@@ -2,6 +2,7 @@ import '@fontsource/special-elite/400.css';
 import './style.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/AudioEngine';
+import { Music } from './audio/Music';
 import { exportPdf, exportPng, exportText } from './export/Export';
 import { bindKeyboard } from './input/Keyboard';
 import { LAYOUTS } from './input/layouts';
@@ -21,6 +22,14 @@ async function main(): Promise<void> {
   audio.init();
   audio.setVolume(settings.volume);
   audio.setMuted(settings.muted);
+  audio.setMusicVolume(settings.musicVolume);
+  let music: Music | undefined;
+  let unlocked = false;
+  const syncMusic = () => {
+    if (!unlocked) return;
+    if (settings.music) (music ??= new Music(audio.music.ctx, audio.music.out)).start();
+    else music?.stop();
+  };
 
   const doc = new TypedDocument();
   doc.load();
@@ -31,6 +40,7 @@ async function main(): Promise<void> {
   const stage = new Stage(document.getElementById('app')!, () => tw.update());
   stage.scene.add(tw.group);
   stage.setQuality(settings.quality);
+  void stage.room.setView(settings.view);
 
   const overlay = new Overlay(document.getElementById('ui')!, settings, {
     onView: (v) => stage.flyTo(v),
@@ -47,8 +57,16 @@ async function main(): Promise<void> {
       if (next.color !== settings.color) tw.setBodyColor(next.color);
       audio.setVolume(next.volume);
       audio.setMuted(next.muted);
+      audio.setMusicVolume(next.musicVolume);
+      if (next.view !== settings.view) void stage.room.setView(next.view);
+      const musicChanged = next.music !== settings.music;
       settings = { ...next };
       saveSettings(settings);
+      if (musicChanged) {
+        audio.unlock();
+        unlocked = true;
+        syncMusic();
+      }
     },
   });
 
@@ -57,6 +75,10 @@ async function main(): Promise<void> {
   const begin = () => {
     audio.unlock();
     overlay.start();
+    if (!unlocked) {
+      unlocked = true;
+      syncMusic();
+    }
   };
   window.addEventListener('pointerdown', begin);
   bindKeyboard(tw, begin, () => true);

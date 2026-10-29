@@ -33,4 +33,6 @@ Planung und Roadmap: [`plan.md`](plan.md) · Änderungen: [`CHANGELOG.md`](CHANG
 ## Lizenzen
 
 - Klänge: siehe [`public/sounds/LICENSES.md`](public/sounds/LICENSES.md) (CC BY 3.0 / CC BY 4.0 / CC0)
+- Aussichten und Texturen: Poly Haven (CC0), siehe [`public/views/LICENSES.md`](public/views/LICENSES.md) und [`public/textures/LICENSES.md`](public/textures/LICENSES.md)
+- Musik: generativ im Browser erzeugt (eigener Code)
 - Schrift: Special Elite (Apache 2.0) über `@fontsource/special-elite`

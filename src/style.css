@@ -81,6 +81,21 @@ body {
   outline: 2px solid var(--accent);
 }
 
+.btn.select {
+  appearance: none;
+  padding-right: 10px;
+  max-width: 190px;
+}
+
+.btn.select option {
+  color: #1b1714;
+}
+
+.btn.active {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
 .btn.icon {
   font-size: 18px;
   padding: 3px 9px;

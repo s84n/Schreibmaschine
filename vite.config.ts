@@ -16,7 +16,7 @@ export default defineConfig({
       registerType: 'autoUpdate',
       includeAssets: ['icons/*.png', 'icons/*.svg'],
       workbox: {
-        globPatterns: ['**/*.{js,css,html,woff,woff2,wav,png,svg}'],
+        globPatterns: ['**/*.{js,css,html,woff,woff2,wav,png,svg,jpg}'],
         maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
       },
       manifest: {

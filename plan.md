@@ -2,7 +2,7 @@
 
 > Zentrale Quelle für alle Planungsdetails. Jede Planänderung wird hier festgehalten (mit Versionsnummer).
 
-**Aktuelle Planversion:** v0.2.0 (2026-10-29) · **Aktuelle App-Version:** v0.8.1
+**Aktuelle Planversion:** v0.3.0 (2026-10-29) · **Aktuelle App-Version:** v0.9.0
 
 ---
 
@@ -24,6 +24,9 @@ originalgetreu. Hosting über **GitHub Pages**, installierbar als **PWA**.
 | Shader/Optik | `postprocessing`-Library (pmndrs): Depth of Field (Fokus Druckpunkt), Bloom (dezent), Vignette, Film Grain, ACES-Tonemapping. Papier & Tinte über prozedurale Canvas-Textur (statt eigener GLSL-Shader – einfacher, exportierbar). SSAO offen |
 | Sound | Echte Aufnahmen von **Wikimedia Commons** (Anschläge: CC BY 3.0, Rücklauf: CC BY 4.0, Glocke: CC0 – Namensnennung in `public/sounds/LICENSES.md`), als WAV zugeschnitten, Wiedergabe via **Web Audio API** mit Pitch-/Volume-Variation |
 | Layout | **QWERTZ/QWERTY umschaltbar**, UI **Deutsch + Englisch** |
+| Atmosphäre | Zimmer mit Putzwand + Sprossenfenster; Aussicht wählbar (Poly-Haven-Panoramen CC0, als Horizontband auf Kugel hinter dem Fenster); Tisch/Wand mit Poly-Haven-PBR-Texturen (CC0) |
+| Musik | **Generativer Lo-Fi-Jazz** in Web Audio (keine Dateien, keine Lizenzfragen, offline), standardmäßig aus, eigener Lautstärkeregler |
+| Klangkette | Anschläge → EQ → Kompressor (+ dezenter Faltungshall) → Limiter; Ziel: Tippen ≈ −18 LUFS, Musik ≈ 6–7 dB darunter |
 | Schrift | **Special Elite** (Apache 2.0) über `@fontsource/special-elite`, lokal gebündelt (offline-fähig) |
 | GitHub | Repo `s84n/Schreibmaschine`, Push per eigenem Deploy-Key (SSH), Autor `s84n` mit noreply-Adresse – keine privaten Daten im Repo. Deploy über GitHub Actions → Pages |
 | Versionierung | **SemVer** (`MAJOR.MINOR.PATCH`), `CHANGELOG.md`, Git-Tags `vX.Y.Z`, Version in `package.json` und im UI-Footer |
@@ -56,13 +59,16 @@ schreibmaschine/
 ├── package.json
 ├── public/
 │   ├── sounds/              # WAV-Samples (+ LICENSES.md mit Quellen/Namensnennung)
+│   ├── views/               # Fensterpanoramen (Horizontbänder, CC0)
+│   ├── textures/            # Tisch- und Wandtexturen (CC0)
 │   └── icons/               # PWA-Icons
 ├── src/
 │   ├── main.ts              # Bootstrap
 │   ├── scene/
 │   │   ├── Scene.ts         # Renderer, Kamera, Licht, OrbitControls (begrenzt)
 │   │   ├── PostFX.ts        # postprocessing-Pipeline
-│   │   └── Environment.ts   # Holztisch, RoomEnvironment-Reflexionen, Lampe
+│   │   ├── Environment.ts   # RoomEnvironment-Reflexionen, Lampe, Gegenlicht
+│   │   └── Room.ts          # Tisch, Wand, Fenster, Aussicht (Kugel), Fensterlicht
 │   ├── typewriter/
 │   │   ├── Typewriter.ts    # Zusammenbau, Zustandsmaschine
 │   │   ├── dims.ts          # zentrale Maße (cm), Druckpunkt
@@ -75,7 +81,8 @@ schreibmaschine/
 │   │   ├── Keyboard.ts      # KeyboardEvent → Maschinenaktion (über event.code + Layout-Map)
 │   │   └── layouts.ts       # QWERTZ / QWERTY
 │   ├── audio/
-│   │   └── AudioEngine.ts   # Web Audio, Sample-Pool, Randomisierung, Unlock bei erster Eingabe
+│   │   ├── AudioEngine.ts   # Web Audio, Sample-Pool, Effektkette, Limiter, Unlock bei erster Eingabe
+│   │   └── Music.ts         # generativer Lo-Fi-Jazz (Sequenzer + Synth-Instrumente)
 │   ├── animation/
 │   │   └── Tweens.ts        # schlanke Tween-/Easing-Utilities, Queue für schnelles Tippen
 │   ├── state/
@@ -110,7 +117,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.6.0** | Shader-Optik: Post-Processing, Papier-Shader, Qualitätsstufen, Performance-Tuning | ✅ in v0.8.0 |
 | **v0.7.0** | Speichern & Export (localStorage, PNG, PDF), neues Blatt | ✅ in v0.8.0 |
 | **v0.8.0** | UI: Einstellungen, i18n DE/EN, Versionsanzeige | ✅ in v0.8.0 |
-| **v0.9.0** | PWA (Manifest, Service Worker, Offline), Feinschliff, Browser-Tests | 🟡 PWA erledigt, Tests/Feinschliff offen |
+| **v0.9.0** | PWA, Feinschliff · ergänzt: Zimmer mit Fenster + Aussichten, Hintergrundmusik, satterer Klang, Holztisch | ✅ (Browser-Tests auf echten Geräten offen) |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -128,11 +135,14 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.3.0** (2026-10-29) – Nutzer-Feedback umgesetzt → App v0.9.0: Tastenklang satter (EQ/Kompressor/Hall/Körperschall), stummer Wagenrücklauf behoben, Holztisch mit PBR-Textur, Zimmer mit Fenster und 5 wählbaren Aussichten, generative Lo-Fi-Jazz-Musik.
 - **v0.2.0** (2026-10-29) – GitHub-Repo `s84n/Schreibmaschine` verbunden (Deploy-Key, noreply-Autor). `base`-Pfad auf `/Schreibmaschine/` (Groß-S) korrigiert → App v0.8.1.
 
 ## 8. Offene Punkte
 
-- v0.9.0: Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz/Lautstärken abstimmen, Performance auf schwächerer Hardware, ggf. SSAO.
+- Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz, Performance auf schwächerer Hardware, ggf. SSAO.
+- Ideen: Umgebungsgeräusche passend zur Aussicht (Wellen, Vögel, Grillen), weitere Aussichten, Musik-Varianten (Tonarten/Tempi), Deko im Zimmer (Lampe, Bücher, Kaffeetasse).
+- PWA-Precache ist durch Panoramen/Texturen auf ~7 MB gewachsen – ggf. Aussichten erst bei Auswahl cachen.
 - Bundle-Größe (~720 kB JS, davon Three.js) – optional Code-Splitting.
 
 ---

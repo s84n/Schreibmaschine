@@ -1,4 +1,5 @@
 import type { LayoutId } from '../input/layouts';
+import type { ViewId } from '../scene/Room';
 import type { Quality } from '../scene/Scene';
 import type { BodyColorId } from '../typewriter/materials';
 import type { Lang } from './i18n';
@@ -10,6 +11,9 @@ export interface Settings {
   muted: boolean;
   quality: Quality;
   color: BodyColorId;
+  view: ViewId;
+  music: boolean;
+  musicVolume: number;
 }
 
 const KEY = 'schreibmaschine.settings';
@@ -24,6 +28,9 @@ function defaults(): Settings {
     muted: false,
     quality: lowEnd ? 'low' : 'high',
     color: 'sage',
+    view: 'alps',
+    music: false,
+    musicVolume: 0.5,
   };
 }
 

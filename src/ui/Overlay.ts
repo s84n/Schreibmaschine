@@ -1,12 +1,13 @@
 import { LAYOUTS, type LayoutId } from '../input/layouts';
-import type { Quality, ViewId } from '../scene/Scene';
+import { VIEWS, type ViewId } from '../scene/Room';
+import type { CameraView, Quality } from '../scene/Scene';
 import { BODY_COLORS, type BodyColorId } from '../typewriter/materials';
 import { APP_VERSION } from '../version';
 import { strings, type Lang } from './i18n';
 import type { Settings } from './Settings';
 
 export interface OverlayActions {
-  onView(view: ViewId): void;
+  onView(view: CameraView): void;
   onNewSheet(): void;
   onExport(kind: 'png' | 'pdf' | 'txt'): void;
   onSettings(next: Settings): void;
@@ -23,7 +24,7 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
 export class Overlay {
   private readonly root: HTMLElement;
   private settings: Settings;
-  private view: ViewId = 'machine';
+  private view: CameraView = 'machine';
   private started = false;
   private panelOpen = false;
   private toastTimer = 0;
@@ -88,6 +89,23 @@ export class Overlay {
     pdf.onclick = () => this.actions.onExport('pdf');
     const txt = el('button', 'btn', t.exportTxt);
     txt.onclick = () => this.actions.onExport('txt');
+    const outlook = el('select', 'btn select');
+    outlook.title = t.view;
+    outlook.setAttribute('aria-label', t.view);
+    for (const id of Object.keys(VIEWS) as ViewId[]) {
+      const o = el('option', '', t.views[id]);
+      o.value = id;
+      o.selected = id === s.view;
+      outlook.append(o);
+    }
+    outlook.onchange = () => {
+      this.update({ view: outlook.value as ViewId });
+      outlook.blur();
+    };
+    const music = el('button', `btn${s.music ? ' active' : ''}`, `♪ ${t.music}`);
+    music.title = t.musicTitle;
+    music.setAttribute('aria-pressed', String(s.music));
+    music.onclick = () => this.update({ music: !this.settings.music });
     const gear = el('button', 'btn icon', '⚙');
     gear.title = t.settings;
     gear.setAttribute('aria-label', t.settings);
@@ -95,7 +113,7 @@ export class Overlay {
       this.panelOpen = !this.panelOpen;
       this.render();
     };
-    bar.append(viewBtn, sheetBtn, el('span', 'sep'), png, pdf, txt, el('span', 'sep'), gear);
+    bar.append(viewBtn, sheetBtn, el('span', 'sep'), png, pdf, txt, el('span', 'sep'), outlook, music, el('span', 'sep'), gear);
     // Buttons sollen keinen Tastaturfokus behalten (sonst löst Leertaste/Enter sie aus)
     bar.querySelectorAll('button').forEach((b) => b.addEventListener('mouseup', () => b.blur()));
     this.root.append(bar);
@@ -152,6 +170,18 @@ export class Overlay {
       this.actions.onSettings(this.settings);
     };
     row(t.volume, vol);
+
+    const mvol = el('input');
+    mvol.type = 'range';
+    mvol.min = '0';
+    mvol.max = '1';
+    mvol.step = '0.05';
+    mvol.value = String(s.musicVolume);
+    mvol.oninput = () => {
+      this.settings.musicVolume = Number(mvol.value);
+      this.actions.onSettings(this.settings);
+    };
+    row(t.musicVolume, mvol);
 
     const mute = el('input');
     mute.type = 'checkbox';

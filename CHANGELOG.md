@@ -2,6 +2,24 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.9.0] – 2026-10-29
+
+### Hinzugefügt
+- Zimmer statt dunklem Hintergrund: alte Putzwand, weißes Sprossenfenster mit Fensterbank, durch die Tiefenschärfe weich gezeichnet.
+- Austauschbare Aussicht (Auswahl in der Werkzeugleiste): Alpen, Bergsee im Winter, Nordischer See, Mittelmeer, Sternennacht am See. Panoramen liegen auf einer Kugel hinter dem Fenster (Parallaxe beim Drehen der Kamera); Fensterlicht und Raumhelligkeit passen sich an.
+- Hintergrundmusik (Schalter „♪ Musik“): generativer Lo-Fi-Jazz in Web Audio – E-Piano (FM), Bass, Besen-Schlagzeug mit Swing, sparsame Melodie, Vinyl-Knistern, Tonband-Schwankung. Eigene Musiklautstärke in den Einstellungen.
+- Satterer Maschinenklang: EQ (Tiefen-Shelf, weniger Mitten-Mulm, Präsenz), Kompressor, dezenter Raumhall (synthetische Impulsantwort), tiefer Körperschall pro Anschlag, Limiter am Ausgang.
+- Zeilenschaltung mit Ratschen-Klick vor dem Wagenrücklauf.
+
+### Geändert
+- Schreibtisch mit echter PBR-Holztextur (Farbe, Normal, Rauheit) statt gemalter Maserung.
+- Kamera der Gesamtansicht etwas tiefer und weiter (Blick aufs Fenster).
+- Lautstärke-Einstellung heißt jetzt „Lautstärke Maschine“.
+
+### Behoben
+- Animationen laufen jetzt immer in Echtzeit (keine Zeitbegrenzung pro Bild mehr): bei niedriger Bildrate hinkte die Mechanik sonst hinter dem Ton her.
+- Wagenrücklauf war stumm: `return.wav` enthielt durch einen Fehler beim Zuschneiden (Lautheitsfilter) nur Stille. Neu geschnitten und auf Spitzenpegel normalisiert.
+
 ## [0.8.1] – 2026-10-29
 
 ### Geändert

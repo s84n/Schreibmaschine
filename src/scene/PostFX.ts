@@ -24,7 +24,7 @@ export class PostFX {
     this.composer = new EffectComposer(renderer, { frameBufferType: THREE.HalfFloatType, multisampling: 4 });
     this.composer.addPass(new RenderPass(scene, camera));
 
-    this.dof = new DepthOfFieldEffect(camera, { focusRange: 18, bokehScale: 2.2, resolutionScale: 0.5 });
+    this.dof = new DepthOfFieldEffect(camera, { focusRange: 22, bokehScale: 3.2, resolutionScale: 0.5 });
     this.dof.target = focus;
     this.composer.addPass(new EffectPass(camera, this.dof));
 
