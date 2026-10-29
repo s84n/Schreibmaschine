@@ -2,7 +2,7 @@
 
 > Zentrale Quelle für alle Planungsdetails. Jede Planänderung wird hier festgehalten (mit Versionsnummer).
 
-**Aktuelle Planversion:** v0.1.0 (2026-10-29) · **Aktuelle App-Version:** v0.8.0
+**Aktuelle Planversion:** v0.2.0 (2026-10-29) · **Aktuelle App-Version:** v0.8.1
 
 ---
 
@@ -25,7 +25,7 @@ originalgetreu. Hosting über **GitHub Pages**, installierbar als **PWA**.
 | Sound | Echte Aufnahmen von **Wikimedia Commons** (Anschläge: CC BY 3.0, Rücklauf: CC BY 4.0, Glocke: CC0 – Namensnennung in `public/sounds/LICENSES.md`), als WAV zugeschnitten, Wiedergabe via **Web Audio API** mit Pitch-/Volume-Variation |
 | Layout | **QWERTZ/QWERTY umschaltbar**, UI **Deutsch + Englisch** |
 | Schrift | **Special Elite** (Apache 2.0) über `@fontsource/special-elite`, lokal gebündelt (offline-fähig) |
-| GitHub | Vorerst **nur lokal**, kein Remote. Deploy-Workflow liegt bereit (`.github/workflows/deploy.yml`) |
+| GitHub | Repo `s84n/Schreibmaschine`, Push per eigenem Deploy-Key (SSH), Autor `s84n` mit noreply-Adresse – keine privaten Daten im Repo. Deploy über GitHub Actions → Pages |
 | Versionierung | **SemVer** (`MAJOR.MINOR.PATCH`), `CHANGELOG.md`, Git-Tags `vX.Y.Z`, Version in `package.json` und im UI-Footer |
 
 ## 3. Features (Umfang v1.0)
@@ -52,7 +52,7 @@ schreibmaschine/
 ├── CHANGELOG.md
 ├── README.md
 ├── index.html
-├── vite.config.ts           # base: '/schreibmaschine/', vite-plugin-pwa
+├── vite.config.ts           # base: '/Schreibmaschine/', vite-plugin-pwa
 ├── package.json
 ├── public/
 │   ├── sounds/              # WAV-Samples (+ LICENSES.md mit Quellen/Namensnennung)
@@ -122,16 +122,16 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 - `npm run build && npm run preview` → Produktionsbuild mit korrektem `base`-Pfad prüfen.
 - Lighthouse: PWA-Installierbarkeit & Performance (Ziel: 60 fps auf Mittelklasse-Laptop bei „hoch“).
 - Browser: Chrome, Firefox, Safari (Web-Audio-Unlock, WebGL2).
-- Nach Push: GitHub-Actions-Deploy grün, Seite unter `https://<user>.github.io/schreibmaschine/` erreichbar.
+- Nach Push: GitHub-Actions-Deploy grün, Seite unter `https://s84n.github.io/Schreibmaschine/` erreichbar.
 
 ## 7. Status / Changelog der Planung
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.2.0** (2026-10-29) – GitHub-Repo `s84n/Schreibmaschine` verbunden (Deploy-Key, noreply-Autor). `base`-Pfad auf `/Schreibmaschine/` (Groß-S) korrigiert → App v0.8.1.
 
 ## 8. Offene Punkte
 
-- GitHub-Repo anlegen (Name `schreibmaschine` passt zum `base`-Pfad; sonst `vite.config.ts` anpassen), Remote verbinden, Pages auf „GitHub Actions“ stellen.
 - v0.9.0: Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz/Lautstärken abstimmen, Performance auf schwächerer Hardware, ggf. SSAO.
 - Bundle-Größe (~720 kB JS, davon Three.js) – optional Code-Splitting.
 
@@ -140,4 +140,4 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 ## Nächster Schritt
 
 1. Lokal testen (`npm run dev`), Feedback zu Optik/Sound/Mechanik sammeln → v0.9.0.
-2. GitHub-Repo verbinden, sobald angelegt.
+2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

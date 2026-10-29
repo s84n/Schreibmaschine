@@ -1,5 +1,7 @@
 # Schreibmaschine
 
+**Live:** https://s84n.github.io/Schreibmaschine/
+
 Ein 3D-Schreibmaschinen-Simulator im Browser. Man tippt auf der echten Tastatur –
 Tasten, Typenhebel, Farbband und Wagen bewegen sich wie bei einer echten Reiseschreibmaschine,
 dazu Originalklänge, Glocke und Wagenrücklauf.
@@ -10,7 +12,7 @@ dazu Originalklänge, Glocke und Wagenrücklauf.
 npm install
 npm run dev       # Entwicklungsserver
 npm run build     # Typprüfung + Produktionsbuild nach dist/
-npm run preview   # Produktionsbuild lokal ansehen (http://localhost:4173/schreibmaschine/)
+npm run preview   # Produktionsbuild lokal ansehen (http://localhost:4173/Schreibmaschine/)
 ```
 
 ## Bedienung

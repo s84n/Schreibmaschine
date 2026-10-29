@@ -4,7 +4,7 @@ import pkg from './package.json' with { type: 'json' };
 
 // GitHub Pages hostet unter /<repo-name>/ – lokal und im Preview funktioniert der Pfad ebenfalls.
 export default defineConfig({
-  base: '/schreibmaschine/',
+  base: '/Schreibmaschine/',
   define: {
     __APP_VERSION__: JSON.stringify(pkg.version),
   },

@@ -2,6 +2,13 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.8.1] – 2026-10-29
+
+### Geändert
+- `base`-Pfad auf `/Schreibmaschine/` korrigiert (Repo-Name mit großem S, GitHub Pages unterscheidet Groß-/Kleinschreibung).
+- Icon-Links in `index.html` relativ statt mit festem Pfad.
+- README mit Live-Link.
+
 ## [0.8.0] – 2026-10-29
 
 Erster lauffähiger Stand. Umfasst die Roadmap-Punkte v0.1.0 bis v0.8.0 sowie ein PWA-Grundgerüst.
