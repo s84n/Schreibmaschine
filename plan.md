@@ -2,7 +2,7 @@
 
 > Zentrale Quelle für alle Planungsdetails. Jede Planänderung wird hier festgehalten (mit Versionsnummer).
 
-**Aktuelle Planversion:** v0.4.0 (2026-10-30) · **Aktuelle App-Version:** v0.10.0
+**Aktuelle Planversion:** v0.5.0 (2026-10-30) · **Aktuelle App-Version:** v0.11.0
 
 ---
 
@@ -24,6 +24,7 @@ originalgetreu. Hosting über **GitHub Pages**, installierbar als **PWA**.
 | Shader/Optik | `postprocessing`-Library (pmndrs): Depth of Field (Fokus Druckpunkt), Bloom (dezent), Vignette, Film Grain, ACES-Tonemapping. Papier & Tinte über prozedurale Canvas-Textur (statt eigener GLSL-Shader – einfacher, exportierbar). SSAO offen |
 | Sound | Echte Aufnahmen von **Wikimedia Commons** (Anschläge: CC BY 3.0, Rücklauf: CC BY 4.0, Glocke: CC0 – Namensnennung in `public/sounds/LICENSES.md`), als WAV zugeschnitten, Wiedergabe via **Web Audio API** mit Pitch-/Volume-Variation |
 | Layout | **QWERTZ/QWERTY umschaltbar**, UI **Deutsch + Englisch** |
+| Lizenzen | CC0 bevorzugt; CC BY / CC BY-SA nur mit Namensnennung (README + `LICENSES.md` + Credits in der App). BY-SA gilt nur für die bearbeitete Bilddatei, nicht für den Code |
 | Atmosphäre | Geschlossenes Zimmer (weiße Putzwände, Dielenboden, Decke) mit Sprossenfenster knapp über Tischhöhe und Deko (Regale, Efeutute, Bücher, Bild, Tasse); Aussicht wählbar (Poly-Haven-Panoramen CC0, als Horizontband auf Kugel hinter dem Fenster); Tisch/Wand mit Poly-Haven-PBR-Texturen (CC0) |
 | Musik | **Generativer Lo-Fi-Jazz** in Web Audio (keine Dateien, keine Lizenzfragen, offline), standardmäßig aus, eigener Lautstärkeregler |
 | Klangkette | Anschläge → EQ → Kompressor (+ dezenter Faltungshall) → Limiter; Ziel: Tippen ≈ −18 LUFS, Musik ≈ 6–7 dB darunter |
@@ -120,6 +121,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.8.0** | UI: Einstellungen, i18n DE/EN, Versionsanzeige | ✅ in v0.8.0 |
 | **v0.9.0** | PWA, Feinschliff · ergänzt: Zimmer mit Fenster + Aussichten, Hintergrundmusik, satterer Klang, Holztisch | ✅ (Browser-Tests auf echten Geräten offen) |
 | **v0.10.0** | Geschlossenes Zimmer, Deko, Fenster tiefer, weiße Wände | ✅ |
+| **v0.11.0** | Mechanik-Fix Typenhebel, 3 Stadt-Aussichten, README | ✅ |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -137,6 +139,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.5.0** (2026-10-30) – Mechanik nach echtem Vorbild korrigiert (Typenhebel liegen im offenen Korb hinter den Tasten, Maschine 4 cm tiefer), 3 Stadt-Aussichten (Istanbul, New York, Dubai; Wikimedia Commons, CC BY/BY-SA), README für GitHub neu → App v0.11.0.
 - **v0.4.0** (2026-10-30) – Feedback: Fenster tiefer, Wände weiß, Zimmer rundum geschlossen (kein Panorama mehr neben der Wand), Deko ergänzt → App v0.10.0.
 - **v0.3.0** (2026-10-29) – Nutzer-Feedback umgesetzt → App v0.9.0: Tastenklang satter (EQ/Kompressor/Hall/Körperschall), stummer Wagenrücklauf behoben, Holztisch mit PBR-Textur, Zimmer mit Fenster und 5 wählbaren Aussichten, generative Lo-Fi-Jazz-Musik.
 - **v0.2.0** (2026-10-29) – GitHub-Repo `s84n/Schreibmaschine` verbunden (Deploy-Key, noreply-Autor). `base`-Pfad auf `/Schreibmaschine/` (Groß-S) korrigiert → App v0.8.1.

@@ -20,7 +20,7 @@ export interface Key {
 
 const KEY_PITCH = 1.9;
 const KEY_RADIUS = 0.7;
-const ROW_Z = [4.9, 6.8, 8.7, 10.6];
+const ROW_Z = [8.8, 10.7, 12.6, 14.5];
 const ROW_OFFSET = [-0.4, 0.2, 0.55, 1.0];
 const TRAVEL = 0.55;
 const LEGEND_FONT = '"Futura", "Century Gothic", "Helvetica Neue", Arial, sans-serif';
@@ -171,7 +171,7 @@ export class Keyboard {
   }
 
   private addSpaceBar(): void {
-    const z = 12.3;
+    const z = 16.3;
     const restY = keyboardDeckY(z) + 1.1;
     const obj = new THREE.Group();
     obj.position.set(0, restY, z);

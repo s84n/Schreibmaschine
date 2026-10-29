@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { animator, ease } from '../animation/Tweens';
 import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, type DecorMaterials } from './Decor';
 
-export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'starnight';
+export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'starnight' | 'istanbul' | 'newyork' | 'dubai';
 
 export interface OutdoorView {
   file: string;
@@ -22,6 +22,9 @@ export const VIEWS: Record<ViewId, OutdoorView> = {
   winterlake: { file: 'lago_disola.jpg', u: 0.8, drop: 16, light: '#e8f0ff', lightIntensity: 2.0, ambient: 0.55 },
   nordiclake: { file: 'lakeside.jpg', u: 0.68, drop: 3, light: '#fff6e8', lightIntensity: 2.3, ambient: 0.55 },
   mediterranean: { file: 'spiaggia_di_mondello.jpg', u: 0.03, drop: 4, light: '#ffe9c4', lightIntensity: 2.6, ambient: 0.6 },
+  istanbul: { file: 'istanbul.jpg', u: 0.5, drop: 3, light: '#fff1dc', lightIntensity: 2.4, ambient: 0.58 },
+  newyork: { file: 'newyork.jpg', u: 0.5, drop: 2, light: '#f4f6ff', lightIntensity: 2.2, ambient: 0.58 },
+  dubai: { file: 'dubai.jpg', u: 0.5, drop: 10, light: '#ff9fb0', lightIntensity: 0.6, ambient: 0.28 },
   starnight: { file: 'lakeside_night.jpg', u: 0.4, drop: 5, light: '#ffb070', lightIntensity: 0.35, ambient: 0.18 },
 };
 

@@ -18,8 +18,8 @@ export function buildBody(m: Materials): THREE.Group {
   const pts: [number, number][] = [
     [DIMS.bodyFrontZ, 0],
     [DIMS.bodyFrontZ, 2.4],
-    [3.5, keyboardDeckY(3.5) + 0.3],
-    [0.5, 6.7],
+    [DIMS.keyboardBackZ, keyboardDeckY(DIMS.keyboardBackZ) + 0.3],
+    [2.5, 6.8],
     [DIMS.deckFrontZ, DIMS.deckY],
     [DIMS.bodyBackZ, DIMS.deckY],
     [DIMS.bodyBackZ, 0],
@@ -54,7 +54,7 @@ export function buildBody(m: Materials): THREE.Group {
 
   // Schräge Tastaturplatte (dunkel)
   const zFront = DIMS.bodyFrontZ - 0.3;
-  const zBack = 3.5;
+  const zBack = DIMS.keyboardBackZ;
   const len = Math.hypot(zFront - zBack, keyboardDeckY(zBack) - keyboardDeckY(zFront));
   const deck = box(inner, 0.25, len, m.interior);
   deck.position.set(0, (keyboardDeckY(zFront) + keyboardDeckY(zBack)) / 2 - 0.15, (zFront + zBack) / 2);

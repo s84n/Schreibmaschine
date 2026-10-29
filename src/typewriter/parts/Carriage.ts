@@ -59,8 +59,9 @@ export class Carriage {
     rail.position.set(0, DIMS.deckY + 1.4, -8.4);
     this.group.add(rail);
     for (const side of [-1, 1]) {
-      const bracket = box(0.3, 2.4, 3.2, m.steel);
-      bracket.position.set(side * (half + 0.3), 8.9, -7.4);
+      // Unterkante über den Farbbandspulen, damit der Wagen darüber hinwegfährt
+      const bracket = box(0.3, 1.6, 3.2, m.steel);
+      bracket.position.set(side * (half + 0.3), 9.3, -7.4);
       this.group.add(bracket);
     }
 

@@ -7,7 +7,7 @@ import { beam, orientBeam, shadow } from './util';
 const RIBBON_H = 0.62;
 const REST_DROP = 0.75;
 const SPOOL_X = 10;
-const SPOOL_Z = -4.6;
+const SPOOL_Z = -6.4;
 
 /** Farbband: zwei Spulen, Bandführung und Farbbandgabel, die sich beim Anschlag hebt. */
 export class Ribbon {

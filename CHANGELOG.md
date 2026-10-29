@@ -2,6 +2,18 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.11.0] – 2026-10-30
+
+### Behoben
+- Typenhebel schlugen beim Anschlag durch Tastaturplatte und hintere Tastenreihe: In Ruhe lagen die Hebelspitzen unter der Platte. Die Mechanik ist jetzt wie bei einer echten Reiseschreibmaschine aufgebaut – kleiner Segmentbogen tief vor der Walze, längere Hebel, die fast waagerecht im offenen Typenkorb hinter den Tasten liegen und ~120° zum Druckpunkt schwingen. Dafür ist die Maschine vorne 4 cm tiefer geworden; Hinterdeck und Farbbandspulen sind nach hinten gerückt, damit auch die äußeren Hebel freie Bahn haben.
+
+### Hinzugefügt
+- Drei neue Aussichten: Istanbul (Goldenes Horn), New York (Büro hoch über Manhattan), Dubai (Skyline in der Dämmerung) – Fotos von Wikimedia Commons, als Panoramaband aufbereitet.
+- Neue README für die GitHub-Seite mit Screenshots, Beschreibung, Technik-Überblick und vollständigen Quellenangaben.
+
+### Geändert
+- Quellenangabe in den Einstellungen um Wikimedia Commons ergänzt.
+
 ## [0.10.0] – 2026-10-30
 
 ### Hinzugefügt
