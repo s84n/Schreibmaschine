@@ -41,7 +41,7 @@ export class Stage {
     this.controls.enableDamping = true;
     this.controls.dampingFactor = 0.08;
     this.controls.minDistance = 10;
-    this.controls.maxDistance = 95;
+    this.controls.maxDistance = 85;
     this.controls.minPolarAngle = 0.15;
     this.controls.maxPolarAngle = Math.PI / 2 - 0.08;
     this.controls.minAzimuthAngle = -Math.PI / 2.2;

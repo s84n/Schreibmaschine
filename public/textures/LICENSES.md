@@ -6,3 +6,4 @@ PBR-Texturen von [Poly Haven](https://polyhaven.com) – Lizenz **CC0** (gemeinf
 |---|---|
 | `desk_*.jpg` | [Wood Table Worn](https://polyhaven.com/a/wood_table_worn) |
 | `wall_*.jpg` | [Painted Plaster Wall](https://polyhaven.com/a/painted_plaster_wall) |
+| `floor_*.jpg` | [Plank Flooring 02](https://polyhaven.com/a/plank_flooring_02) |

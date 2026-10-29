@@ -2,6 +2,18 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.10.0] – 2026-10-30
+
+### Hinzugefügt
+- Geschlossenes Zimmer: Seitenwände, Vorderwand, Decke, Dielenboden (Poly Haven, CC0) und weiße Fußleisten – beim Schwenken der Kamera ist das Panorama nur noch durchs Fenster zu sehen.
+- Schreibtisch mit Zarge und Beinen.
+- Deko: Wandregal mit Efeutute (herabhängende Ranken) und Büchern neben dem Fenster, gerahmtes Landschaftsbild an der linken Wand, Bücherregal mit zweiter Pflanze an der rechten Wand, Kaffeetasse auf dem Tisch.
+
+### Geändert
+- Fenster sitzt jetzt knapp über der Tischplatte; Horizonte aller Aussichten neu ausgerichtet.
+- Wände in gebrochenem Weiß statt Beige – mehr Kontrast zum dunklen Tisch.
+- Maximaler Kameraabstand verringert (bleibt im Zimmer).
+
 ## [0.9.0] – 2026-10-29
 
 ### Hinzugefügt
