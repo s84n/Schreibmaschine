@@ -1,0 +1,24 @@
+{
+  "name": "schreibmaschine",
+  "private": true,
+  "version": "0.8.0",
+  "description": "3D-Schreibmaschinen-Simulator im Browser",
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "tsc --noEmit && vite build",
+    "preview": "vite preview"
+  },
+  "dependencies": {
+    "@fontsource/special-elite": "^5.3.0",
+    "jspdf": "^4.2.1",
+    "postprocessing": "^6.39.5",
+    "three": "^0.186.1"
+  },
+  "devDependencies": {
+    "@types/three": "^0.186.0",
+    "typescript": "^7.0.2",
+    "vite": "^8.3.5",
+    "vite-plugin-pwa": "^2.0.0"
+  }
+}
