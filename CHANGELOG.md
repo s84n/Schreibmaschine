@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.16.0] – 2026-10-30
+
+### Hinzugefügt
+- Grafik-Schalter im Zahnrad-Menü: Staub im Licht (tagsüber im Lichtband des Fensters, nachts im Kerzenschein), Lichtstrahlen durchs Fenster (nur bei hellem Tag, bei Regen stark abgeschwächt) und Kontaktschatten (SSAO, nur in der Grafikstufe „hoch“). Alle standardmäßig an.
+
 ## [0.15.0] – 2026-10-30
 
 ### Entfernt

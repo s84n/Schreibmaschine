@@ -49,6 +49,9 @@ async function main(): Promise<void> {
   void stage.room.setView(settings.view);
   stage.setTime(settings.time, false);
   stage.room.setRain(settings.rain, false);
+  stage.room.setDust(settings.dust);
+  stage.room.setShafts(settings.shafts);
+  stage.setAO(settings.ao);
 
   let view: CameraView = 'machine';
   const overlay = new Overlay(document.getElementById('ui')!, settings, {
@@ -72,6 +75,9 @@ async function main(): Promise<void> {
       if (next.ribbon !== settings.ribbon) tw.setRibbon(next.ribbon);
       if (next.time !== settings.time) stage.setTime(next.time);
       if (next.rain !== settings.rain) stage.room.setRain(next.rain);
+      if (next.dust !== settings.dust) stage.room.setDust(next.dust);
+      if (next.shafts !== settings.shafts) stage.room.setShafts(next.shafts);
+      if (next.ao !== settings.ao) stage.setAO(next.ao);
       audio.setVolume(next.volume);
       audio.setMuted(next.muted);
       audio.setMusicVolume(next.musicVolume);

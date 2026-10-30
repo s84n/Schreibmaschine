@@ -26,6 +26,7 @@ export class Stage {
   readonly renderer: THREE.WebGLRenderer;
   readonly controls: OrbitControls;
   private post?: PostFX;
+  private ao = true;
   private quality: Quality = 'high';
   private last = performance.now();
   private readonly lamp: THREE.SpotLight;
@@ -89,6 +90,7 @@ export class Stage {
     if (q === 'high') {
       this.renderer.toneMapping = THREE.NoToneMapping;
       this.post ??= new PostFX(this.renderer, this.scene, this.camera, this.focus);
+      this.post.setAO(this.ao);
     } else {
       this.renderer.toneMapping = THREE.ACESFilmicToneMapping;
       this.post?.dispose();
@@ -129,6 +131,12 @@ export class Stage {
     const night = this.night > 0.5;
     this.lamp.castShadow = high && !night;
     this.room.candle.light.castShadow = high && night;
+  }
+
+  /** Kontaktschatten; wirken nur in der Grafikstufe „hoch“. */
+  setAO(on: boolean): void {
+    this.ao = on;
+    this.post?.setAO(on);
   }
 
   /** Hält unten Platz frei, falls der Browser die Bildschirmtastatur nicht meldet. */

@@ -19,6 +19,9 @@ export interface Settings {
   ribbon: RibbonId;
   model: ModelId;
   rain: boolean;
+  dust: boolean;
+  shafts: boolean;
+  ao: boolean;
 }
 
 const KEY = 'schreibmaschine.settings';
@@ -40,6 +43,9 @@ function defaults(): Settings {
     ribbon: 'black',
     model: 'reise',
     rain: false,
+    dust: true,
+    shafts: true,
+    ao: true,
   };
 }
 

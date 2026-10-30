@@ -281,6 +281,9 @@ export class Overlay {
       row(label, c);
     };
     toggle(t.rain, s.rain, (rain) => this.update({ rain }));
+    toggle(t.dust, s.dust, (dust) => this.update({ dust }));
+    toggle(t.shafts, s.shafts, (shafts) => this.update({ shafts }));
+    toggle(t.ao, s.ao, (ao) => this.update({ ao }));
     row(t.layout, select<LayoutId>(s.layout, (Object.keys(LAYOUTS) as LayoutId[]).map((id) => [id, LAYOUTS[id].label]), (layout) => this.update({ layout })));
     row(t.language, select<Lang>(s.lang, [['de', 'Deutsch'], ['en', 'English']], (lang) => this.update({ lang })));
     row(t.quality, select<Quality>(s.quality, [['high', t.qualityHigh], ['low', t.qualityLow]], (quality) => this.update({ quality })));

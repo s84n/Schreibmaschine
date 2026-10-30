@@ -459,3 +459,141 @@ export function buildRainGlass(w: number, h: number) {
   mesh.visible = false;
   return { mesh, uniforms };
 }
+
+/** Schwebender Staub: tagsüber sichtbar im Lichtkegel des Fensters, nachts im Schein der Kerze. */
+export class Dust {
+  readonly points: THREE.Points;
+  private readonly uniforms = {
+    uTime: { value: 0 },
+    uDay: { value: 1 },
+    uNight: { value: 0 },
+    uCandle: { value: new THREE.Vector3() },
+    uScale: { value: 1 },
+  };
+
+  constructor(candle: THREE.Vector3) {
+    const COUNT = 420;
+    const r = rng(91);
+    const pos = new Float32Array(COUNT * 3);
+    const seed = new Float32Array(COUNT);
+    for (let i = 0; i < COUNT; i++) {
+      pos.set([-60 + r() * 110, 1 + r() * 55, -30 + r() * 70], i * 3);
+      seed[i] = r();
+    }
+    const geo = new THREE.BufferGeometry();
+    geo.setAttribute('position', new THREE.BufferAttribute(pos, 3));
+    geo.setAttribute('seed', new THREE.BufferAttribute(seed, 1));
+    this.uniforms.uCandle.value.copy(candle);
+    this.points = new THREE.Points(
+      geo,
+      new THREE.ShaderMaterial({
+        uniforms: this.uniforms,
+        transparent: true,
+        depthWrite: false,
+        blending: THREE.AdditiveBlending,
+        vertexShader: /* glsl */ `
+          uniform float uTime, uDay, uNight, uScale;
+          uniform vec3 uCandle;
+          attribute float seed;
+          varying vec3 vColor;
+          void main() {
+            float s = seed * 6.2831;
+            vec3 p = position;
+            p.x += sin(uTime * 0.11 + s) * 3.5 + sin(uTime * 0.31 + s * 3.0) * 0.8;
+            p.y += sin(uTime * 0.07 + s * 2.0) * 4.0 + sin(uTime * 0.23 + s) * 0.7;
+            p.z += cos(uTime * 0.09 + s * 1.5) * 3.5;
+            // Tagsüber nur im schrägen Lichtband vom Fenster zum Tisch
+            float band = abs(p.x + 18.0 + (p.z + 30.0) * -0.35 + (p.y - 30.0) * 0.5);
+            float day = smoothstep(26.0, 6.0, band) * uDay * 1.1;
+            float d = distance(p, uCandle);
+            float night = smoothstep(46.0, 6.0, d) * uNight * 1.3;
+            float twinkle = 0.65 + 0.35 * sin(uTime * (0.6 + seed) + s);
+            vColor = (vec3(1.0, 0.95, 0.85) * day + vec3(1.0, 0.62, 0.3) * night) * twinkle;
+            vec4 mv = modelViewMatrix * vec4(p, 1.0);
+            gl_PointSize = max(1.2, (0.07 + seed * 0.09) * uScale / -mv.z);
+            gl_Position = projectionMatrix * mv;
+          }
+        `,
+        fragmentShader: /* glsl */ `
+          varying vec3 vColor;
+          void main() {
+            float a = smoothstep(0.5, 0.05, length(gl_PointCoord - 0.5));
+            gl_FragColor = vec4(vColor * a, a);
+            #include <colorspace_fragment>
+          }
+        `,
+      }),
+    );
+    this.points.frustumCulled = false;
+  }
+
+  /** day/night: 0–1, Stärke von Fensterlicht bzw. Kerzenschein. */
+  setLight(day: number, night: number): void {
+    this.uniforms.uDay.value = day;
+    this.uniforms.uNight.value = night;
+  }
+
+  update(dt: number, viewportHeight: number): void {
+    this.uniforms.uTime.value += dt;
+    // Punktgröße in Pixeln passend zur Auflösung
+    this.uniforms.uScale.value = viewportHeight * 1.35;
+  }
+}
+
+/** Lichtstrahlen, die durch die Fensterscheiben schräg in den Raum fallen. */
+export class LightShafts {
+  readonly group = new THREE.Group();
+  private readonly uniforms = { uTime: { value: 0 }, uPower: { value: 1 } };
+
+  constructor(panes: [number, number][], z: number) {
+    const material = new THREE.ShaderMaterial({
+      uniforms: this.uniforms,
+      transparent: true,
+      depthWrite: false,
+      side: THREE.DoubleSide,
+      blending: THREE.AdditiveBlending,
+      vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: /* glsl */ `
+        uniform float uTime, uPower;
+        varying vec2 vUv;
+        void main() {
+          float edge = smoothstep(0.0, 0.3, vUv.x) * smoothstep(1.0, 0.7, vUv.x);
+          // Am Fenster (v = 1) am hellsten, zum Tisch hin auslaufend
+          float along = smoothstep(0.0, 0.55, vUv.y) * smoothstep(1.0, 0.92, vUv.y);
+          float drift = 0.82 + 0.18 * sin(vUv.x * 9.0 + uTime * 0.25) * sin(vUv.y * 5.0 - uTime * 0.17);
+          float a = edge * along * drift * 0.24 * uPower;
+          gl_FragColor = vec4(vec3(1.0, 0.93, 0.78) * a, a);
+          #include <colorspace_fragment>
+        }
+      `,
+    });
+    const LENGTH = 62;
+    const WIDTH = 15;
+    const geo = new THREE.PlaneGeometry(WIDTH, LENGTH);
+    geo.translate(0, -LENGTH / 2, 0);
+    // Richtung: vom Fenster nach vorn unten, passend zum Fensterlicht
+    const dir = new THREE.Vector3(0.5, -0.5, 0.7).normalize();
+    const down = new THREE.Vector3(0, -1, 0);
+    for (const [x, y] of panes) {
+      const beam = new THREE.Group();
+      beam.position.set(x, y, z);
+      beam.quaternion.setFromUnitVectors(down, dir);
+      // Zwei gekreuzte Flächen wirken aus jedem Blickwinkel wie ein Volumen
+      for (const a of [0.5, -0.9]) {
+        const m = new THREE.Mesh(geo, material);
+        m.rotation.y = a;
+        beam.add(m);
+      }
+      this.group.add(beam);
+    }
+  }
+
+  setPower(p: number): void {
+    this.uniforms.uPower.value = p;
+    this.group.visible = p > 0.01;
+  }
+
+  update(dt: number): void {
+    this.uniforms.uTime.value += dt;
+  }
+}

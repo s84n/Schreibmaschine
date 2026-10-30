@@ -2,7 +2,7 @@
 
 > Zentrale Quelle für alle Planungsdetails. Jede Planänderung wird hier festgehalten (mit Versionsnummer).
 
-**Aktuelle Planversion:** v0.9.0 (2026-10-30) · **Aktuelle App-Version:** v0.15.0
+**Aktuelle Planversion:** v0.10.0 (2026-10-30) · **Aktuelle App-Version:** v0.16.0
 
 ---
 
@@ -21,7 +21,7 @@ originalgetreu. Hosting über **GitHub Pages**, installierbar als **PWA**.
 | Vorbild | Klassische **Reiseschreibmaschine** (Stil 1950er/60er), eigenes generisches Design – keine Markennachbildung |
 | 3D-Modell | **Prozedural im Code** aus Three.js-Geometrien (jedes Teil einzeln animierbar) |
 | Stack | **Vite + TypeScript + Three.js**, `vite-plugin-pwa`, Deployment per GitHub Actions |
-| Shader/Optik | `postprocessing`-Library (pmndrs): Depth of Field (Fokus Druckpunkt), Bloom (dezent), Vignette, Film Grain, ACES-Tonemapping. Papier & Tinte über prozedurale Canvas-Textur (statt eigener GLSL-Shader – einfacher, exportierbar). SSAO offen |
+| Shader/Optik | `postprocessing`-Library (pmndrs): Depth of Field (Fokus Druckpunkt), Bloom (dezent), Vignette, Film Grain, ACES-Tonemapping, SSAO (abschaltbar). Papier & Tinte über prozedurale Canvas-Textur (statt eigener GLSL-Shader – einfacher, exportierbar) |
 | Sound | Echte Aufnahmen von **Wikimedia Commons** (Anschläge: CC BY 3.0, Rücklauf: CC BY 4.0, Glocke: CC0 – Namensnennung in `public/sounds/LICENSES.md`), als WAV zugeschnitten, Wiedergabe via **Web Audio API** mit Pitch-/Volume-Variation |
 | Layout | **QWERTZ/QWERTY umschaltbar**, UI **Deutsch + Englisch** |
 | Lizenzen | CC0 bevorzugt; CC BY / CC BY-SA nur mit Namensnennung (README + `LICENSES.md` + Credits in der App). BY-SA gilt nur für die bearbeitete Bilddatei, nicht für den Code |
@@ -133,6 +133,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.13.0** | Schlafende Katze, Regenwetter (je mit Schalter), Fix für dunkles Zimmer nach Kontextverlust | ✅ |
 | **v0.14.0** | Katze und Kaminsound entfernt, Regenklang neu, Kerzenschale ohne Ring, Tasse und Pflanze versetzt | ✅ |
 | **v0.15.0** | Fenster ohne Fensterbrett, Manuskript auf dem Papierstapel | ✅ |
+| **v0.16.0** | Grafik-Schalter: Staub, Lichtstrahlen, Kontaktschatten | ✅ (Bildrate auf echter GPU offen) |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -150,6 +151,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.10.0** (2026-10-30) – Grafikpaket mit Schaltern → App v0.16.0; Konzeptideen in Abschnitt 8.
 - **v0.9.0** (2026-10-30) – Nutzer-Feedback: Fensterbrett entfernt, Papierstapel mit getipptem Manuskript → App v0.15.0.
 - **v0.8.0** (2026-10-30) – Nutzer-Feedback: Katze als Modell unbrauchbar und aus dem Konzept gestrichen, Kaminsound samt Menüpunkt „Geräuschkulisse“ entfernt, Regenklang neu → App v0.14.0.
 - **v0.7.0** (2026-10-30) – Katze und Regenwetter auf Nutzerwunsch → App v0.13.0. Ursache des dunklen Zimmers gefunden: leere Umgebungskarte nach WebGL-Kontextverlust.
@@ -163,8 +165,9 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **Kaffee-Link eintragen** (`src/config.ts`), vorher Anbieter wählen und Steuer-/Impressumsfrage klären.
 - **Echte Smartphones testen:** Bildschirmtastatur (Android/Gboard, iOS), Vollbild + Lock, Bildrate nachts.
+- Konzeptideen (ungeprüft priorisiert): Schreibmodus ohne Oberfläche, Schreibziele/Wortzähler, mehrere Blätter als Manuskript mit PDF-Export, Briefe als Link teilen, Kurz-Schreibimpulse, Schnee zum Regen, Papiersorten, Tintenauftrag nach Anschlagstärke, Farbband-Abnutzung.
 - Cozy-Ideen: Tag/Nacht nach Uhrzeit, Tippen auf den 3D-Tasten, verblassendes Farbband.
-- Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz, Performance auf schwächerer Hardware, ggf. SSAO.
+- Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz, Performance auf schwächerer Hardware.
 - Ideen: Umgebungsgeräusche passend zur Aussicht (Wellen, Vögel, Grillen), weitere Aussichten, Musik-Varianten (Tonarten/Tempi), sichtbare Schreibtischlampe.
 - PWA-Precache ist durch Panoramen/Texturen auf ~7 MB gewachsen – ggf. Aussichten erst bei Auswahl cachen.
 - Bundle-Größe (~720 kB JS, davon Three.js) – optional Code-Splitting.
@@ -173,5 +176,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v0.15.0 auf echten Smartphones testen, Feedback sammeln.
+1. v0.16.0 auf echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

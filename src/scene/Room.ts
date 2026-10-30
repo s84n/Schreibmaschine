@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../animation/Tweens';
-import { buildBookStack, buildCurtain, buildPaperStack, buildPencilCup, buildRainGlass, Candle, FairyLights, Steam } from './Cozy';
+import { buildBookStack, buildCurtain, buildPaperStack, buildPencilCup, buildRainGlass, Candle, Dust, FairyLights, LightShafts, Steam } from './Cozy';
 import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, type DecorMaterials } from './Decor';
 
 export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'starnight' | 'istanbul' | 'newyork' | 'dubai';
@@ -73,6 +73,9 @@ export class Room {
   private readonly rainGlass = buildRainGlass(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0);
   readonly candle = new Candle();
   private readonly steam = new Steam();
+  private readonly dust = new Dust(new THREE.Vector3(-32, 11, 3));
+  private readonly shafts: LightShafts;
+  private shaftsOn = true;
   private readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
   /** Unsichtbarer, etwas größerer Klickbereich um die Tasse */
   readonly mugHit: THREE.Mesh;
@@ -99,6 +102,14 @@ export class Room {
     this.windowLight.position.set(-30, 45, -60);
     this.windowLight.target.position.set(0, 0, 0);
     this.group.add(this.windowLight, this.windowLight.target);
+
+    const midX = (WIN.x0 + WIN.x1) / 2;
+    const q = (WIN.x1 - WIN.x0) / 4;
+    this.shafts = new LightShafts(
+      [[midX - q, WIN.y0 + 34], [midX + q, WIN.y0 + 34], [midX - q, WIN.y0 + 14], [midX + q, WIN.y0 + 14]],
+      WALL_Z - 3,
+    );
+    this.group.add(this.shafts.group, this.dust.points);
 
     this.mugHit = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 14, 12), new THREE.MeshBasicMaterial());
     this.mugHit.position.set(MUG_POS.x, DESK_Y + 6, MUG_POS.z);
@@ -127,6 +138,15 @@ export class Room {
     this.rainTween = animator.add({ duration: 2, ease: ease.inOutCubic, onUpdate: (t) => this.applyRain(from + (to - from) * t) });
   }
 
+  setDust(on: boolean): void {
+    this.dust.points.visible = on;
+  }
+
+  setShafts(on: boolean): void {
+    this.shaftsOn = on;
+    this.applyLight();
+  }
+
   private applyRain(r: number): void {
     this.rain = r;
     this.rainGlass.mesh.visible = r > 0.01;
@@ -137,6 +157,8 @@ export class Room {
   update(dt: number, camera: THREE.Camera): void {
     this.candle.update(dt, camera);
     this.steam.update(dt);
+    this.dust.update(dt, window.innerHeight);
+    this.shafts.update(dt);
     this.rainGlass.uniforms.uTime.value += dt;
   }
 
@@ -151,6 +173,10 @@ export class Room {
     this.outsideMat.color.r *= 1 + (RAIN_TINT.r - 1) * r;
     this.outsideMat.color.g *= 1 + (RAIN_TINT.g - 1) * r;
     this.outsideMat.color.b *= 1 + (RAIN_TINT.b - 1) * r;
+    // Sonnenlicht gibt es nur am hellen Tag: nicht nachts, kaum bei Regen und in der Dämmerung
+    const sun = (1 - n) * (1 - 0.8 * r) * (this.dusk ? 0.2 : 1);
+    this.shafts.setPower(this.shaftsOn ? sun : 0);
+    this.dust.setLight(sun, n);
     // Tropfen spiegeln nachts nur noch wenig Himmel
     this.rainGlass.uniforms.uLight.value = 1 + (0.22 - 1) * n;
   }

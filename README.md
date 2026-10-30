@@ -49,6 +49,7 @@ Efeutute – und ein Fenster, durch das du hinausschaust.
 | 🎀 **Farbband wechseln** | Schwarz, Rot, Königsblau, Tannengrün, Violett oder Sepia – Geschriebenes behält seine Farbe. |
 | 🏛️ **Modell wählen** | Reise (1950er), Kontor (1930er, Messing) oder Flach (1960er) – eigene Entwürfe mit derselben Mechanik. |
 | 🌧️ **Regenwetter** | Tropfen laufen die Scheibe hinab, dazu Regen mit Prasseln an der Scheibe und Tropfen vom Dach – per Schalter an und aus. |
+| ✨ **Grafik-Effekte** | Staub im Licht, Lichtstrahlen und Kontaktschatten – jeweils per Schalter. |
 | 🎨 **Anpassen** | Gehäusefarbe (Salbeigrün, Bordeaux, Schwarz, Creme), QWERTZ oder QWERTY, Deutsch oder Englisch, zwei Grafikstufen. |
 | 📲 **Am Smartphone** | Im Querformat; ⌨ öffnet die Tastatur, alles Weitere liegt im Zahnrad-Menü. |
 | 📱 **Als App installieren** | Die Seite lässt sich wie eine App installieren und funktioniert danach auch **offline**. |
