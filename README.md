@@ -44,7 +44,9 @@ Efeutute – und ein Fenster, durch das du hinausschaust.
 | 🎷 **Musik an** | Ruhiger Lo-Fi-Jazz mit E-Piano und Plattenknistern – wird live im Browser erzeugt und wiederholt sich nie exakt. |
 | 💾 **Nichts verlieren** | Dein Blatt wird automatisch im Browser gespeichert und ist beim nächsten Besuch wieder da. |
 | 📄 **Exportieren** | Die fertige Seite als **PNG**, als **PDF** (A4) oder als reinen **Text** herunterladen. |
-| 📃 **Neues Blatt** | Das alte Blatt wird herausgedreht, ein neues eingespannt. |
+| 📚 **Manuskript** | Fertige Blätter landen auf dem Stapel; PDF und Text enthalten alle Seiten. |
+| 💌 **Brief als Link** | Der Empfänger sieht deinen Text Anschlag für Anschlag entstehen. Er steckt nur im Link, auf keinem Server. |
+| 🎯 **Fokus-Modus** | F2 blendet alles aus, außer Papier und Maschine. |
 | 🕯️ **Tag & Nacht** | Nachts brennt links eine Kerze mit flackerndem Licht, über dem Fenster leuchtet eine Lichterkette. |
 | 🎀 **Farbband wechseln** | Schwarz, Rot, Königsblau, Tannengrün, Violett oder Sepia – Geschriebenes behält seine Farbe. |
 | 🏛️ **Modell wählen** | Reise (1950er), Kontor (1930er, Messing) oder Flach (1960er) – eigene Entwürfe mit derselben Mechanik. |

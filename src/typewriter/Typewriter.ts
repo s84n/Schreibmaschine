@@ -18,7 +18,7 @@ const MAX_BACKLOG = 0.8;
 /** Zeitpunkt des Anschlags im Rücklauf-Sample (Wagen schlägt an). */
 const RETURN_THUNK_AT = 1.15;
 
-export type TypewriterEvent = 'pageEnd' | 'change';
+export type TypewriterEvent = 'pageEnd' | 'change' | 'sheet';
 
 /**
  * Die komplette Maschine: Aufbau der 3D-Teile und Mechanik-Logik.
@@ -224,16 +224,23 @@ export class Typewriter {
     this.updateBasket();
   }
 
-  /** Blatt herausdrehen und ein neues einspannen. */
-  newSheet(): void {
+  /** Sekunden, bis die Mechanik wieder frei ist. */
+  get busyFor(): number {
+    return Math.max(0, this.busyUntil - performance.now() / 1000);
+  }
+
+  /** Blatt herausdrehen, aufs Manuskript legen (oder verwerfen) und ein neues einspannen. */
+  newSheet(discard = false): void {
     const slot = this.reserve(2.0);
     if (slot < 0) return;
     this.audio.play('return', slot, { offset: 0.3, gain: 0.6 });
     this.at(slot, () => this.carriage.ejectPaper(0.8));
     this.at(slot + 0.9, () => {
-      this.doc.clear();
+      if (discard) this.doc.discardAll();
+      else this.doc.nextSheet();
       this.ink.clear();
       this.emit('change');
+      this.emit('sheet');
       this.carriage.snapTo(0, 0);
       const target = PAGE.marginTopCm;
       const from = -26;

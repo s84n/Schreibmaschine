@@ -44,15 +44,28 @@ interface Stored {
 }
 
 const STORAGE_KEY = 'schreibmaschine.doc';
+const PAGES_KEY = 'schreibmaschine.pages';
 
 /** Logischer Zustand des eingespannten Blatts: alle Anschläge + Wagenposition. */
 export class TypedDocument {
   strikes: Strike[] = [];
   line = 0;
   col = 0;
+  /** Fertige Blätter des Manuskripts, ältestes zuerst */
+  pages: Strike[][] = [];
+  /** Aus: Ein empfangener Brief darf das eigene Blatt nicht überschreiben. */
+  persist = true;
+  /** Wird gerufen, wenn der Browser-Speicher voll ist und nicht gesichert werden konnte. */
+  onSaveFailed?: () => void;
   private saveTimer = 0;
 
   load(): boolean {
+    try {
+      const pages = JSON.parse(localStorage.getItem(PAGES_KEY) ?? '[]') as unknown;
+      if (Array.isArray(pages)) this.pages = pages as Strike[][];
+    } catch {
+      /* beschädigte Blätter überspringen, das eingespannte Blatt trotzdem laden */
+    }
     try {
       const raw = localStorage.getItem(STORAGE_KEY);
       if (!raw) return false;
@@ -74,28 +87,61 @@ export class TypedDocument {
   }
 
   saveNow(): void {
+    if (!this.persist) return;
     const data: Stored = { v: 1, strikes: this.strikes, line: this.line, col: this.col };
+    this.write(STORAGE_KEY, JSON.stringify(data));
+  }
+
+  private savePages(): void {
+    if (this.persist) this.write(PAGES_KEY, JSON.stringify(this.pages));
+  }
+
+  private write(key: string, value: string): void {
     try {
-      localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+      localStorage.setItem(key, value);
     } catch {
-      /* Speicher voll oder deaktiviert – ignorieren */
+      this.onSaveFailed?.();
     }
   }
 
-  clear(): void {
+  /** Legt das Blatt aufs Manuskript (leere Blätter nicht) und beginnt ein neues. */
+  nextSheet(): void {
+    if (this.strikes.length) {
+      this.pages.push(this.strikes);
+      this.savePages();
+    }
     this.strikes = [];
     this.line = 0;
     this.col = 0;
     this.saveNow();
   }
 
-  /** Text als reine Zeichenkette (überschriebene Zeichen: letzter Anschlag gewinnt). */
-  toPlainText(): string {
-    const lines: string[][] = [];
-    for (const s of this.strikes) {
-      const row = (lines[s.line] ??= []);
-      row[s.col] = s.ch;
-    }
-    return Array.from(lines, (row) => Array.from(row ?? [], (c) => c ?? ' ').join('').trimEnd()).join('\n');
+  /** Verwirft das ganze Manuskript samt eingespanntem Blatt. */
+  discardAll(): void {
+    this.pages = [];
+    this.savePages();
+    this.strikes = [];
+    this.line = 0;
+    this.col = 0;
+    this.saveNow();
   }
+
+  /** Alle Blätter in Reihenfolge; das eingespannte nur, wenn etwas darauf steht. */
+  allPages(): Strike[][] {
+    return this.strikes.length ? [...this.pages, this.strikes] : [...this.pages];
+  }
+
+  /** Text aller Blätter als reine Zeichenkette (überschriebene Zeichen: letzter Anschlag gewinnt). */
+  toPlainText(): string {
+    return this.allPages().map(pageText).join('\n\n\f\n');
+  }
+}
+
+function pageText(strikes: Strike[]): string {
+  const lines: string[][] = [];
+  for (const s of strikes) {
+    const row = (lines[s.line] ??= []);
+    row[s.col] = s.ch;
+  }
+  return Array.from(lines, (row) => Array.from(row ?? [], (c) => c ?? ' ').join('').trimEnd()).join('\n');
 }

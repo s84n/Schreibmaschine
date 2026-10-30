@@ -2,7 +2,7 @@
 
 > Zentrale Quelle für alle Planungsdetails. Jede Planänderung wird hier festgehalten (mit Versionsnummer).
 
-**Aktuelle Planversion:** v0.10.0 (2026-10-30) · **Aktuelle App-Version:** v0.16.0
+**Aktuelle Planversion:** v0.11.0 (2026-10-30) · **Aktuelle App-Version:** v0.17.0
 
 ---
 
@@ -94,7 +94,8 @@ schreibmaschine/
 │   ├── animation/
 │   │   └── Tweens.ts        # schlanke Tween-/Easing-Utilities, Queue für schnelles Tippen
 │   ├── state/
-│   │   └── Document.ts      # Zeilen, Cursor, localStorage-Persistenz
+│   │   ├── Document.ts      # Zeilen, Cursor, fertige Blätter, localStorage-Persistenz
+│   │   └── Letter.ts        # Brief als Link: komprimiert im #-Teil der Adresse
 │   ├── export/
 │   │   └── Export.ts        # PNG / PDF (jsPDF, nachgeladen) / TXT
 │   ├── ui/
@@ -134,6 +135,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.14.0** | Katze und Kaminsound entfernt, Regenklang neu, Kerzenschale ohne Ring, Tasse und Pflanze versetzt | ✅ |
 | **v0.15.0** | Fenster ohne Fensterbrett, Manuskript auf dem Papierstapel | ✅ |
 | **v0.16.0** | Grafik-Schalter: Staub, Lichtstrahlen, Kontaktschatten | ✅ (Bildrate auf echter GPU offen) |
+| **v0.17.0** | Mehrseitige Manuskripte, Brief als Link, Fokus-Modus, Kerze mit Rauch | ✅ |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -151,6 +153,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.11.0** (2026-10-30) – Manuskripte, Brief-Link, Fokus-Modus, Kerze → App v0.17.0. Brief-Link bewusst ohne Server: Text steckt komprimiert im #-Teil der Adresse.
 - **v0.10.0** (2026-10-30) – Grafikpaket mit Schaltern → App v0.16.0; Konzeptideen in Abschnitt 8.
 - **v0.9.0** (2026-10-30) – Nutzer-Feedback: Fensterbrett entfernt, Papierstapel mit getipptem Manuskript → App v0.15.0.
 - **v0.8.0** (2026-10-30) – Nutzer-Feedback: Katze als Modell unbrauchbar und aus dem Konzept gestrichen, Kaminsound samt Menüpunkt „Geräuschkulisse“ entfernt, Regenklang neu → App v0.14.0.
@@ -165,7 +168,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **Kaffee-Link eintragen** (`src/config.ts`), vorher Anbieter wählen und Steuer-/Impressumsfrage klären.
 - **Echte Smartphones testen:** Bildschirmtastatur (Android/Gboard, iOS), Vollbild + Lock, Bildrate nachts.
-- Konzeptideen (ungeprüft priorisiert): Schreibmodus ohne Oberfläche, Schreibziele/Wortzähler, mehrere Blätter als Manuskript mit PDF-Export, Briefe als Link teilen, Kurz-Schreibimpulse, Schnee zum Regen, Papiersorten, Tintenauftrag nach Anschlagstärke, Farbband-Abnutzung.
+- Konzeptideen (ungeprüft priorisiert): Schreibziele/Wortzähler, Kurz-Schreibimpulse, Tippen auf den 3D-Tasten, Schnee zum Regen, Papiersorten, Tintenauftrag nach Anschlagstärke, Farbband-Abnutzung.
 - Cozy-Ideen: Tag/Nacht nach Uhrzeit, Tippen auf den 3D-Tasten, verblassendes Farbband.
 - Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz, Performance auf schwächerer Hardware.
 - Ideen: Umgebungsgeräusche passend zur Aussicht (Wellen, Vögel, Grillen), weitere Aussichten, Musik-Varianten (Tonarten/Tempi), sichtbare Schreibtischlampe.
@@ -176,5 +179,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v0.16.0 auf echten Smartphones testen, Feedback sammeln.
+1. v0.17.0 auf echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

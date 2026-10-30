@@ -84,6 +84,7 @@ export class Stage {
     // Auch „niedrig“ nicht unter 1,5: Smartphones haben kleine, sehr dichte Displays
     this.renderer.setPixelRatio(Math.min(dpr, q === 'high' ? 2 : 1.5));
     this.syncShadows();
+    this.room.setShaftStrength(q === 'high' ? 1 : 0.45);
     this.lamp.shadow.mapSize.setScalar(q === 'high' ? 2048 : 512);
     this.lamp.shadow.map?.dispose();
     this.lamp.shadow.map = null;
@@ -109,7 +110,7 @@ export class Stage {
     }
     const from = this.night;
     this.nightTween = animator.add({
-      duration: 1.6,
+      duration: 2.4,
       ease: ease.inOutCubic,
       onUpdate: (t) => this.applyNight(from + (to - from) * t),
     });

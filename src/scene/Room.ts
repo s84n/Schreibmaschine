@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../animation/Tweens';
-import { buildBookStack, buildCurtain, buildPaperStack, buildPencilCup, buildRainGlass, Candle, Dust, FairyLights, LightShafts, Steam } from './Cozy';
+import { buildBookStack, buildCurtain, buildPencilCup, buildRainGlass, Candle, Dust, FairyLights, LightShafts, PaperStack, Steam } from './Cozy';
 import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, type DecorMaterials } from './Decor';
 
 export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'starnight' | 'istanbul' | 'newyork' | 'dubai';
@@ -73,9 +73,11 @@ export class Room {
   private readonly rainGlass = buildRainGlass(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0);
   readonly candle = new Candle();
   private readonly steam = new Steam();
+  readonly paper = new PaperStack(13);
   private readonly dust = new Dust(new THREE.Vector3(-32, 11, 3));
   private readonly shafts: LightShafts;
   private shaftsOn = true;
+  private shaftStrength = 1;
   private readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
   /** Unsichtbarer, etwas größerer Klickbereich um die Tasse */
   readonly mugHit: THREE.Mesh;
@@ -106,7 +108,8 @@ export class Room {
     const midX = (WIN.x0 + WIN.x1) / 2;
     const q = (WIN.x1 - WIN.x0) / 4;
     this.shafts = new LightShafts(
-      [[midX - q, WIN.y0 + 34], [midX + q, WIN.y0 + 34], [midX - q, WIN.y0 + 14], [midX + q, WIN.y0 + 14]],
+      // Nur die linken Scheiben: Rechts schnitten die Strahlen als harte Kante durchs Papier
+      [[midX - q, WIN.y0 + 34], [midX - q, WIN.y0 + 14]],
       WALL_Z - 3,
     );
     this.group.add(this.shafts.group, this.dust.points);
@@ -142,6 +145,12 @@ export class Room {
     this.dust.points.visible = on;
   }
 
+  /** Ohne Nachbearbeitung wirken die additiven Strahlen ungefiltert und müssen schwächer sein. */
+  setShaftStrength(k: number): void {
+    this.shaftStrength = k;
+    this.applyLight();
+  }
+
   setShafts(on: boolean): void {
     this.shaftsOn = on;
     this.applyLight();
@@ -175,7 +184,7 @@ export class Room {
     this.outsideMat.color.b *= 1 + (RAIN_TINT.b - 1) * r;
     // Sonnenlicht gibt es nur am hellen Tag: nicht nachts, kaum bei Regen und in der Dämmerung
     const sun = (1 - n) * (1 - 0.8 * r) * (this.dusk ? 0.2 : 1);
-    this.shafts.setPower(this.shaftsOn ? sun : 0);
+    this.shafts.setPower(this.shaftsOn ? sun * this.shaftStrength : 0);
     this.dust.setLight(sun, n);
     // Tropfen spiegeln nachts nur noch wenig Himmel
     this.rainGlass.uniforms.uLight.value = 1 + (0.22 - 1) * n;
@@ -433,10 +442,9 @@ export class Room {
     stack.rotation.y = 0.25;
     const pencils = buildPencilCup(4);
     pencils.position.set(-38, DESK_Y, -20);
-    const paper = buildPaperStack(13);
-    paper.position.set(29, DESK_Y, 21);
-    paper.rotation.y = -0.12;
-    g.add(stack, pencils, paper);
+    this.paper.group.position.set(29, DESK_Y, 21);
+    this.paper.group.rotation.y = -0.12;
+    g.add(stack, pencils, this.paper.group);
 
     // Vorhänge an einer Stange und Lichterkette über dem Fenster
     const rodY = WIN.y1 + 8;

@@ -24,11 +24,16 @@ export function exportPng(page: HTMLCanvasElement): void {
   }, 'image/png');
 }
 
-/** PDF im A4-Format; jsPDF wird erst bei Bedarf nachgeladen. */
-export async function exportPdf(page: HTMLCanvasElement): Promise<void> {
+/** PDF im A4-Format, eine Seite je Blatt; jsPDF wird erst bei Bedarf nachgeladen. */
+export async function exportPdf(pages: Iterable<HTMLCanvasElement>): Promise<void> {
   const { jsPDF } = await import('jspdf');
   const pdf = new jsPDF({ orientation: 'portrait', unit: 'cm', format: 'a4' });
-  pdf.addImage(page.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, PAGE.widthCm, PAGE.heightCm);
+  let first = true;
+  for (const page of pages) {
+    if (!first) pdf.addPage();
+    first = false;
+    pdf.addImage(page.toDataURL('image/jpeg', 0.92), 'JPEG', 0, 0, PAGE.widthCm, PAGE.heightCm);
+  }
   pdf.save(`schreibmaschine_${stamp()}.pdf`);
 }
 

@@ -14,7 +14,15 @@ export interface OverlayActions {
   onExport(kind: 'png' | 'pdf' | 'txt'): void;
   onSettings(next: Settings): void;
   onKeyboard(): void;
+  onFocus(on: boolean): void;
+  onShare(): void;
+  onDiscard(): void;
+  onLetterPlay(): void;
+  onLetterSkip(): void;
+  onLetterWrite(): void;
 }
+
+export type LetterState = 'ready' | 'playing' | 'done';
 
 const touch = matchMedia('(pointer: coarse)');
 /** Wenig Platz (Smartphone): Werkzeugleiste verschwindet ins Zahnrad-Menü. */
@@ -35,6 +43,9 @@ export class Overlay {
   private started = false;
   private panelOpen = false;
   private coffeeOpen = false;
+  private focus = false;
+  private pages = 0;
+  private letter?: LetterState;
   private keyboardOpen = false;
   private toastTimer = 0;
 
@@ -59,6 +70,29 @@ export class Overlay {
   /** Hält die Anzeige synchron, wenn die Kamera von außen wechselt (Bildschirmtastatur). */
   setView(view: CameraView): void {
     this.view = view;
+    this.render();
+  }
+
+  get isFocused(): boolean {
+    return this.focus;
+  }
+
+  setFocus(on: boolean): void {
+    this.focus = on;
+    this.panelOpen = false;
+    this.actions.onFocus(on);
+    this.render();
+    if (on) this.toast(this.t.focusHint);
+  }
+
+  /** Anzahl fertiger Blätter für Fußzeile und „Verwerfen“. */
+  setPages(n: number): void {
+    this.pages = n;
+    this.render();
+  }
+
+  setLetter(state: LetterState | undefined): void {
+    this.letter = state;
     this.render();
   }
 
@@ -113,9 +147,16 @@ export class Overlay {
       this.render();
     };
     const tools: HTMLElement[] = [];
-    if (!small.matches) tools.push(...this.actionButtons(), el('span', 'sep'));
-    tools.push(time);
-    if (touch.matches) {
+    if (this.focus) {
+      const exit = el('button', 'btn', t.focusExit);
+      exit.onclick = () => this.setFocus(false);
+      tools.push(exit);
+      bar.classList.add('faint');
+    } else {
+      if (!small.matches) tools.push(...this.actionButtons(), el('span', 'sep'));
+      tools.push(time);
+    }
+    if (touch.matches && !this.letter) {
       const kb = el('button', `btn icon kb${this.keyboardOpen ? ' active' : ''}`, '⌨\uFE0E');
       kb.title = t.keyboard;
       kb.setAttribute('aria-label', t.keyboard);
@@ -125,7 +166,7 @@ export class Overlay {
       kb.onclick = () => this.actions.onKeyboard();
       tools.push(kb);
     }
-    tools.push(gear);
+    if (!this.focus) tools.push(gear);
     bar.append(...tools);
     // Buttons sollen keinen Tastaturfokus behalten (sonst löst Leertaste/Enter sie aus)
     bar.querySelectorAll('button').forEach((b) => b.addEventListener('mouseup', () => b.blur()));
@@ -137,6 +178,7 @@ export class Overlay {
       panel.scrollTop = scroll;
     }
     if (this.coffeeOpen) this.root.append(this.renderCoffee());
+    if (this.letter) this.root.append(this.renderLetter());
 
     // Startschirm
     const start = el('div', `start${this.started ? ' hidden' : ''}`);
@@ -144,9 +186,11 @@ export class Overlay {
     this.root.append(start);
 
     const hint = el('div', 'hint', t.hint);
-    const footer = el('footer', 'footer', `Schreibmaschine v${APP_VERSION} · ${t.saved}`);
+    const sheet = this.pages ? `${t.pageOf(this.pages + 1)} · ` : '';
+    const footer = el('footer', 'footer', `Schreibmaschine v${APP_VERSION} · ${sheet}${t.saved}`);
     footer.title = t.credits;
-    this.root.append(hint, footer, el('div', 'toast'), this.renderRotate());
+    if (!this.focus) this.root.append(hint, footer);
+    this.root.append(el('div', 'toast'), this.renderRotate());
   }
 
   /** Werkzeuge, die je nach Platz in der Leiste oder im Menü sitzen. */
@@ -161,9 +205,12 @@ export class Overlay {
       this.render();
     };
     const sheetBtn = el('button', 'btn', t.newSheet);
-    sheetBtn.onclick = () => {
-      if (confirm(t.confirmNewSheet)) this.actions.onNewSheet();
-    };
+    sheetBtn.onclick = () => this.actions.onNewSheet();
+    const share = el('button', 'btn', t.share);
+    share.onclick = () => this.actions.onShare();
+    const focusBtn = el('button', 'btn', t.focus);
+    focusBtn.title = t.focusTitle;
+    focusBtn.onclick = () => this.setFocus(true);
     const png = el('button', 'btn', t.exportPng);
     png.onclick = () => this.actions.onExport('png');
     const pdf = el('button', 'btn', t.exportPdf);
@@ -187,7 +234,8 @@ export class Overlay {
     music.title = t.musicTitle;
     music.setAttribute('aria-pressed', String(s.music));
     music.onclick = () => this.update({ music: !this.settings.music });
-    return [viewBtn, sheetBtn, el('span', 'sep'), png, pdf, txt, el('span', 'sep'), outlook, music];
+    if (this.letter) return [viewBtn, el('span', 'sep'), png, pdf, txt, el('span', 'sep'), outlook, music];
+    return [viewBtn, focusBtn, sheetBtn, el('span', 'sep'), png, pdf, txt, share, el('span', 'sep'), outlook, music];
   }
 
   /** Hinweis im Hochformat auf Smartphones; sichtbar nur per CSS-Media-Query. */
@@ -206,6 +254,25 @@ export class Overlay {
           .catch(() => this.toast(t.rotateText));
       };
       box.append(force);
+    }
+    return box;
+  }
+
+  private renderLetter(): HTMLElement {
+    const t = this.t;
+    const box = el('section', 'panel letter');
+    if (this.letter === 'ready') {
+      const play = el('button', 'btn primary', t.letterPlay);
+      play.onclick = () => this.actions.onLetterPlay();
+      box.append(el('h2', '', t.letterTitle), el('p', '', t.letterText), play);
+    } else if (this.letter === 'playing') {
+      const skip = el('button', 'btn', t.letterSkip);
+      skip.onclick = () => this.actions.onLetterSkip();
+      box.append(skip);
+    } else {
+      const write = el('button', 'btn primary', t.letterWrite);
+      write.onclick = () => this.actions.onLetterWrite();
+      box.append(write);
     }
     return box;
   }
@@ -251,6 +318,13 @@ export class Overlay {
       const coffee = el('button', 'btn', t.coffee);
       coffee.onclick = () => this.openCoffee();
       extras.append(coffee);
+    }
+    if (this.pages && !this.letter) {
+      const discard = el('button', 'btn', t.discard);
+      discard.onclick = () => {
+        if (confirm(t.confirmDiscard)) this.actions.onDiscard();
+      };
+      extras.append(discard);
     }
     if (extras.childElementCount) panel.append(extras);
 

@@ -2,6 +2,14 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.17.0] – 2026-10-30
+
+### Hinzugefügt
+- Mehrseitige Manuskripte: „Nächstes Blatt“ legt das fertige Blatt sichtbar auf den Papierstapel, statt es zu löschen. PDF und Text enthalten alle Blätter. „Manuskript verwerfen“ im Zahnrad-Menü beginnt von vorn.
+- Brief als Link: „Als Link teilen“ packt das Manuskript komprimiert in die Adresse (kein Server). Der Empfänger sieht es Anschlag für Anschlag entstehen; sein eigenes Blatt bleibt unangetastet.
+- Fokus-Modus (F2, Esc beendet): Oberfläche weg, Kamera am Papier.
+- Kerze: Die Flamme wächst beim Anzünden vom Docht aus; beim Wechsel zum Tag steigt ein Rauchfaden auf. Der Tag/Nacht-Wechsel ist weicher.
+
 ## [0.16.0] – 2026-10-30
 
 ### Hinzugefügt

@@ -56,6 +56,10 @@ export class Candle {
   private readonly uniforms = { uTime: { value: 0 }, uPower: { value: 3.2 } };
   private night = 0;
   private time = 0;
+  private readonly smoke: { s: THREE.Sprite; phase: number }[] = [];
+  /** Sekunden seit dem Auspusten; negativ = kein Rauch */
+  private smokeAge = -1;
+  private flameY = 0;
 
   constructor() {
     const brass = new THREE.MeshStandardMaterial({ color: '#b08a45', metalness: 1, roughness: 0.32 });
@@ -135,22 +139,56 @@ export class Candle {
     this.light.shadow.camera.far = 140;
     this.light.shadow.bias = -0.002;
     this.light.shadow.normalBias = 0.05;
+    this.flameY = this.flame.position.y;
     this.group.add(this.flame, this.glow, this.light);
+
+    for (let i = 0; i < 22; i++) {
+      const puff = new THREE.Sprite(new THREE.SpriteMaterial({ map: softTexture(), color: '#5e5a56', transparent: true, depthWrite: false, opacity: 0 }));
+      puff.position.y = top + 1;
+      puff.visible = false;
+      this.smoke.push({ s: puff, phase: i / 22 });
+      this.group.add(puff);
+    }
   }
 
   setNight(n: number): void {
+    // Beim Übergang zum Tag wird die Kerze ausgepustet: Die Flamme ist weg, der Docht raucht nach
+    if (this.night >= 0.3 && n < 0.3) this.smokeAge = 0;
     this.night = n;
     const lit = n > 0.02;
     this.flame.visible = lit;
     this.glow.visible = lit;
     if (!lit) this.light.intensity = 0;
     this.wax.emissiveIntensity = n * 0.75;
+    // Flamme wächst beim Anzünden vom Docht aus
+    const size = Math.min(1, n * 1.4);
+    this.flame.scale.set(0.5 + size * 0.5, Math.max(size, 0.01), 1);
+    this.flame.position.y = this.flameY - (1 - size) * 2.05;
+  }
+
+  private updateSmoke(dt: number): void {
+    if (this.smokeAge < 0) return;
+    this.smokeAge += dt;
+    const alive = this.smokeAge < 5;
+    const strength = Math.max(0, 1 - this.smokeAge / 5);
+    for (const p of this.smoke) {
+      const f = (this.smokeAge * 0.32 + p.phase) % 1;
+      p.s.visible = alive;
+      // Dünner Faden, der sich nach oben kräuselt und auffächert
+      p.s.position.x = Math.sin(f * 8 + this.smokeAge * 1.5) * f * 1.5;
+      p.s.position.z = Math.cos(f * 6 + this.smokeAge) * f * 0.7;
+      p.s.position.y = 10.4 + f * 15;
+      p.s.scale.setScalar(0.55 + f * 2.6);
+      (p.s.material as THREE.SpriteMaterial).opacity = strength * (1 - f) ** 1.2 * Math.min(1, f * 12);
+    }
+    if (!alive) this.smokeAge = -1;
   }
 
   update(dt: number, camera: THREE.Camera): void {
     this.time += dt;
     const t = this.time;
     this.uniforms.uTime.value = t;
+    this.updateSmoke(dt);
     if (this.night <= 0.02) return;
     // Überlagerte Schwingungen plus seltenes Aufflackern
     const flick = 0.86 + 0.08 * Math.sin(t * 9.1) + 0.05 * Math.sin(t * 17.3 + 1) + 0.04 * Math.sin(t * 31.7) + 0.1 * Math.max(0, Math.sin(t * 1.3)) ** 12;
@@ -361,27 +399,68 @@ function manuscriptTexture(seed: number): THREE.CanvasTexture {
   return tex;
 }
 
-/** Papierstapel mit leicht versetzten Blättern, obenauf das angefangene Manuskript. Ursprung = Tischplatte. */
-export function buildPaperStack(seed: number): THREE.Group {
-  const r = rng(seed);
-  const g = new THREE.Group();
-  const mat = new THREE.MeshStandardMaterial({ color: '#efe9da', roughness: 0.95 });
-  const block = new THREE.Mesh(new THREE.BoxGeometry(21, 1.1, 29.7), mat);
-  block.position.y = 0.55;
-  g.add(block);
-  let top = 0;
-  for (let i = 0; i < 4; i++) {
-    const sheet = new THREE.Mesh(new THREE.BoxGeometry(21, 0.04, 29.7), mat);
-    top = 1.12 + i * 0.05;
-    sheet.position.set((r() - 0.5) * 0.7, top, (r() - 0.5) * 0.7);
-    sheet.rotation.y = (r() - 0.5) * 0.05;
-    g.add(sheet);
+/**
+ * Papierstapel: obenauf das angefangene Manuskript, bis eigene fertige Blätter darauf landen.
+ * Ursprung = Tischplatte.
+ */
+export class PaperStack {
+  readonly group = new THREE.Group();
+  private readonly page: THREE.Mesh;
+  private readonly pile: THREE.Mesh;
+  private readonly pageMat: THREE.MeshStandardMaterial;
+  private readonly joke: THREE.Texture;
+  private finished?: THREE.CanvasTexture;
+  private readonly top: number;
+
+  constructor(seed: number) {
+    const r = rng(seed);
+    const mat = new THREE.MeshStandardMaterial({ color: '#efe9da', roughness: 0.95 });
+    const block = new THREE.Mesh(new THREE.BoxGeometry(21, 1.1, 29.7), mat);
+    block.position.y = 0.55;
+    this.group.add(block);
+    let top = 0;
+    for (let i = 0; i < 4; i++) {
+      const sheet = new THREE.Mesh(new THREE.BoxGeometry(21, 0.04, 29.7), mat);
+      top = 1.12 + i * 0.05;
+      sheet.position.set((r() - 0.5) * 0.7, top, (r() - 0.5) * 0.7);
+      sheet.rotation.y = (r() - 0.5) * 0.05;
+      this.group.add(sheet);
+    }
+    this.top = top + 0.05;
+    this.joke = manuscriptTexture(seed);
+    this.pageMat = new THREE.MeshStandardMaterial({ map: this.joke, roughness: 0.95 });
+    this.page = new THREE.Mesh(new THREE.PlaneGeometry(21, 29.7), this.pageMat);
+    this.page.rotation.set(-Math.PI / 2, 0, 0.02);
+    this.page.position.set(0.2, this.top, -0.1);
+    this.pile = new THREE.Mesh(new THREE.BoxGeometry(21, 1, 29.7), mat);
+    this.pile.position.set(0.2, this.top, -0.1);
+    this.pile.rotation.y = -0.02;
+    this.pile.visible = false;
+    this.group.add(this.page, this.pile);
+    shadowed(this.group);
   }
-  const page = new THREE.Mesh(new THREE.PlaneGeometry(21, 29.7), new THREE.MeshStandardMaterial({ map: manuscriptTexture(seed), roughness: 0.95 }));
-  page.rotation.set(-Math.PI / 2, 0, 0.02);
-  page.position.set(0.2, top + 0.05, -0.1);
-  g.add(page);
-  return shadowed(g);
+
+  /** Zeigt `count` fertige Blätter; `latest` liegt obenauf, ohne Blätter wieder das Manuskript. */
+  setFinished(count: number, latest?: HTMLCanvasElement): void {
+    const height = Math.min(count * 0.03, 3);
+    this.pile.visible = count > 0;
+    this.pile.scale.y = Math.max(height, 0.001);
+    this.pile.position.y = this.top + height / 2;
+    this.page.position.y = this.top + height + 0.005;
+    this.finished?.dispose();
+    this.finished = undefined;
+    if (count > 0 && latest) {
+      const c = document.createElement('canvas');
+      c.width = 1024;
+      c.height = 1448;
+      c.getContext('2d')!.drawImage(latest, 0, 0, c.width, c.height);
+      this.finished = new THREE.CanvasTexture(c);
+      this.finished.colorSpace = THREE.SRGBColorSpace;
+      this.finished.anisotropy = 8;
+    }
+    this.pageMat.map = this.finished ?? this.joke;
+    this.pageMat.needsUpdate = true;
+  }
 }
 
 const RAIN_FRAG = /* glsl */ `
@@ -572,7 +651,7 @@ export class LightShafts {
     const geo = new THREE.PlaneGeometry(WIDTH, LENGTH);
     geo.translate(0, -LENGTH / 2, 0);
     // Richtung: vom Fenster nach vorn unten, passend zum Fensterlicht
-    const dir = new THREE.Vector3(0.5, -0.5, 0.7).normalize();
+    const dir = new THREE.Vector3(0.25, -0.5, 0.8).normalize();
     const down = new THREE.Vector3(0, -1, 0);
     for (const [x, y] of panes) {
       const beam = new THREE.Group();
