@@ -408,7 +408,7 @@ export class Room {
     const pencils = buildPencilCup(4);
     pencils.position.set(-38, DESK_Y, -20);
     const paper = buildPaperStack(13);
-    paper.position.set(42, DESK_Y, 21);
+    paper.position.set(29, DESK_Y, 21);
     paper.rotation.y = -0.12;
     g.add(stack, pencils, paper);
 
@@ -439,6 +439,7 @@ export class Room {
       [WIN.x0, (WIN.y0 + WIN.y1) / 2, 0.01, WIN.y1 - WIN.y0, 0],
       [WIN.x1, (WIN.y0 + WIN.y1) / 2, 0.01, WIN.y1 - WIN.y0, 0],
       [(WIN.x0 + WIN.x1) / 2, WIN.y1, WIN.x1 - WIN.x0, 0.01, 0],
+      [(WIN.x0 + WIN.x1) / 2, WIN.y0, WIN.x1 - WIN.x0, 0.01, 0],
     ];
     for (const [x, y, w, h] of sides) {
       const b = new THREE.Mesh(new THREE.BoxGeometry(w || 0.5, h || 0.5, depth), reveal);
@@ -483,12 +484,6 @@ export class Room {
     glass.position.set(cx, cy, z - 0.2);
     this.rainGlass.mesh.position.set(cx, cy, z - 0.1);
     g.add(glass, this.rainGlass.mesh);
-
-    // Fensterbank
-    const sill = new THREE.Mesh(new THREE.BoxGeometry(w + 8, 1.6, 12), paint);
-    sill.position.set(cx, WIN.y0 - 0.8, WALL_Z - 2);
-    sill.castShadow = sill.receiveShadow = true;
-    g.add(sill);
     return g;
   }
 }

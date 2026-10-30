@@ -2,6 +2,14 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.15.0] – 2026-10-30
+
+### Entfernt
+- Fensterbrett: Die Vorhänge hingen hinein, und direkt über der Tischplatte braucht das Fenster keins. Die Laibung schließt unten jetzt sauber ab.
+
+### Hinzugefügt
+- Oberstes Blatt des Papierstapels ist ein angefangenes, getipptes Manuskript mit überschriebener erster Zeile (Deutsch oder Englisch je nach Browsersprache). Der Stapel rückt dafür weiter ins Bild.
+
 ## [0.14.0] – 2026-10-30
 
 ### Entfernt

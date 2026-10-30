@@ -320,7 +320,48 @@ export function buildPencilCup(seed: number): THREE.Group {
   return shadowed(g);
 }
 
-/** Papierstapel mit leicht versetzten Blättern. Ursprung = Tischplatte. */
+/** Ein angefangenes Manuskript: x = überschriebene Zeile wie an der echten Maschine. */
+const MANUSCRIPT = {
+  de: { title: 'KAPITEL 1', lines: [['Es war eine dunkle und', true], ['stürmische Nacht.', true], ['', false], ['Es regnete.', false], ['', false], ['Mehr fiel mir nicht ein.', false], ['Ich holte mir noch', false], ['einen Kaffee.', false]] },
+  en: { title: 'CHAPTER 1', lines: [['It was a dark and', true], ['stormy night.', true], ['', false], ['It rained.', false], ['', false], ['That was all I had.', false], ['I went to get another', false], ['coffee.', false]] },
+} as const;
+
+/** Oberstes Blatt des Stapels: getippter Text mit unregelmäßigem Anschlag. */
+function manuscriptTexture(seed: number): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 1024;
+  c.height = 1448;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#efe9da';
+  ctx.fillRect(0, 0, c.width, c.height);
+  const r = rng(seed);
+  const { title, lines } = navigator.language.toLowerCase().startsWith('de') ? MANUSCRIPT.de : MANUSCRIPT.en;
+  ctx.font = '50px "Special Elite", "Courier New", monospace';
+  ctx.textBaseline = 'alphabetic';
+  const step = ctx.measureText('m').width;
+  const strike = (ch: string, x: number, y: number) => {
+    ctx.globalAlpha = 0.72 + r() * 0.28;
+    ctx.fillStyle = '#17171d';
+    ctx.fillText(ch, x + (r() - 0.5) * 1.6, y + (r() - 0.5) * 1.6);
+  };
+  const typeLine = (text: string, x: number, y: number) => [...text].forEach((ch, i) => strike(ch, x + i * step, y));
+  const left = 130;
+  const titleX = (c.width - title.length * step) / 2;
+  typeLine(title, titleX, 110);
+  typeLine('_'.repeat(title.length), titleX, 118);
+  lines.forEach(([text, crossed], i) => {
+    const y = 195 + i * 62;
+    typeLine(text, left, y);
+    if (crossed) typeLine('x'.repeat(text.length), left, y);
+  });
+  ctx.globalAlpha = 1;
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  return tex;
+}
+
+/** Papierstapel mit leicht versetzten Blättern, obenauf das angefangene Manuskript. Ursprung = Tischplatte. */
 export function buildPaperStack(seed: number): THREE.Group {
   const r = rng(seed);
   const g = new THREE.Group();
@@ -328,12 +369,18 @@ export function buildPaperStack(seed: number): THREE.Group {
   const block = new THREE.Mesh(new THREE.BoxGeometry(21, 1.1, 29.7), mat);
   block.position.y = 0.55;
   g.add(block);
+  let top = 0;
   for (let i = 0; i < 4; i++) {
     const sheet = new THREE.Mesh(new THREE.BoxGeometry(21, 0.04, 29.7), mat);
-    sheet.position.set((r() - 0.5) * 0.7, 1.12 + i * 0.05, (r() - 0.5) * 0.7);
+    top = 1.12 + i * 0.05;
+    sheet.position.set((r() - 0.5) * 0.7, top, (r() - 0.5) * 0.7);
     sheet.rotation.y = (r() - 0.5) * 0.05;
     g.add(sheet);
   }
+  const page = new THREE.Mesh(new THREE.PlaneGeometry(21, 29.7), new THREE.MeshStandardMaterial({ map: manuscriptTexture(seed), roughness: 0.95 }));
+  page.rotation.set(-Math.PI / 2, 0, 0.02);
+  page.position.set(0.2, top + 0.05, -0.1);
+  g.add(page);
   return shadowed(g);
 }
 
