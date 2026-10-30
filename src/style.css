@@ -36,8 +36,25 @@ body {
 }
 
 #ui > .toolbar,
-#ui > .panel {
+#ui > .panel,
+#ui > .rotate {
   pointer-events: auto;
+}
+
+/* Unsichtbares Feld für die Smartphone-Tastatur; 16 px verhindern den Auto-Zoom in iOS */
+.soft-input {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  border: 0;
+  resize: none;
+  opacity: 0;
+  font-size: 16px;
+  caret-color: transparent;
+  pointer-events: none;
 }
 
 .toolbar {
@@ -111,6 +128,84 @@ body {
   border: 1px solid var(--line);
   border-radius: 12px;
   backdrop-filter: blur(10px);
+  max-height: calc(100dvh - 84px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+
+.tools {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 10px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tools .btn {
+  border-color: var(--line);
+}
+
+.btn.primary {
+  display: inline-block;
+  margin-right: 6px;
+  color: #1b1714;
+  background: var(--accent);
+  text-decoration: none;
+}
+
+.coffee p {
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+.rotate {
+  display: none;
+  position: absolute;
+  inset: 0;
+  z-index: 10;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 32px;
+  text-align: center;
+  background: #15110e;
+}
+
+.rotate h2 {
+  margin: 0;
+  font-size: 22px;
+  font-weight: normal;
+}
+
+.rotate p {
+  margin: 0 0 12px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.rotate-icon {
+  font-size: 54px;
+  animation: tilt 2.4s ease-in-out infinite;
+}
+
+@keyframes tilt {
+  0%,
+  25% {
+    transform: rotate(0);
+  }
+  60%,
+  100% {
+    transform: rotate(-90deg);
+  }
+}
+
+/* Nur Smartphones im Hochformat; Tablets bleiben frei */
+@media (pointer: coarse) and (orientation: portrait) and (max-width: 600px) {
+  .rotate {
+    display: flex;
+  }
 }
 
 .panel h2 {
@@ -226,14 +321,46 @@ body {
   transform: translate(-50%, 0);
 }
 
-@media (max-width: 640px) {
-  .toolbar {
-    left: 10px;
-    right: 10px;
-    flex-wrap: wrap;
-    justify-content: center;
-  }
-  .hint {
-    display: none;
-  }
+#ui.compact .toolbar {
+  top: max(8px, env(safe-area-inset-top));
+  right: max(8px, env(safe-area-inset-right));
+  gap: 2px;
+  padding: 3px;
+}
+
+#ui.compact .btn.icon {
+  min-width: 42px;
+  min-height: 38px;
+  font-size: 20px;
+}
+
+#ui.compact .btn.kb {
+  font-size: 28px;
+  line-height: 1;
+}
+
+#ui.compact .panel {
+  top: max(8px, env(safe-area-inset-top));
+  right: calc(max(8px, env(safe-area-inset-right)) + 150px);
+  width: min(380px, calc(100vw - 180px));
+  max-height: calc(100dvh - 16px);
+  padding: 12px 14px;
+}
+
+#ui.compact .hint,
+#ui.compact .footer {
+  display: none;
+}
+
+#ui.compact .start {
+  justify-content: center;
+  padding-bottom: 0;
+}
+
+#ui.compact .start h1 {
+  font-size: 30px;
+}
+
+#ui.compact .start .lead {
+  font-size: 16px;
 }

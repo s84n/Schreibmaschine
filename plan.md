@@ -2,7 +2,7 @@
 
 > Zentrale Quelle für alle Planungsdetails. Jede Planänderung wird hier festgehalten (mit Versionsnummer).
 
-**Aktuelle Planversion:** v0.5.0 (2026-10-30) · **Aktuelle App-Version:** v0.11.0
+**Aktuelle Planversion:** v0.6.0 (2026-10-30) · **Aktuelle App-Version:** v0.12.0
 
 ---
 
@@ -30,6 +30,9 @@ originalgetreu. Hosting über **GitHub Pages**, installierbar als **PWA**.
 | Klangkette | Anschläge → EQ → Kompressor (+ dezenter Faltungshall) → Limiter; Ziel: Tippen ≈ −18 LUFS, Musik ≈ 6–7 dB darunter |
 | Schrift | **Special Elite** (Apache 2.0) über `@fontsource/special-elite`, lokal gebündelt (offline-fähig) |
 | GitHub | Repo `s84n/Schreibmaschine`, Push per eigenem Deploy-Key (SSH), Autor `s84n` mit noreply-Adresse – keine privaten Daten im Repo. Deploy über GitHub Actions → Pages |
+| Smartphone | Echtes Erzwingen des Querformats geht nur per Vollbild + Orientation-Lock (nicht in iOS Safari). Daher: Sperrhinweis im Hochformat überall, Lock-Button wo verfügbar. Kein CSS-Drehen der Seite, weil die Systemtastatur sonst quer zum Bild aufginge |
+| Modelle | Eigene Entwürfe nach Epochen (Reise, Kontor, Flach) statt Nachbauten: Markennamen und Logos wie Olympia werden nicht verwendet |
+| Kaffee-Link | Nur ein externer Link (`DONATE_URL` in `src/config.ts`), kein eingebettetes Widget, kein Tracking, keine Gegenleistung; Wortlaut „Kaffee ausgeben“ statt „Spende“ |
 | Versionierung | **SemVer** (`MAJOR.MINOR.PATCH`), `CHANGELOG.md`, Git-Tags `vX.Y.Z`, Version in `package.json` und im UI-Footer |
 
 ## 3. Features (Umfang v1.0)
@@ -45,8 +48,7 @@ originalgetreu. Hosting über **GitHub Pages**, installierbar als **PWA**.
 5. **Einstellungen** – Layout QWERTZ/QWERTY, Sprache DE/EN, Lautstärke/Mute, Grafikqualität (niedrig/hoch).
 6. **PWA** – Offline-fähig, installierbar, Manifest + Icons.
 
-Später (nicht v1.0): Touch-Bildschirmtastatur, mehrere Maschinenmodelle/Skins, Farbband rot/schwarz,
-Backspace mit Überschreiben (echtes „Übertippen“), glTF-Hi-Res-Modell.
+Später (nicht v1.0): glTF-Hi-Res-Modell.
 
 ## 4. Architektur
 
@@ -70,7 +72,8 @@ schreibmaschine/
 │   │   ├── PostFX.ts        # postprocessing-Pipeline
 │   │   ├── Environment.ts   # RoomEnvironment-Reflexionen, Lampe, Gegenlicht
 │   │   ├── Room.ts          # Tisch, Raumhülle, Fenster, Aussicht (Kugel), Fensterlicht
-│   │   └── Decor.ts         # Regale, Efeutute, Bücher, Bild, Tasse (prozedural)
+│   │   ├── Decor.ts         # Regale, Efeutute, Bücher, Bild, Tasse (prozedural)
+│   │   └── Cozy.ts          # Kerze, Dampf, Lichterkette, Vorhang, Schreibtisch-Kleinigkeiten
 │   ├── typewriter/
 │   │   ├── Typewriter.ts    # Zusammenbau, Zustandsmaschine
 │   │   ├── dims.ts          # zentrale Maße (cm), Druckpunkt
@@ -81,10 +84,12 @@ schreibmaschine/
 │   │   └── InkCanvas.ts     # 2D-Canvas als Textur: Papierfasern + Zeichen mit Farbband-Varianz
 │   ├── input/
 │   │   ├── Keyboard.ts      # KeyboardEvent → Maschinenaktion (über event.code + Layout-Map)
+│   │   ├── SoftKeyboard.ts  # Smartphone-Tastatur über verstecktes Eingabefeld
 │   │   └── layouts.ts       # QWERTZ / QWERTY
 │   ├── audio/
 │   │   ├── AudioEngine.ts   # Web Audio, Sample-Pool, Effektkette, Limiter, Unlock bei erster Eingabe
-│   │   └── Music.ts         # generativer Lo-Fi-Jazz (Sequenzer + Synth-Instrumente)
+│   │   ├── Music.ts         # generativer Lo-Fi-Jazz (Sequenzer + Synth-Instrumente)
+│   │   └── Ambience.ts      # generierter Regen und Kaminfeuer
 │   ├── animation/
 │   │   └── Tweens.ts        # schlanke Tween-/Easing-Utilities, Queue für schnelles Tippen
 │   ├── state/
@@ -95,6 +100,7 @@ schreibmaschine/
 │   │   ├── Overlay.ts       # Werkzeugleiste, Einstellungs-Panel, Startschirm, Toasts
 │   │   ├── Settings.ts      # Einstellungen laden/speichern
 │   │   └── i18n.ts          # DE/EN Strings
+│   ├── config.ts            # DONATE_URL
 │   └── version.ts           # Version aus package.json (per Vite-define)
 └── .github/workflows/deploy.yml   # Build + Deploy auf GitHub Pages
 ```
@@ -122,6 +128,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.9.0** | PWA, Feinschliff · ergänzt: Zimmer mit Fenster + Aussichten, Hintergrundmusik, satterer Klang, Holztisch | ✅ (Browser-Tests auf echten Geräten offen) |
 | **v0.10.0** | Geschlossenes Zimmer, Deko, Fenster tiefer, weiße Wände | ✅ |
 | **v0.11.0** | Mechanik-Fix Typenhebel, 3 Stadt-Aussichten, README | ✅ |
+| **v0.12.0** | Smartphone-Bedienung, Tag/Nacht mit Kerze, Gehäuse, Leertaste, Farbbänder, Modelle, Geräuschkulisse, Tasse, Deko | ✅ (Test auf echten Smartphones offen) |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -139,6 +146,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.6.0** (2026-10-30) – Nutzer-Feedback umgesetzt → App v0.12.0 (siehe Roadmap); Entscheidungen zu Querformat, Modellen und Kaffee-Link in Abschnitt 2.
 - **v0.5.0** (2026-10-30) – Mechanik nach echtem Vorbild korrigiert (Typenhebel liegen im offenen Korb hinter den Tasten, Maschine 4 cm tiefer), 3 Stadt-Aussichten (Istanbul, New York, Dubai; Wikimedia Commons, CC BY/BY-SA), README für GitHub neu → App v0.11.0.
 - **v0.4.0** (2026-10-30) – Feedback: Fenster tiefer, Wände weiß, Zimmer rundum geschlossen (kein Panorama mehr neben der Wand), Deko ergänzt → App v0.10.0.
 - **v0.3.0** (2026-10-29) – Nutzer-Feedback umgesetzt → App v0.9.0: Tastenklang satter (EQ/Kompressor/Hall/Körperschall), stummer Wagenrücklauf behoben, Holztisch mit PBR-Textur, Zimmer mit Fenster und 5 wählbaren Aussichten, generative Lo-Fi-Jazz-Musik.
@@ -146,8 +154,12 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## 8. Offene Punkte
 
+- **Kaffee-Link eintragen** (`src/config.ts`), vorher Anbieter wählen und Steuer-/Impressumsfrage klären.
+- **Echte Smartphones testen:** Bildschirmtastatur (Android/Gboard, iOS), Vollbild + Lock, Bildrate nachts.
+- Einmalig beobachtet: ein Nachtbild deutlich dunkler als sonst (rechte Raumseite fast schwarz), danach nicht reproduzierbar; Ursache unbekannt.
+- Cozy-Ideen: schlafende Katze, Regentropfen auf der Scheibe bei „Regen“, Tag/Nacht nach Uhrzeit, Tippen auf den 3D-Tasten, verblassendes Farbband.
 - Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz, Performance auf schwächerer Hardware, ggf. SSAO.
-- Ideen: Umgebungsgeräusche passend zur Aussicht (Wellen, Vögel, Grillen), weitere Aussichten, Musik-Varianten (Tonarten/Tempi), weitere Deko (Schreibtischlampe, Papierstapel).
+- Ideen: Umgebungsgeräusche passend zur Aussicht (Wellen, Vögel, Grillen), weitere Aussichten, Musik-Varianten (Tonarten/Tempi), sichtbare Schreibtischlampe.
 - PWA-Precache ist durch Panoramen/Texturen auf ~7 MB gewachsen – ggf. Aussichten erst bei Auswahl cachen.
 - Bundle-Größe (~720 kB JS, davon Three.js) – optional Code-Splitting.
 
@@ -155,5 +167,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. Lokal testen (`npm run dev`), Feedback zu Optik/Sound/Mechanik sammeln → v0.9.0.
+1. v0.12.0 auf echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

@@ -23,6 +23,7 @@ const KEY_RADIUS = 0.7;
 const ROW_Z = [8.8, 10.7, 12.6, 14.5];
 const ROW_OFFSET = [-0.4, 0.2, 0.55, 1.0];
 const TRAVEL = 0.55;
+const SPACE_ARMS = [-6.2, 6.2];
 const LEGEND_FONT = '"Futura", "Century Gothic", "Helvetica Neue", Arial, sans-serif';
 
 const capGeo = new THREE.CylinderGeometry(KEY_RADIUS * 0.95, KEY_RADIUS * 0.95, 0.16, 32);
@@ -40,6 +41,7 @@ export class Keyboard {
   private readonly special = new Map<SpecialKey, Key>();
   private readonly textures: THREE.Texture[] = [];
   private readonly legendMats: THREE.Material[] = [];
+  private readonly slotMat = new THREE.MeshStandardMaterial({ color: '#050505', roughness: 0.9 });
 
   constructor(private readonly m: Materials, layout: Layout) {
     this.group.name = 'keyboard';
@@ -170,18 +172,28 @@ export class Keyboard {
     return { obj, restY, x };
   }
 
+  /**
+   * Leertaste vor der untersten Tastenreihe: Die Arme führen senkrecht in Schlitze der
+   * Tastaturplatte und laufen nicht mehr unter den Tasten hindurch.
+   */
   private addSpaceBar(): void {
-    const z = 16.3;
-    const restY = keyboardDeckY(z) + 1.1;
+    const z = 16.15;
+    const deckY = keyboardDeckY(z);
+    const restY = deckY + 1.1;
     const obj = new THREE.Group();
     obj.position.set(0, restY, z);
-    const bar = shadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.28, 15, 8, 16), this.m.chrome));
+    const bar = shadow(new THREE.Mesh(new THREE.CapsuleGeometry(0.26, 16.5, 8, 20), this.m.chrome));
     bar.rotation.z = Math.PI / 2;
+    bar.scale.z = 1.5;
     obj.add(bar);
-    for (const x of [-6.5, 6.5]) {
-      const arm = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.25, 0.25, 2.2), this.m.steel));
-      arm.position.set(x, -0.2, -1.1);
+    for (const x of SPACE_ARMS) {
+      const arm = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.42, 1.9, 0.2), this.m.steel));
+      arm.position.set(x, -0.95, 0);
       obj.add(arm);
+      const slot = new THREE.Mesh(new THREE.BoxGeometry(0.72, 0.03, 0.42), this.slotMat);
+      slot.position.set(x, deckY + 0.01, z);
+      slot.rotation.x = Math.atan(0.33);
+      this.group.add(slot);
     }
     this.group.add(obj);
     this.special.set('space', { obj, restY, x: 0, special: 'space' });

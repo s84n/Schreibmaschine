@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { animator, ease } from '../animation/Tweens';
-import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, type DecorMaterials } from './Decor';
+import { buildBookStack, buildCurtain, buildPaperStack, buildPencilCup, Candle, FairyLights, Steam } from './Cozy';
+import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, type DecorMaterials } from './Decor';
 
 export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'starnight' | 'istanbul' | 'newyork' | 'dubai';
 
@@ -15,6 +16,8 @@ export interface OutdoorView {
   lightIntensity: number;
   /** Helligkeit der Raumbeleuchtung (Umgebung) */
   ambient: number;
+  /** Bild zeigt schon Dämmerung/Nacht: wird im Nachtmodus kaum abgedunkelt */
+  dusk?: boolean;
 }
 
 export const VIEWS: Record<ViewId, OutdoorView> = {
@@ -24,8 +27,8 @@ export const VIEWS: Record<ViewId, OutdoorView> = {
   mediterranean: { file: 'spiaggia_di_mondello.jpg', u: 0.03, drop: 4, light: '#ffe9c4', lightIntensity: 2.6, ambient: 0.6 },
   istanbul: { file: 'istanbul.jpg', u: 0.5, drop: 3, light: '#fff1dc', lightIntensity: 2.4, ambient: 0.58 },
   newyork: { file: 'newyork.jpg', u: 0.5, drop: 2, light: '#f4f6ff', lightIntensity: 2.2, ambient: 0.58 },
-  dubai: { file: 'dubai.jpg', u: 0.5, drop: 10, light: '#ff9fb0', lightIntensity: 0.6, ambient: 0.28 },
-  starnight: { file: 'lakeside_night.jpg', u: 0.4, drop: 5, light: '#ffb070', lightIntensity: 0.35, ambient: 0.18 },
+  dubai: { file: 'dubai.jpg', u: 0.5, drop: 10, light: '#ff9fb0', lightIntensity: 0.6, ambient: 0.28, dusk: true },
+  starnight: { file: 'lakeside_night.jpg', u: 0.4, drop: 5, light: '#ffb070', lightIntensity: 0.35, ambient: 0.18, dusk: true },
 };
 
 const DESK_Y = -0.45;
@@ -36,9 +39,16 @@ const WIN = { x0: -46, x1: 14, y0: 2.6, y1: 54 };
 const ROOM = { x0: -100, x1: 100, z0: WALL_Z, z1: 130, floor: DESK_Y - 76, ceil: 150 };
 /** Wandfarbe: gebrochenes Weiß für Kontrast zum dunklen Tisch */
 const WALL_COLOR = '#fbf7f0';
+const MUG_POS = { x: 29, z: -10 };
 /** Elevationsbereich des Panorama-Bands (aus dem Zuschnitt) */
 const BAND_TOP_DEG = 34.94;
 const BAND_HEIGHT_DEG = 60.06;
+/** Nachtzustand von Fensterlicht, Umgebung und Aussicht */
+const MOON_LIGHT = new THREE.Color('#7f9be0');
+const NIGHT_LIGHT = 0.28;
+const NIGHT_AMBIENT = 0.045;
+const NIGHT_TINT = new THREE.Color(0.075, 0.1, 0.2);
+const DUSK_TINT = new THREE.Color(0.75, 0.75, 0.8);
 
 /** Zimmer: Schreibtisch, geschlossener Raum mit Sprossenfenster, austauschbarer Aussicht und etwas Deko. */
 export class Room {
@@ -51,6 +61,16 @@ export class Room {
   private readonly loader = new THREE.TextureLoader();
   private readonly cache = new Map<ViewId, Promise<THREE.Texture>>();
   private current?: ViewId;
+  /** Tagwerte der aktuellen Aussicht; der Nachtfaktor wird in applyLight() daraufgerechnet */
+  private readonly dayLight = { color: new THREE.Color('#fff3e0'), intensity: 2, ambient: 0.55 };
+  private night = 0;
+  private fade = 0;
+  private dusk = false;
+  readonly candle = new Candle();
+  private readonly steam = new Steam();
+  private readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
+  /** Unsichtbarer, etwas größerer Klickbereich um die Tasse */
+  readonly mugHit: THREE.Mesh;
 
   constructor(private readonly scene: THREE.Scene, private readonly anisotropy: number) {
     this.group.name = 'room';
@@ -74,6 +94,33 @@ export class Room {
     this.windowLight.position.set(-30, 45, -60);
     this.windowLight.target.position.set(0, 0, 0);
     this.group.add(this.windowLight, this.windowLight.target);
+
+    this.mugHit = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 14, 12), new THREE.MeshBasicMaterial());
+    this.mugHit.position.set(MUG_POS.x, DESK_Y + 6, MUG_POS.z);
+    this.mugHit.visible = false;
+    this.group.add(this.mugHit);
+    this.applyLight();
+  }
+
+  /** Überblendet zwischen Tag (0) und Nacht (1). */
+  setNight(n: number): void {
+    this.night = n;
+    this.candle.setNight(n);
+    this.fairy.setNight(n);
+    this.applyLight();
+  }
+
+  update(dt: number, camera: THREE.Camera): void {
+    this.candle.update(dt, camera);
+    this.steam.update(dt);
+  }
+
+  private applyLight(): void {
+    const n = this.night;
+    this.windowLight.color.copy(this.dayLight.color).lerp(MOON_LIGHT, n);
+    this.windowLight.intensity = this.dayLight.intensity + (NIGHT_LIGHT - this.dayLight.intensity) * n;
+    this.scene.environmentIntensity = this.dayLight.ambient + (NIGHT_AMBIENT - this.dayLight.ambient) * n;
+    this.outsideMat.color.setScalar(1).lerp(this.dusk ? DUSK_TINT : NIGHT_TINT, n).multiplyScalar(this.fade);
   }
 
   /** Wechselt die Aussicht mit kurzer Überblendung. */
@@ -86,28 +133,40 @@ export class Room {
 
     const mat = this.outsideMat;
     const fadeOut = mat.map ? 0.25 : 0;
-    const fromLight = this.windowLight.color.clone();
-    const fromIntensity = this.windowLight.intensity;
-    const fromAmbient = this.scene.environmentIntensity;
+    const fromLight = this.dayLight.color.clone();
+    const fromIntensity = this.dayLight.intensity;
+    const fromAmbient = this.dayLight.ambient;
     const toLight = new THREE.Color(view.light);
     animator.add({
       duration: fadeOut,
-      onUpdate: (t) => mat.color.setScalar(1 - t),
+      onUpdate: (t) => {
+        this.fade = 1 - t;
+        this.applyLight();
+      },
       onComplete: () => {
         mat.map = tex;
         mat.needsUpdate = true;
         this.aim(view.u);
         this.tilt.rotation.x = -THREE.MathUtils.degToRad(view.drop);
-        animator.add({ duration: 0.5, ease: ease.outQuad, onUpdate: (t) => mat.color.setScalar(t) });
+        this.dusk = !!view.dusk;
+        animator.add({
+          duration: 0.5,
+          ease: ease.outQuad,
+          onUpdate: (t) => {
+            this.fade = t;
+            this.applyLight();
+          },
+        });
       },
     });
     animator.add({
       duration: 0.8,
       ease: ease.inOutCubic,
       onUpdate: (t) => {
-        this.windowLight.color.copy(fromLight).lerp(toLight, t);
-        this.windowLight.intensity = fromIntensity + (view.lightIntensity - fromIntensity) * t;
-        this.scene.environmentIntensity = fromAmbient + (view.ambient - fromAmbient) * t;
+        this.dayLight.color.copy(fromLight).lerp(toLight, t);
+        this.dayLight.intensity = fromIntensity + (view.lightIntensity - fromIntensity) * t;
+        this.dayLight.ambient = fromAmbient + (view.ambient - fromAmbient) * t;
+        this.applyLight();
       },
     });
   }
@@ -269,7 +328,7 @@ export class Room {
     return g;
   }
 
-  /** Deko: Wandregal mit Efeutute und Büchern, Bild an der linken Wand, Regal rechts, Kaffeetasse. */
+  /** Deko: Regale mit Pflanzen und Büchern, Bild, Tasse, Kerze, Schreibtisch-Kleinigkeiten, Vorhänge, Lichterkette. */
   private buildDecor(m: DecorMaterials): THREE.Object3D {
     const g = new THREE.Group();
     const shelfY = 34;
@@ -300,9 +359,41 @@ export class Room {
 
     // Kaffeetasse rechts neben der Maschine
     const mug = buildMug();
-    mug.position.set(29, DESK_Y, -10);
-    mug.rotation.y = -0.6;
-    g.add(mug);
+    mug.position.set(MUG_POS.x, DESK_Y, MUG_POS.z);
+    mug.rotation.y = -MUG_TURN;
+    this.steam.group.position.set(MUG_POS.x, DESK_Y + 8, MUG_POS.z);
+    g.add(mug, this.steam.group);
+
+    // Kerze links neben der Maschine (außerhalb der Wagenbahn)
+    this.candle.group.position.set(-32, DESK_Y, 3);
+    g.add(this.candle.group);
+
+    // Schreibtisch-Kleinigkeiten
+    const stack = buildBookStack(9);
+    stack.position.set(38, DESK_Y, -24);
+    stack.rotation.y = 0.25;
+    const pencils = buildPencilCup(4);
+    pencils.position.set(-38, DESK_Y, -20);
+    const paper = buildPaperStack(13);
+    paper.position.set(33, DESK_Y, 14);
+    paper.rotation.y = -0.12;
+    g.add(stack, pencils, paper);
+
+    // Vorhänge an einer Stange und Lichterkette über dem Fenster
+    const rodY = WIN.y1 + 8;
+    const rod = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.5, 0.5, WIN.x1 - WIN.x0 + 36, 12),
+      new THREE.MeshStandardMaterial({ color: '#2b2118', metalness: 0.5, roughness: 0.45 }),
+    );
+    rod.rotation.z = Math.PI / 2;
+    rod.position.set((WIN.x0 + WIN.x1) / 2, rodY, WALL_Z + 3.4);
+    g.add(rod);
+    for (const [x, seed] of [[WIN.x0 - 5, 3], [WIN.x1 + 2, 8]] as const) {
+      const curtain = buildCurtain(15, rodY - 0.5 - DESK_Y, seed);
+      curtain.position.set(x, rodY - 0.3, WALL_Z + 3.4);
+      g.add(curtain);
+    }
+    g.add(this.fairy.group);
     return g;
   }
 

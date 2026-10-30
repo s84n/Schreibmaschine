@@ -2,7 +2,7 @@ import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
 /** Licht und Umgebungsreflexionen (Tisch, Wand und Fenster: siehe Room). */
-export function buildEnvironment(scene: THREE.Scene, renderer: THREE.WebGLRenderer): { lamp: THREE.SpotLight } {
+export function buildEnvironment(scene: THREE.Scene, renderer: THREE.WebGLRenderer): { lamp: THREE.SpotLight; rim: THREE.DirectionalLight; hemi: THREE.HemisphereLight } {
   const pmrem = new THREE.PMREMGenerator(renderer);
   scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
   scene.environmentIntensity = 0.55;
@@ -28,6 +28,7 @@ export function buildEnvironment(scene: THREE.Scene, renderer: THREE.WebGLRender
   rim.position.set(30, 25, -40);
   scene.add(rim);
 
-  scene.add(new THREE.HemisphereLight('#fff1dd', '#2b1d12', 0.25));
-  return { lamp };
+  const hemi = new THREE.HemisphereLight('#fff1dd', '#2b1d12', 0.25);
+  scene.add(hemi);
+  return { lamp, rim, hemi };
 }

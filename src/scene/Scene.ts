@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { OrbitControls } from 'three/examples/jsm/controls/OrbitControls.js';
-import { animator, ease } from '../animation/Tweens';
+import { animator, ease, type TweenHandle } from '../animation/Tweens';
 import { PRINT_POINT } from '../typewriter/dims';
 import { buildEnvironment } from './Environment';
 import { Room } from './Room';
@@ -8,6 +8,11 @@ import { PostFX } from './PostFX';
 
 export type Quality = 'high' | 'low';
 export type CameraView = 'machine' | 'paper';
+export type TimeOfDay = 'day' | 'night';
+
+const LAMP = 2600;
+const RIM = 0.6;
+const HEMI = 0.25;
 
 const CAMERAS: Record<CameraView, { pos: THREE.Vector3; target: THREE.Vector3 }> = {
   machine: { pos: new THREE.Vector3(0, 27, 62), target: new THREE.Vector3(0, 13, -4) },
@@ -24,6 +29,17 @@ export class Stage {
   private quality: Quality = 'high';
   private last = performance.now();
   private readonly lamp: THREE.SpotLight;
+  private readonly rim: THREE.DirectionalLight;
+  private readonly hemi: THREE.HemisphereLight;
+  private night = 0;
+  private nightTween?: TweenHandle;
+  /** Anteil der Bildhöhe, der sichtbar bleibt (Tastatur-Fallback im Vollbild) */
+  private heightFactor = 1;
+  private readonly raycaster = new THREE.Raycaster();
+  private readonly pointer = new THREE.Vector2();
+  private downAt?: { x: number; y: number };
+  /** Wird aufgerufen, wenn die Tasse angeklickt wird (nur gesetzt, wenn ein Link hinterlegt ist). */
+  onMug?: () => void;
   readonly room: Room;
   private readonly focus = PRINT_POINT.clone();
 
@@ -49,12 +65,14 @@ export class Stage {
     this.controls.enablePan = true;
     this.controls.screenSpacePanning = true;
 
-    this.lamp = buildEnvironment(this.scene, this.renderer).lamp;
+    ({ lamp: this.lamp, rim: this.rim, hemi: this.hemi } = buildEnvironment(this.scene, this.renderer));
     this.room = new Room(this.scene, this.renderer.capabilities.getMaxAnisotropy());
     this.scene.add(this.room.group);
     this.setQuality('high');
 
     window.addEventListener('resize', () => this.resize());
+    window.visualViewport?.addEventListener('resize', () => this.resize());
+    this.bindMug();
     this.resize();
     this.renderer.setAnimationLoop(() => this.frame());
   }
@@ -62,8 +80,9 @@ export class Stage {
   setQuality(q: Quality): void {
     this.quality = q;
     const dpr = window.devicePixelRatio || 1;
-    this.renderer.setPixelRatio(q === 'high' ? Math.min(dpr, 2) : 1);
-    this.lamp.castShadow = q === 'high';
+    // Auch „niedrig“ nicht unter 1,5: Smartphones haben kleine, sehr dichte Displays
+    this.renderer.setPixelRatio(Math.min(dpr, q === 'high' ? 2 : 1.5));
+    this.syncShadows();
     this.lamp.shadow.mapSize.setScalar(q === 'high' ? 2048 : 512);
     this.lamp.shadow.map?.dispose();
     this.lamp.shadow.map = null;
@@ -76,6 +95,66 @@ export class Stage {
       this.post = undefined;
     }
     this.resize();
+  }
+
+  /** Tag/Nacht mit Überblendung (beim Start ohne). */
+  setTime(time: TimeOfDay, animate = true): void {
+    const to = time === 'night' ? 1 : 0;
+    this.nightTween?.cancel();
+    if (!animate) {
+      this.applyNight(to);
+      return;
+    }
+    const from = this.night;
+    this.nightTween = animator.add({
+      duration: 1.6,
+      ease: ease.inOutCubic,
+      onUpdate: (t) => this.applyNight(from + (to - from) * t),
+    });
+  }
+
+  private applyNight(n: number): void {
+    const wasNight = this.night > 0.5;
+    this.night = n;
+    this.lamp.intensity = LAMP * (1 - n);
+    this.rim.intensity = RIM + (0.06 - RIM) * n;
+    this.hemi.intensity = HEMI + (0.035 - HEMI) * n;
+    this.room.setNight(n);
+    if (wasNight !== n > 0.5) this.syncShadows();
+  }
+
+  /** Nur die jeweils führende Lichtquelle wirft Schatten – die Kerzen-Cubemap ist teuer. */
+  private syncShadows(): void {
+    const high = this.quality === 'high';
+    const night = this.night > 0.5;
+    this.lamp.castShadow = high && !night;
+    this.room.candle.light.castShadow = high && night;
+  }
+
+  /** Hält unten Platz frei, falls der Browser die Bildschirmtastatur nicht meldet. */
+  setHeightFactor(f: number): void {
+    this.heightFactor = f;
+    this.resize();
+  }
+
+  private bindMug(): void {
+    const el = this.renderer.domElement;
+    const hitsMug = (e: PointerEvent) => {
+      const r = el.getBoundingClientRect();
+      this.pointer.set(((e.clientX - r.left) / r.width) * 2 - 1, -((e.clientY - r.top) / r.height) * 2 + 1);
+      this.raycaster.setFromCamera(this.pointer, this.camera);
+      return this.raycaster.intersectObject(this.room.mugHit).length > 0;
+    };
+    el.addEventListener('pointerdown', (e) => (this.downAt = { x: e.clientX, y: e.clientY }));
+    el.addEventListener('pointerup', (e) => {
+      const d = this.downAt;
+      this.downAt = undefined;
+      // Nur echte Klicks, kein Kameradrehen
+      if (this.onMug && d && Math.hypot(e.clientX - d.x, e.clientY - d.y) < 8 && hitsMug(e)) this.onMug();
+    });
+    el.addEventListener('pointermove', (e) => {
+      if (e.pointerType === 'mouse' && !e.buttons) el.style.cursor = this.onMug && hitsMug(e) ? 'pointer' : '';
+    });
   }
 
   /** Fliegt die Kamera sanft zu einer Ansicht. */
@@ -95,7 +174,8 @@ export class Stage {
 
   private resize(): void {
     const w = window.innerWidth;
-    const h = window.innerHeight;
+    // visualViewport schrumpft, wenn die Bildschirmtastatur offen ist
+    const h = Math.round(Math.min(window.innerHeight, window.visualViewport?.height ?? Infinity) * this.heightFactor);
     this.camera.aspect = w / h;
     // Hochformat: weiter herauszoomen, damit die Maschine ganz sichtbar bleibt
     this.camera.fov = w / h < 1 ? 60 : 40;
@@ -112,6 +192,7 @@ export class Stage {
     this.last = now;
     animator.update(dt);
     this.onFrame(dt);
+    this.room.update(dt, this.camera);
     this.controls.update();
     if (this.post && this.quality === 'high') this.post.render(dt);
     else this.renderer.render(this.scene, this.camera);

@@ -9,10 +9,20 @@ export const BODY_COLORS: Record<BodyColorId, string> = {
   cream: '#d9cfb8',
 };
 
+export type ModelId = 'reise' | 'kontor' | 'flach';
+
+/** Maschinenmodelle: eigene Entwürfe nach Epochen, gleiche Mechanik, anderes Gehäuse. */
+export const MODELS: Record<ModelId, { plaque: string; color: BodyColorId }> = {
+  reise: { plaque: 'Reise', color: 'sage' },
+  kontor: { plaque: 'Kontor', color: 'black' },
+  flach: { plaque: 'Flach', color: 'cream' },
+};
+
 export interface Materials {
   lacquer: THREE.MeshPhysicalMaterial;
   chrome: THREE.MeshStandardMaterial;
   steel: THREE.MeshStandardMaterial;
+  brass: THREE.MeshStandardMaterial;
   rubber: THREE.MeshStandardMaterial;
   bakelite: THREE.MeshPhysicalMaterial;
   interior: THREE.MeshStandardMaterial;
@@ -32,6 +42,7 @@ export function createMaterials(): Materials {
     }),
     chrome: new THREE.MeshStandardMaterial({ color: '#e6e6e6', metalness: 1, roughness: 0.14 }),
     steel: new THREE.MeshStandardMaterial({ color: '#a7a9ab', metalness: 0.9, roughness: 0.35 }),
+    brass: new THREE.MeshStandardMaterial({ color: '#c49a4a', metalness: 1, roughness: 0.28 }),
     rubber: new THREE.MeshStandardMaterial({ color: '#0e0e0e', metalness: 0, roughness: 0.75 }),
     bakelite: new THREE.MeshPhysicalMaterial({
       color: '#161412',

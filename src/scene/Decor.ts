@@ -145,6 +145,11 @@ export function buildShelf(m: DecorMaterials, width: number, depth: number): THR
   return shadowed(g);
 }
 
+/** Drehung der Tasse im Zimmer (Henkel nach vorn rechts). */
+export const MUG_TURN = 0.6;
+/** Winkel des Aufdrucks auf der Tasse, sodass er im Zimmer zur Standardkamera zeigt. */
+const PRINT_FACING = 0.22;
+
 /** Kaffeetasse; Ursprung = Boden. */
 export function buildMug(): THREE.Group {
   const g = new THREE.Group();
@@ -170,6 +175,29 @@ export function buildMug(): THREE.Group {
   coffee.rotation.x = -Math.PI / 2;
   coffee.position.y = 7.6;
   g.add(coffee);
+
+  // Aufdruck auf der dem Betrachter zugewandten Seite
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 300;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#3a2416';
+  ctx.textAlign = 'center';
+  ctx.font = '74px "Special Elite", serif';
+  ctx.fillText('made with', 256, 118);
+  ctx.font = '104px "Special Elite", serif';
+  ctx.fillText('coffee', 256, 222);
+  ctx.fillRect(166, 250, 180, 5);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 8;
+  const arc = 2.2;
+  const print = new THREE.Mesh(
+    new THREE.CylinderGeometry(3.975, 3.86, 5, 32, 1, true, PRINT_FACING - arc / 2, arc),
+    new THREE.MeshStandardMaterial({ map: tex, transparent: true, roughness: 0.4 }),
+  );
+  print.position.y = 5;
+  g.add(print);
   return shadowed(g);
 }
 

@@ -14,12 +14,26 @@ export const MAX_LINES = Math.floor((PAGE.heightCm - PAGE.marginTopCm - PAGE.mar
 /** Glocke ertönt so viele Anschläge vor dem rechten Rand. */
 export const BELL_COLS_BEFORE_END = 8;
 
+export type RibbonId = 'black' | 'red' | 'blue' | 'green' | 'violet' | 'brown';
+
+/** Farbbänder: Tinte auf dem Papier und Farbton des sichtbaren Bands. */
+export const RIBBONS: Record<RibbonId, { ink: string; tape: string }> = {
+  black: { ink: '#16161c', tape: '#0b0b0d' },
+  red: { ink: '#a01c1c', tape: '#7a1010' },
+  blue: { ink: '#1b3b82', tape: '#122a66' },
+  green: { ink: '#1b5c3a', tape: '#113f27' },
+  violet: { ink: '#54297e', tape: '#3a1b5c' },
+  brown: { ink: '#5a3620', tape: '#3e2515' },
+};
+
 export interface Strike {
   line: number;
   col: number;
   ch: string;
   /** Zufalls-Seed für reproduzierbare Tintenvariation */
   seed: number;
+  /** Farbband zum Zeitpunkt des Anschlags (ältere Blätter: schwarz) */
+  ink?: RibbonId;
 }
 
 interface Stored {

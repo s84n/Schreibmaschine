@@ -3,8 +3,8 @@ import { animator, ease } from '../animation/Tweens';
 import type { AudioEngine } from '../audio/AudioEngine';
 import type { Layout } from '../input/layouts';
 import { InkCanvas } from '../paper/InkCanvas';
-import { BELL_COLS_BEFORE_END, MAX_COLS, MAX_LINES, PAGE, TypedDocument } from '../state/Document';
-import { createMaterials, BODY_COLORS, type BodyColorId, type Materials } from './materials';
+import { BELL_COLS_BEFORE_END, MAX_COLS, MAX_LINES, PAGE, RIBBONS, TypedDocument, type RibbonId } from '../state/Document';
+import { createMaterials, BODY_COLORS, type BodyColorId, type Materials, type ModelId } from './materials';
 import { buildBody } from './parts/Body';
 import { Carriage } from './parts/Carriage';
 import { Keyboard, type Key } from './parts/Keys';
@@ -37,15 +37,19 @@ export class Typewriter {
   private shiftHeld = { left: false, right: false };
   private shiftLocked = false;
   private busyUntil = 0;
+  private body: THREE.Group;
+  private ribbonId: RibbonId = 'black';
   private listeners: Partial<Record<TypewriterEvent, (() => void)[]>> = {};
 
   constructor(
     layout: Layout,
     private readonly audio: AudioEngine,
     readonly doc: TypedDocument,
+    model: ModelId,
   ) {
     this.m = createMaterials();
-    this.group.add(buildBody(this.m));
+    this.body = buildBody(this.m, model);
+    this.group.add(this.body);
     this.keyboard = new Keyboard(this.m, layout);
     this.group.add(this.keyboard.group);
     this.typebars = new Typebars(this.m, this.keyboard.charKeys.length);
@@ -82,6 +86,24 @@ export class Typewriter {
     this.m.lacquer.color.set(BODY_COLORS[id]);
   }
 
+  /** Tauscht das Gehäuse; die Mechanik bleibt, Maße und Bedienung ändern sich nicht. */
+  setModel(id: ModelId): void {
+    this.group.remove(this.body);
+    this.body.traverse((o) => {
+      const mesh = o as THREE.Mesh;
+      if (mesh.isMesh) mesh.geometry.dispose();
+    });
+    this.body = buildBody(this.m, id);
+    this.group.add(this.body);
+  }
+
+  /** Neues Farbband: gilt für alle folgenden Anschläge, Geschriebenes bleibt. */
+  setRibbon(id: RibbonId, audible = true): void {
+    this.ribbonId = id;
+    this.m.ribbon.color.set(RIBBONS[id].tape);
+    if (audible) this.audio.play('soft', 0, { gain: 0.6 });
+  }
+
   /** Pro Frame: Papiertextur bei Bedarf hochladen. */
   update(): void {
     this.ink.flush();
@@ -101,7 +123,7 @@ export class Typewriter {
       this.audio.play('jam', slot);
       return;
     }
-    const strike = { line: this.doc.line, col: this.doc.col, ch, seed: (Math.random() * 2 ** 32) >>> 0 };
+    const strike = { line: this.doc.line, col: this.doc.col, ch, seed: (Math.random() * 2 ** 32) >>> 0, ink: this.ribbonId };
     this.doc.strikes.push(strike);
     this.doc.col++;
     const col = this.doc.col;

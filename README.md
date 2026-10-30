@@ -33,6 +33,8 @@ Efeutute – und ein Fenster, durch das du hinausschaust.
 
 ![Nahaufnahme: getippter Text auf dem Papier in der Walze](docs/screenshot-paper.jpg)
 
+![Nachtmodus: Kerze neben der Schreibmaschine, dunkles Fenster](docs/screenshot-night.jpg)
+
 ## Was du alles machen kannst
 
 | | |
@@ -43,7 +45,12 @@ Efeutute – und ein Fenster, durch das du hinausschaust.
 | 💾 **Nichts verlieren** | Dein Blatt wird automatisch im Browser gespeichert und ist beim nächsten Besuch wieder da. |
 | 📄 **Exportieren** | Die fertige Seite als **PNG**, als **PDF** (A4) oder als reinen **Text** herunterladen. |
 | 📃 **Neues Blatt** | Das alte Blatt wird herausgedreht, ein neues eingespannt. |
+| 🕯️ **Tag & Nacht** | Nachts brennt links eine Kerze mit flackerndem Licht, über dem Fenster leuchtet eine Lichterkette. |
+| 🎀 **Farbband wechseln** | Schwarz, Rot, Königsblau, Tannengrün, Violett oder Sepia – Geschriebenes behält seine Farbe. |
+| 🏛️ **Modell wählen** | Reise (1950er), Kontor (1930er, Messing) oder Flach (1960er) – eigene Entwürfe mit derselben Mechanik. |
+| 🌧️ **Geräuschkulisse** | Regen oder Kaminfeuer, live im Browser erzeugt. |
 | 🎨 **Anpassen** | Gehäusefarbe (Salbeigrün, Bordeaux, Schwarz, Creme), QWERTZ oder QWERTY, Deutsch oder Englisch, zwei Grafikstufen. |
+| 📲 **Am Smartphone** | Im Querformat; ⌨ öffnet die Tastatur, alles Weitere liegt im Zahnrad-Menü. |
 | 📱 **Als App installieren** | Die Seite lässt sich wie eine App installieren und funktioniert danach auch **offline**. |
 
 ### Tasten

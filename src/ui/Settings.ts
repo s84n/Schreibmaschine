@@ -1,7 +1,9 @@
+import type { AmbienceId } from '../audio/Ambience';
 import type { LayoutId } from '../input/layouts';
 import type { ViewId } from '../scene/Room';
-import type { Quality } from '../scene/Scene';
-import type { BodyColorId } from '../typewriter/materials';
+import type { Quality, TimeOfDay } from '../scene/Scene';
+import type { RibbonId } from '../state/Document';
+import type { BodyColorId, ModelId } from '../typewriter/materials';
 import type { Lang } from './i18n';
 
 export interface Settings {
@@ -14,6 +16,10 @@ export interface Settings {
   view: ViewId;
   music: boolean;
   musicVolume: number;
+  time: TimeOfDay;
+  ribbon: RibbonId;
+  model: ModelId;
+  ambience: AmbienceId;
 }
 
 const KEY = 'schreibmaschine.settings';
@@ -31,6 +37,10 @@ function defaults(): Settings {
     view: 'alps',
     music: false,
     musicVolume: 0.5,
+    time: 'day',
+    ribbon: 'black',
+    model: 'reise',
+    ambience: 'off',
   };
 }
 

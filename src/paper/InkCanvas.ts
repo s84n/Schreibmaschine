@@ -1,5 +1,5 @@
 import * as THREE from 'three';
-import { PAGE, type Strike } from '../state/Document';
+import { PAGE, RIBBONS, type Strike } from '../state/Document';
 
 /** Pixel pro cm der Papiertextur (80 px/cm ≈ 200 dpi). */
 export const PX_PER_CM = 80;
@@ -73,7 +73,7 @@ export class InkCanvas {
     g.font = `${FONT_PX}px ${TYPE_FONT}`;
     g.textAlign = 'center';
     g.textBaseline = 'alphabetic';
-    g.fillStyle = '#16161c';
+    g.fillStyle = RIBBONS[s.ink ?? 'black'].ink;
     g.save();
     g.translate(B / 2, B * 0.68);
     g.rotate((r() - 0.5) * 0.035);

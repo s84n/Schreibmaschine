@@ -2,6 +2,25 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.12.0] – 2026-10-30
+
+### Hinzugefügt
+- Smartphone: Querformat-Pflicht (Hinweis im Hochformat; wo der Browser es erlaubt, Button „Querformat erzwingen“ über Vollbild + Orientation-Lock), Tastatur-Button ⌨ für die Bildschirmtastatur inkl. Eingabe über ein verstecktes Feld (auch mit Android-Composition). Bei offener Tastatur fährt die Kamera aufs Papier und der Bildausschnitt passt sich dem freien Bereich an.
+- Tag/Nacht-Schalter: nachts brennende Kerze links neben der Maschine mit Flackerlicht und wandernden Schatten, Lichterkette über dem Fenster, abgedunkelte Aussicht.
+- Kaffeetasse mit Aufdruck „made with coffee“ und Dampf. Klick auf die Tasse öffnet den Kaffee-Dialog, sobald in `src/config.ts` ein Link eingetragen ist.
+- Farbband-Wechsel (Schwarz, Rot, Königsblau, Tannengrün, Violett, Sepia); gilt ab dem nächsten Anschlag, Geschriebenes behält seine Farbe.
+- Drei Modelle mit eigenem Gehäuse und gleicher Mechanik: Reise (1950er), Kontor (1930er, Messing), Flach (1960er).
+- Geräuschkulisse: generierter Regen und Kaminfeuer.
+- Deko: Vorhänge, Bücherstapel, Bleistiftbecher, Papierstapel. Vollbild-Button im Menü.
+
+### Geändert
+- Gehäuse überarbeitet: geschwungene Seitenwangen, Zierleisten, Schrauben, Krispellack auf der Tastaturplatte, Modellplakette, Deckplatte, Spulenschalen, Farbband-Wahlhebel, Randsteller.
+- Auf kleinen Displays liegen alle Werkzeuge im Zahnrad-Menü; sichtbar bleiben nur Tag/Nacht, Tastatur und Zahnrad. Das Menü ist scrollbar.
+- Grafikstufe „Niedrig“ rendert mit bis zu 1,5-facher Pixeldichte statt 1, damit es auf Smartphones schärfer ist.
+
+### Behoben
+- Die Arme der Leertaste liefen durch die Stößel der untersten Tastenreihe; sie führen jetzt senkrecht in eigene Schlitze der Tastaturplatte.
+
 ## [0.11.0] – 2026-10-30
 
 ### Behoben
