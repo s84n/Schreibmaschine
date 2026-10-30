@@ -1,4 +1,3 @@
-import type { AmbienceId } from '../audio/Ambience';
 import type { LayoutId } from '../input/layouts';
 import type { ViewId } from '../scene/Room';
 import type { Quality, TimeOfDay } from '../scene/Scene';
@@ -19,9 +18,7 @@ export interface Settings {
   time: TimeOfDay;
   ribbon: RibbonId;
   model: ModelId;
-  ambience: AmbienceId;
   rain: boolean;
-  cat: boolean;
 }
 
 const KEY = 'schreibmaschine.settings';
@@ -42,9 +39,7 @@ function defaults(): Settings {
     time: 'day',
     ribbon: 'black',
     model: 'reise',
-    ambience: 'off',
     rain: false,
-    cat: true,
   };
 }
 
@@ -52,10 +47,10 @@ export function loadSettings(): Settings {
   const base = defaults();
   try {
     const raw = localStorage.getItem(KEY);
-    const s: Settings = raw ? { ...base, ...(JSON.parse(raw) as Partial<Settings>) } : base;
-    // Bis v0.12 war Regen eine Geräuschkulisse, jetzt ein eigener Schalter
-    if (s.ambience === 'rain') return { ...s, ambience: 'off', rain: true };
-    return s;
+    if (!raw) return base;
+    // Bis v0.12 war Regen ein Wert der entfernten Einstellung „Geräuschkulisse“
+    const { ambience, ...stored } = JSON.parse(raw) as Partial<Settings> & { ambience?: string };
+    return { ...base, ...stored, ...(ambience === 'rain' ? { rain: true } : {}) };
   } catch {
     return base;
   }

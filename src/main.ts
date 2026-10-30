@@ -1,8 +1,8 @@
 import '@fontsource/special-elite/400.css';
 import './style.css';
 import { registerSW } from 'virtual:pwa-register';
-import { Ambience } from './audio/Ambience';
 import { AudioEngine } from './audio/AudioEngine';
+import { RainSound } from './audio/RainSound';
 import { Music } from './audio/Music';
 import { DONATE_URL } from './config';
 import { exportPdf, exportPng, exportText } from './export/Export';
@@ -27,15 +27,13 @@ async function main(): Promise<void> {
   audio.setMuted(settings.muted);
   audio.setMusicVolume(settings.musicVolume);
   let music: Music | undefined;
-  let ambience: Ambience | undefined;
-  let rainSound: Ambience | undefined;
+  let rainSound: RainSound | undefined;
   let unlocked = false;
   const syncMusic = () => {
     if (!unlocked) return;
     if (settings.music) (music ??= new Music(audio.music.ctx, audio.music.out)).start();
     else music?.stop();
-    if (ambience || settings.ambience !== 'off') (ambience ??= new Ambience(audio.music.ctx, audio.music.out)).set(settings.ambience);
-    if (rainSound || settings.rain) (rainSound ??= new Ambience(audio.music.ctx, audio.music.out)).set(settings.rain ? 'rain' : 'off');
+    if (rainSound || settings.rain) (rainSound ??= new RainSound(audio.music.ctx, audio.music.out)).set(settings.rain);
   };
 
   const doc = new TypedDocument();
@@ -51,7 +49,6 @@ async function main(): Promise<void> {
   void stage.room.setView(settings.view);
   stage.setTime(settings.time, false);
   stage.room.setRain(settings.rain, false);
-  stage.room.setCat(settings.cat);
 
   let view: CameraView = 'machine';
   const overlay = new Overlay(document.getElementById('ui')!, settings, {
@@ -75,12 +72,11 @@ async function main(): Promise<void> {
       if (next.ribbon !== settings.ribbon) tw.setRibbon(next.ribbon);
       if (next.time !== settings.time) stage.setTime(next.time);
       if (next.rain !== settings.rain) stage.room.setRain(next.rain);
-      if (next.cat !== settings.cat) stage.room.setCat(next.cat);
       audio.setVolume(next.volume);
       audio.setMuted(next.muted);
       audio.setMusicVolume(next.musicVolume);
       if (next.view !== settings.view) void stage.room.setView(next.view);
-      const soundChanged = next.music !== settings.music || next.ambience !== settings.ambience || next.rain !== settings.rain;
+      const soundChanged = next.music !== settings.music || next.rain !== settings.rain;
       settings = { ...next };
       saveSettings(settings);
       if (soundChanged) {

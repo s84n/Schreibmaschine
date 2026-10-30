@@ -1,6 +1,6 @@
 import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../animation/Tweens';
-import { buildBookStack, buildCurtain, buildPaperStack, buildPencilCup, buildRainGlass, Candle, Cat, FairyLights, Steam } from './Cozy';
+import { buildBookStack, buildCurtain, buildPaperStack, buildPencilCup, buildRainGlass, Candle, FairyLights, Steam } from './Cozy';
 import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, type DecorMaterials } from './Decor';
 
 export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'starnight' | 'istanbul' | 'newyork' | 'dubai';
@@ -39,7 +39,7 @@ const WIN = { x0: -46, x1: 14, y0: 2.6, y1: 54 };
 const ROOM = { x0: -100, x1: 100, z0: WALL_Z, z1: 130, floor: DESK_Y - 76, ceil: 150 };
 /** Wandfarbe: gebrochenes Weiß für Kontrast zum dunklen Tisch */
 const WALL_COLOR = '#fbf7f0';
-const MUG_POS = { x: 29, z: -10 };
+const MUG_POS = { x: 27, z: 0 };
 /** Elevationsbereich des Panorama-Bands (aus dem Zuschnitt) */
 const BAND_TOP_DEG = 34.94;
 const BAND_HEIGHT_DEG = 60.06;
@@ -71,7 +71,6 @@ export class Room {
   private rain = 0;
   private rainTween?: TweenHandle;
   private readonly rainGlass = buildRainGlass(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0);
-  private readonly cat = new Cat();
   readonly candle = new Candle();
   private readonly steam = new Steam();
   private readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
@@ -128,10 +127,6 @@ export class Room {
     this.rainTween = animator.add({ duration: 2, ease: ease.inOutCubic, onUpdate: (t) => this.applyRain(from + (to - from) * t) });
   }
 
-  setCat(on: boolean): void {
-    this.cat.group.visible = on;
-  }
-
   private applyRain(r: number): void {
     this.rain = r;
     this.rainGlass.mesh.visible = r > 0.01;
@@ -142,7 +137,6 @@ export class Room {
   update(dt: number, camera: THREE.Camera): void {
     this.candle.update(dt, camera);
     this.steam.update(dt);
-    if (this.cat.group.visible) this.cat.update(dt);
     this.rainGlass.uniforms.uTime.value += dt;
   }
 
@@ -373,9 +367,10 @@ export class Room {
     const shelf = buildShelf(m, 46, 16);
     shelf.position.set(46, shelfY, WALL_Z);
     const plant = buildTrailingPlant(7, new THREE.Vector3(0, 0, 1), 34);
-    plant.position.set(34, shelfY + 2, WALL_Z + 7);
+    // Ganz rechts auf dem Regal: Die Ranken dürfen nicht über die Tasse hängen
+    plant.position.set(56, shelfY + 2, WALL_Z + 7);
     const books = buildBooks(3, 7, 15);
-    books.position.set(46, shelfY + 2, WALL_Z + 14.5);
+    books.position.set(25, shelfY + 2, WALL_Z + 14.5);
     g.add(shelf, plant, books);
 
     // Bild an der linken Wand
@@ -406,11 +401,6 @@ export class Room {
     this.candle.group.position.set(-32, DESK_Y, 3);
     g.add(this.candle.group);
 
-    // Katze schläft links hinter der Maschine, außerhalb der Wagenbahn; Kopf zeigt nach außen
-    this.cat.group.position.set(-24, DESK_Y, -21);
-    this.cat.group.scale.setScalar(0.85);
-    g.add(this.cat.group);
-
     // Schreibtisch-Kleinigkeiten
     const stack = buildBookStack(9);
     stack.position.set(38, DESK_Y, -24);
@@ -418,7 +408,7 @@ export class Room {
     const pencils = buildPencilCup(4);
     pencils.position.set(-38, DESK_Y, -20);
     const paper = buildPaperStack(13);
-    paper.position.set(33, DESK_Y, 14);
+    paper.position.set(42, DESK_Y, 21);
     paper.rotation.y = -0.12;
     g.add(stack, pencils, paper);
 

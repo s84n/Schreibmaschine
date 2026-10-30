@@ -2,6 +2,17 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.14.0] – 2026-10-30
+
+### Entfernt
+- Schlafende Katze samt Schalter.
+- Metallring (Griff) an der Kerzenschale, er ragte in den Tisch.
+- Menüpunkt „Geräuschkulisse“ samt Kaminfeuer; Regen bleibt als eigener Schalter.
+
+### Geändert
+- Regenklang neu aufgebaut: gedämpftes Rauschen in drei Bändern mit wechselnder Stärke, Prasseln auf der Scheibe, glucksende Regenrinne und einzelne Tropfstellen vom Dach (Pfütze, Blech der Fensterbank, Holz) mit Raumklang. Die Klänge werden auf der Audio-Uhr vorausgeplant und bleiben so auch im Hintergrund-Tab im Rhythmus.
+- Tasse steht weiter vorn auf dem Tisch; die Pflanze rückt nach rechts aufs Regal, damit keine Ranken über dem Kaffee hängen. Bücher auf dem Regal links davon, Papierstapel weiter nach vorn rechts.
+
 ## [0.13.0] – 2026-10-30
 
 ### Hinzugefügt
