@@ -1,6 +1,6 @@
 import * as THREE from 'three';
-import { animator, ease } from '../animation/Tweens';
-import { buildBookStack, buildCurtain, buildPaperStack, buildPencilCup, Candle, FairyLights, Steam } from './Cozy';
+import { animator, ease, type TweenHandle } from '../animation/Tweens';
+import { buildBookStack, buildCurtain, buildPaperStack, buildPencilCup, buildRainGlass, Candle, Cat, FairyLights, Steam } from './Cozy';
 import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, type DecorMaterials } from './Decor';
 
 export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'starnight' | 'istanbul' | 'newyork' | 'dubai';
@@ -49,6 +49,8 @@ const NIGHT_LIGHT = 0.28;
 const NIGHT_AMBIENT = 0.045;
 const NIGHT_TINT = new THREE.Color(0.075, 0.1, 0.2);
 const DUSK_TINT = new THREE.Color(0.75, 0.75, 0.8);
+/** Regenwetter: grauer Himmel, weniger Licht von draußen */
+const RAIN_TINT = new THREE.Color(0.48, 0.52, 0.58);
 
 /** Zimmer: Schreibtisch, geschlossener Raum mit Sprossenfenster, austauschbarer Aussicht und etwas Deko. */
 export class Room {
@@ -66,6 +68,10 @@ export class Room {
   private night = 0;
   private fade = 0;
   private dusk = false;
+  private rain = 0;
+  private rainTween?: TweenHandle;
+  private readonly rainGlass = buildRainGlass(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0);
+  private readonly cat = new Cat();
   readonly candle = new Candle();
   private readonly steam = new Steam();
   private readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
@@ -110,17 +116,49 @@ export class Room {
     this.applyLight();
   }
 
+  /** Regenwetter mit weicher Überblendung (beim Start ohne). */
+  setRain(on: boolean, animate = true): void {
+    const to = on ? 1 : 0;
+    this.rainTween?.cancel();
+    if (!animate) {
+      this.applyRain(to);
+      return;
+    }
+    const from = this.rain;
+    this.rainTween = animator.add({ duration: 2, ease: ease.inOutCubic, onUpdate: (t) => this.applyRain(from + (to - from) * t) });
+  }
+
+  setCat(on: boolean): void {
+    this.cat.group.visible = on;
+  }
+
+  private applyRain(r: number): void {
+    this.rain = r;
+    this.rainGlass.mesh.visible = r > 0.01;
+    this.rainGlass.uniforms.uRain.value = r;
+    this.applyLight();
+  }
+
   update(dt: number, camera: THREE.Camera): void {
     this.candle.update(dt, camera);
     this.steam.update(dt);
+    if (this.cat.group.visible) this.cat.update(dt);
+    this.rainGlass.uniforms.uTime.value += dt;
   }
 
   private applyLight(): void {
     const n = this.night;
     this.windowLight.color.copy(this.dayLight.color).lerp(MOON_LIGHT, n);
-    this.windowLight.intensity = this.dayLight.intensity + (NIGHT_LIGHT - this.dayLight.intensity) * n;
-    this.scene.environmentIntensity = this.dayLight.ambient + (NIGHT_AMBIENT - this.dayLight.ambient) * n;
+    const r = this.rain;
+    const day = this.dayLight;
+    this.windowLight.intensity = (day.intensity + (NIGHT_LIGHT - day.intensity) * n) * (1 - 0.55 * r);
+    this.scene.environmentIntensity = (day.ambient + (NIGHT_AMBIENT - day.ambient) * n) * (1 - 0.25 * r * (1 - n));
     this.outsideMat.color.setScalar(1).lerp(this.dusk ? DUSK_TINT : NIGHT_TINT, n).multiplyScalar(this.fade);
+    this.outsideMat.color.r *= 1 + (RAIN_TINT.r - 1) * r;
+    this.outsideMat.color.g *= 1 + (RAIN_TINT.g - 1) * r;
+    this.outsideMat.color.b *= 1 + (RAIN_TINT.b - 1) * r;
+    // Tropfen spiegeln nachts nur noch wenig Himmel
+    this.rainGlass.uniforms.uLight.value = 1 + (0.22 - 1) * n;
   }
 
   /** Wechselt die Aussicht mit kurzer Überblendung. */
@@ -368,6 +406,11 @@ export class Room {
     this.candle.group.position.set(-32, DESK_Y, 3);
     g.add(this.candle.group);
 
+    // Katze schläft links hinter der Maschine, außerhalb der Wagenbahn; Kopf zeigt nach außen
+    this.cat.group.position.set(-24, DESK_Y, -21);
+    this.cat.group.scale.setScalar(0.85);
+    g.add(this.cat.group);
+
     // Schreibtisch-Kleinigkeiten
     const stack = buildBookStack(9);
     stack.position.set(38, DESK_Y, -24);
@@ -448,7 +491,8 @@ export class Room {
       new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.05, metalness: 0, transparent: true, opacity: 0.08 }),
     );
     glass.position.set(cx, cy, z - 0.2);
-    g.add(glass);
+    this.rainGlass.mesh.position.set(cx, cy, z - 0.1);
+    g.add(glass, this.rainGlass.mesh);
 
     // Fensterbank
     const sill = new THREE.Mesh(new THREE.BoxGeometry(w + 8, 1.6, 12), paint);

@@ -338,3 +338,235 @@ export function buildPaperStack(seed: number): THREE.Group {
   }
   return shadowed(g);
 }
+
+const RAIN_FRAG = /* glsl */ `
+  uniform float uTime;
+  uniform float uRain;
+  uniform float uLight;
+  uniform vec2 uSize;
+  varying vec2 vUv;
+
+  float hash(vec2 p) {
+    p = fract(p * vec2(123.34, 456.21));
+    p += dot(p, p + 45.32);
+    return fract(p.x * p.y);
+  }
+
+  // Herablaufende Tropfen mit Spur in einem Raster; x = Deckung, y = Schattierung
+  vec2 drops(vec2 cm, float cell, float t) {
+    vec2 aspect = vec2(2.0, 1.0);
+    vec2 uv = cm / cell * aspect;
+    uv.y += t * 0.25;
+    vec2 gv = fract(uv) - 0.5;
+    vec2 id = floor(uv);
+    float n = hash(id);
+    if (n < 0.35) return vec2(0.0, 0.5);
+    t += n * 6.2831;
+    float w = cm.y * 0.35;
+    float x = (n - 0.5) * 0.7;
+    x += (0.35 - abs(x)) * sin(3.0 * w) * pow(abs(sin(w)), 6.0) * 0.4;
+    float y = -sin(t + sin(t + sin(t) * 0.5)) * 0.42;
+    y -= (gv.x - x) * (gv.x - x);
+    vec2 d = (gv - vec2(x, y)) / aspect;
+    d.y *= 0.72;
+    float drop = smoothstep(0.052, 0.034, length(d));
+    vec2 tp = (gv - vec2(x, t * 0.25)) / aspect;
+    tp.y = (fract(tp.y * 7.0) - 0.5) / 7.0;
+    float trail = smoothstep(0.03, 0.012, length(tp));
+    float above = smoothstep(-0.04, 0.04, d.y) * smoothstep(0.5, y, gv.y);
+    return vec2(max(drop, trail * above * 0.7), 0.5 - d.y * 10.0);
+  }
+
+  void main() {
+    vec2 cm = vUv * uSize;
+    vec2 a = drops(cm, 7.0, uTime * 1.3);
+    vec2 b = drops(cm * 1.35 + 11.0, 5.0, uTime * 1.0);
+    float cover = max(a.x, b.x);
+    float shade = a.x > b.x ? a.y : b.y;
+    // Feine Regenfäden draußen
+    vec2 s = vec2(cm.x * 3.2 + cm.y * 0.2, cm.y * 0.07 + uTime * 3.2);
+    float line = step(0.96, hash(floor(s))) * smoothstep(0.0, 0.25, fract(s.y)) * smoothstep(1.0, 0.6, fract(s.y));
+    // Tropfen sind Linsen: fast durchsichtig, oben dunkler, unten ein schmaler heller Rand
+    float sh = clamp(shade, 0.0, 1.0);
+    vec3 lens = mix(vec3(0.1, 0.12, 0.15), vec3(0.8, 0.84, 0.9), sh);
+    float lensAlpha = cover * (0.1 + 0.42 * abs(sh - 0.5) * 2.0);
+    float mist = 0.1 + line * 0.09;
+    float alpha = lensAlpha + mist * (1.0 - lensAlpha);
+    vec3 col = (lens * lensAlpha + vec3(0.72, 0.76, 0.82) * mist * (1.0 - lensAlpha)) / max(alpha, 0.001);
+    gl_FragColor = vec4(col * uLight, alpha * uRain);
+    #include <colorspace_fragment>
+  }
+`;
+
+/** Regen auf der Fensterscheibe: Tropfen, Spuren, Beschlag und Fäden, rein prozedural. */
+export function buildRainGlass(w: number, h: number) {
+  const uniforms = { uTime: { value: 0 }, uRain: { value: 0 }, uLight: { value: 1 }, uSize: { value: new THREE.Vector2(w, h) } };
+  const mesh = new THREE.Mesh(
+    new THREE.PlaneGeometry(w, h),
+    new THREE.ShaderMaterial({
+      uniforms,
+      vertexShader: 'varying vec2 vUv; void main() { vUv = uv; gl_Position = projectionMatrix * modelViewMatrix * vec4(position, 1.0); }',
+      fragmentShader: RAIN_FRAG,
+      transparent: true,
+      depthWrite: false,
+    }),
+  );
+  mesh.visible = false;
+  return { mesh, uniforms };
+}
+
+/** Fell einer getigerten Katze: Grundton, unregelmäßige Streifen, feines Rauschen. */
+function furTexture(): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 512;
+  c.height = 256;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#c98b4e';
+  ctx.fillRect(0, 0, 512, 256);
+  const r = rng(31);
+  ctx.strokeStyle = '#8a5428';
+  ctx.lineCap = 'round';
+  for (let x = 6; x < 512; x += 30 + r() * 26) {
+    ctx.lineWidth = 3 + r() * 5;
+    ctx.beginPath();
+    let px = x;
+    ctx.moveTo(px, 20 + r() * 30);
+    for (let y = 50; y < 236; y += 24) {
+      px += (r() - 0.5) * 14;
+      ctx.lineTo(px, y);
+    }
+    ctx.stroke();
+  }
+  for (let i = 0; i < 9000; i++) {
+    ctx.fillStyle = r() < 0.5 ? 'rgba(255,225,180,0.09)' : 'rgba(70,40,15,0.09)';
+    ctx.fillRect(r() * 512, r() * 256, 1 + r() * 2, 2 + r() * 5);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  return tex;
+}
+
+/**
+ * Zusammengerollter Körper als ein durchgehendes Netz: Kreisringe entlang eines Bogens um die
+ * Hochachse. So entstehen keine Dellen, und die Streifen laufen wie beim Tiger quer um den Leib.
+ */
+function curledBody(): THREE.BufferGeometry {
+  const SEG = 72;
+  const RING = 28;
+  const ARC_START = (150 * Math.PI) / 180;
+  const ARC = (240 * Math.PI) / 180;
+  const SPINE = 6.6;
+  const pos: number[] = [];
+  const uv: number[] = [];
+  const idx: number[] = [];
+  for (let i = 0; i <= SEG; i++) {
+    const t = i / SEG;
+    const a = ARC_START + ARC * t;
+    // Vom Nacken zur Hüfte dicker, beide Enden rund geschlossen
+    const r = (3.9 + 2.5 * Math.sin(Math.min(1, t * 1.25) * Math.PI * 0.5)) * Math.sqrt(Math.max(0.0005, 1 - (2 * t - 1) ** 10));
+    const rad = new THREE.Vector3(Math.cos(a), 0, Math.sin(a));
+    for (let j = 0; j <= RING; j++) {
+      const f = (j / RING) * Math.PI * 2;
+      const q = rad.clone().multiplyScalar(SPINE + Math.cos(f) * r * 1.02);
+      q.y = 0.5 + r * 0.88 + Math.sin(f) * r * 0.88;
+      pos.push(q.x, q.y, q.z);
+      uv.push(t * 1.5, j / RING);
+    }
+  }
+  for (let i = 0; i < SEG; i++) {
+    for (let j = 0; j < RING; j++) {
+      const a = i * (RING + 1) + j;
+      const b = a + RING + 1;
+      idx.push(a, b, a + 1, b, b + 1, a + 1);
+    }
+  }
+  const g = new THREE.BufferGeometry();
+  g.setAttribute('position', new THREE.Float32BufferAttribute(pos, 3));
+  g.setAttribute('uv', new THREE.Float32BufferAttribute(uv, 2));
+  g.setIndex(idx);
+  g.computeVertexNormals();
+  return g;
+}
+
+/** Zusammengerollt schlafende Katze; atmet langsam und zuckt ab und zu mit dem Ohr. Ursprung = Tischplatte. */
+export class Cat {
+  readonly group = new THREE.Group();
+  private readonly body: THREE.Mesh;
+  private readonly head = new THREE.Group();
+  private readonly ear: THREE.Group;
+  private readonly headY = 4.5;
+  private time = 0;
+
+  constructor() {
+    const fur = new THREE.MeshPhysicalMaterial({ map: furTexture(), roughness: 1, sheen: 0.6, sheenRoughness: 0.8, sheenColor: new THREE.Color('#ffd9a8'), side: THREE.DoubleSide });
+    const pale = new THREE.MeshPhysicalMaterial({ color: '#f1e4cf', roughness: 1, sheen: 0.5 });
+    const pink = new THREE.MeshStandardMaterial({ color: '#d98f86', roughness: 0.7 });
+    const dark = new THREE.MeshStandardMaterial({ color: '#2a1b12', roughness: 0.8 });
+    const sphere = new THREE.SphereGeometry(1, 28, 20);
+    const blob = (m: THREE.Material, x: number, y: number, z: number, sx: number, sy: number, sz: number) => {
+      const b = new THREE.Mesh(sphere, m);
+      b.position.set(x, y, z);
+      b.scale.set(sx, sy, sz);
+      return b;
+    };
+
+    this.body = new THREE.Mesh(curledBody(), fur);
+    this.group.add(this.body);
+
+    // Schwanz kommt von der Hüfte und legt sich vorn um den Körper bis unters Kinn
+    const tail = new THREE.CatmullRomCurve3(
+      [[7.5, 2.2, 2.5], [9.5, 1.7, 6.5], [6, 1.5, 10.5], [0, 1.45, 11.8], [-5, 1.4, 11.2]].map(([x, y, z]) => new THREE.Vector3(x, y, z)),
+    );
+    this.group.add(new THREE.Mesh(new THREE.TubeGeometry(tail, 48, 1.25, 12), fur), blob(fur, -5, 1.4, 11.2, 1.25, 1.25, 1.25));
+
+    // Vorderpfote unter dem Kinn
+    this.group.add(blob(pale, -6.5, 1.5, 8.6, 1.9, 1.35, 2.8));
+
+    // Kopf ruht auf der Pfote, leicht zur Kamera und zur Seite geneigt
+    const h = this.head;
+    h.position.set(-8.2, this.headY, 6.8);
+    h.rotation.set(0.12, 0.38, -0.2);
+    h.add(blob(fur, 0, 0, 0, 4.2, 3.7, 3.9));
+    h.add(blob(pale, 0, -1.2, 3.05, 1.7, 1.12, 1.05));
+    h.add(blob(pink, 0, -0.48, 3.95, 0.38, 0.28, 0.2));
+    for (const side of [-1, 1]) {
+      const eye = new THREE.Mesh(new THREE.TorusGeometry(0.72, 0.1, 6, 14, Math.PI), dark);
+      eye.position.set(side * 1.7, 0.6, 3.42);
+      eye.rotation.set(-0.15, side * 0.42, Math.PI);
+      h.add(eye);
+      const ear = new THREE.Group();
+      ear.position.set(side * 2.4, 2.7, -0.3);
+      ear.rotation.z = -side * 0.32;
+      const outer = new THREE.Mesh(new THREE.ConeGeometry(1.7, 3.1, 4), fur);
+      outer.position.y = 1.2;
+      outer.rotation.y = Math.PI / 4;
+      const inner = new THREE.Mesh(new THREE.ConeGeometry(1, 2.1, 4), pink);
+      inner.position.set(0, 0.95, 0.7);
+      inner.rotation.y = Math.PI / 4;
+      ear.add(outer, inner);
+      h.add(ear);
+      for (let i = 0; i < 3; i++) {
+        const whisker = new THREE.Mesh(new THREE.CylinderGeometry(0.018, 0.03, 4, 4), pale);
+        whisker.position.set(side * 2.9, -1.35 + i * 0.28, 3.05);
+        whisker.rotation.z = side * (Math.PI / 2 + 0.2 - i * 0.2);
+        h.add(whisker);
+      }
+    }
+    this.ear = h.children.filter((c) => c instanceof THREE.Group)[0] as THREE.Group;
+    this.group.add(h);
+    shadowed(this.group);
+  }
+
+  update(dt: number): void {
+    this.time += dt;
+    const t = this.time;
+    // etwa 20 Atemzüge pro Minute
+    const breath = Math.sin(t * 2.1);
+    this.body.scale.set(1 + breath * 0.008, 1 + breath * 0.024, 1 + breath * 0.008);
+    this.head.position.y = this.headY + breath * 0.05;
+    // Alle gut zehn Sekunden ein kurzes Ohrzucken
+    const cycle = t % 11.3;
+    this.ear.rotation.x = cycle < 0.35 ? Math.sin((cycle / 0.35) * Math.PI * 3) * 0.28 : 0;
+  }
+}

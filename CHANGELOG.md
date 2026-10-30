@@ -2,6 +2,18 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.13.0] – 2026-10-30
+
+### Hinzugefügt
+- Schlafende Katze auf dem Schreibtisch: atmet langsam und zuckt ab und zu mit dem Ohr. Im Menü abschaltbar (standardmäßig an).
+- Regenwetter als eigener Schalter (standardmäßig aus): Tropfen und Spuren laufen die Scheibe hinab, der Himmel wird grau, es fällt weniger Licht herein, dazu ein leises generiertes Regengeräusch.
+
+### Geändert
+- Regen ist keine Option der Geräuschkulisse mehr; eine alte Einstellung „Regen“ wird automatisch auf den neuen Schalter übernommen. Kaminfeuer und Regen können jetzt gleichzeitig laufen.
+
+### Behoben
+- Zimmer manchmal viel zu dunkel: Nach einem verlorenen WebGL-Kontext (z. B. App-Wechsel am Smartphone, GPU-Neustart) blieb die Umgebungsbeleuchtung leer. Sie wird jetzt nach jeder Wiederherstellung neu erzeugt.
+
 ## [0.12.0] – 2026-10-30
 
 ### Hinzugefügt

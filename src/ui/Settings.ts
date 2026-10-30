@@ -20,6 +20,8 @@ export interface Settings {
   ribbon: RibbonId;
   model: ModelId;
   ambience: AmbienceId;
+  rain: boolean;
+  cat: boolean;
 }
 
 const KEY = 'schreibmaschine.settings';
@@ -41,6 +43,8 @@ function defaults(): Settings {
     ribbon: 'black',
     model: 'reise',
     ambience: 'off',
+    rain: false,
+    cat: true,
   };
 }
 
@@ -48,7 +52,10 @@ export function loadSettings(): Settings {
   const base = defaults();
   try {
     const raw = localStorage.getItem(KEY);
-    return raw ? { ...base, ...(JSON.parse(raw) as Partial<Settings>) } : base;
+    const s: Settings = raw ? { ...base, ...(JSON.parse(raw) as Partial<Settings>) } : base;
+    // Bis v0.12 war Regen eine Geräuschkulisse, jetzt ein eigener Schalter
+    if (s.ambience === 'rain') return { ...s, ambience: 'off', rain: true };
+    return s;
   } catch {
     return base;
   }

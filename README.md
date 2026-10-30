@@ -48,7 +48,9 @@ Efeutute – und ein Fenster, durch das du hinausschaust.
 | 🕯️ **Tag & Nacht** | Nachts brennt links eine Kerze mit flackerndem Licht, über dem Fenster leuchtet eine Lichterkette. |
 | 🎀 **Farbband wechseln** | Schwarz, Rot, Königsblau, Tannengrün, Violett oder Sepia – Geschriebenes behält seine Farbe. |
 | 🏛️ **Modell wählen** | Reise (1950er), Kontor (1930er, Messing) oder Flach (1960er) – eigene Entwürfe mit derselben Mechanik. |
-| 🌧️ **Geräuschkulisse** | Regen oder Kaminfeuer, live im Browser erzeugt. |
+| 🌧️ **Regenwetter** | Tropfen laufen die Scheibe hinab, dazu leises Regenrauschen – per Schalter an und aus. |
+| 🐈 **Schlafende Katze** | Atmet ruhig neben der Maschine – per Schalter an und aus. |
+| 🔥 **Kaminfeuer** | Knistern als Geräuschkulisse, live im Browser erzeugt. |
 | 🎨 **Anpassen** | Gehäusefarbe (Salbeigrün, Bordeaux, Schwarz, Creme), QWERTZ oder QWERTY, Deutsch oder Englisch, zwei Grafikstufen. |
 | 📲 **Am Smartphone** | Im Querformat; ⌨ öffnet die Tastatur, alles Weitere liegt im Zahnrad-Menü. |
 | 📱 **Als App installieren** | Die Seite lässt sich wie eine App installieren und funktioniert danach auch **offline**. |

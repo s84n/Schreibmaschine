@@ -1,12 +1,31 @@
 import * as THREE from 'three';
 import { RoomEnvironment } from 'three/examples/jsm/environments/RoomEnvironment.js';
 
+/**
+ * Backt die Umgebungsreflexionen. Die Karte liegt in einem Render-Target und ist nach einem
+ * verlorenen WebGL-Kontext leer (App-Wechsel am Smartphone, GPU-Neustart) – das Zimmer wäre dann
+ * viel zu dunkel. Deshalb nach jeder Wiederherstellung neu backen.
+ */
+function bakeRoomEnvironment(scene: THREE.Scene, renderer: THREE.WebGLRenderer): void {
+  let current: THREE.WebGLRenderTarget | undefined;
+  const bake = () => {
+    const room = new RoomEnvironment();
+    const pmrem = new THREE.PMREMGenerator(renderer);
+    const rt = pmrem.fromScene(room, 0.04);
+    scene.environment = rt.texture;
+    pmrem.dispose();
+    room.dispose();
+    current?.dispose();
+    current = rt;
+  };
+  bake();
+  renderer.domElement.addEventListener('webglcontextrestored', bake);
+}
+
 /** Licht und Umgebungsreflexionen (Tisch, Wand und Fenster: siehe Room). */
 export function buildEnvironment(scene: THREE.Scene, renderer: THREE.WebGLRenderer): { lamp: THREE.SpotLight; rim: THREE.DirectionalLight; hemi: THREE.HemisphereLight } {
-  const pmrem = new THREE.PMREMGenerator(renderer);
-  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  bakeRoomEnvironment(scene, renderer);
   scene.environmentIntensity = 0.55;
-  pmrem.dispose();
 
   scene.background = new THREE.Color('#15110e');
   scene.fog = new THREE.Fog('#15110e', 160, 400);

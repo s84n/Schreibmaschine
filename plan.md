@@ -2,7 +2,7 @@
 
 > Zentrale Quelle für alle Planungsdetails. Jede Planänderung wird hier festgehalten (mit Versionsnummer).
 
-**Aktuelle Planversion:** v0.6.0 (2026-10-30) · **Aktuelle App-Version:** v0.12.0
+**Aktuelle Planversion:** v0.7.0 (2026-10-30) · **Aktuelle App-Version:** v0.13.0
 
 ---
 
@@ -73,7 +73,7 @@ schreibmaschine/
 │   │   ├── Environment.ts   # RoomEnvironment-Reflexionen, Lampe, Gegenlicht
 │   │   ├── Room.ts          # Tisch, Raumhülle, Fenster, Aussicht (Kugel), Fensterlicht
 │   │   ├── Decor.ts         # Regale, Efeutute, Bücher, Bild, Tasse (prozedural)
-│   │   └── Cozy.ts          # Kerze, Dampf, Lichterkette, Vorhang, Schreibtisch-Kleinigkeiten
+│   │   └── Cozy.ts          # Kerze, Dampf, Lichterkette, Vorhang, Katze, Regen auf der Scheibe, Schreibtisch-Kleinigkeiten
 │   ├── typewriter/
 │   │   ├── Typewriter.ts    # Zusammenbau, Zustandsmaschine
 │   │   ├── dims.ts          # zentrale Maße (cm), Druckpunkt
@@ -129,6 +129,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.10.0** | Geschlossenes Zimmer, Deko, Fenster tiefer, weiße Wände | ✅ |
 | **v0.11.0** | Mechanik-Fix Typenhebel, 3 Stadt-Aussichten, README | ✅ |
 | **v0.12.0** | Smartphone-Bedienung, Tag/Nacht mit Kerze, Gehäuse, Leertaste, Farbbänder, Modelle, Geräuschkulisse, Tasse, Deko | ✅ (Test auf echten Smartphones offen) |
+| **v0.13.0** | Schlafende Katze, Regenwetter (je mit Schalter), Fix für dunkles Zimmer nach Kontextverlust | ✅ |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -146,6 +147,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.7.0** (2026-10-30) – Katze und Regenwetter auf Nutzerwunsch → App v0.13.0. Ursache des dunklen Zimmers gefunden: leere Umgebungskarte nach WebGL-Kontextverlust.
 - **v0.6.0** (2026-10-30) – Nutzer-Feedback umgesetzt → App v0.12.0 (siehe Roadmap); Entscheidungen zu Querformat, Modellen und Kaffee-Link in Abschnitt 2.
 - **v0.5.0** (2026-10-30) – Mechanik nach echtem Vorbild korrigiert (Typenhebel liegen im offenen Korb hinter den Tasten, Maschine 4 cm tiefer), 3 Stadt-Aussichten (Istanbul, New York, Dubai; Wikimedia Commons, CC BY/BY-SA), README für GitHub neu → App v0.11.0.
 - **v0.4.0** (2026-10-30) – Feedback: Fenster tiefer, Wände weiß, Zimmer rundum geschlossen (kein Panorama mehr neben der Wand), Deko ergänzt → App v0.10.0.
@@ -156,8 +158,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **Kaffee-Link eintragen** (`src/config.ts`), vorher Anbieter wählen und Steuer-/Impressumsfrage klären.
 - **Echte Smartphones testen:** Bildschirmtastatur (Android/Gboard, iOS), Vollbild + Lock, Bildrate nachts.
-- Einmalig beobachtet: ein Nachtbild deutlich dunkler als sonst (rechte Raumseite fast schwarz), danach nicht reproduzierbar; Ursache unbekannt.
-- Cozy-Ideen: schlafende Katze, Regentropfen auf der Scheibe bei „Regen“, Tag/Nacht nach Uhrzeit, Tippen auf den 3D-Tasten, verblassendes Farbband.
+- Cozy-Ideen: Tag/Nacht nach Uhrzeit, Tippen auf den 3D-Tasten, verblassendes Farbband.
 - Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz, Performance auf schwächerer Hardware, ggf. SSAO.
 - Ideen: Umgebungsgeräusche passend zur Aussicht (Wellen, Vögel, Grillen), weitere Aussichten, Musik-Varianten (Tonarten/Tempi), sichtbare Schreibtischlampe.
 - PWA-Precache ist durch Panoramen/Texturen auf ~7 MB gewachsen – ggf. Aussichten erst bei Auswahl cachen.
@@ -167,5 +168,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v0.12.0 auf echten Smartphones testen, Feedback sammeln.
+1. v0.13.0 auf echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.
