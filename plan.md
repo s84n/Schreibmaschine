@@ -140,6 +140,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.19.0** | Aussichten Chinesisches Dorf und Japanischer Ahornwald, eigene Songs statt generativer Musik | ✅ |
 | **v0.19.1** | Song umbenannt: „SchreibMaschine - America“ | ✅ |
 | **v0.20.0** | Panoramafenster, 8K-Aussichten, belebte Aussicht | ✅ (Bildrate und 8K-Texturen auf echten Geräten offen) |
+| **v0.21.0** | Eigener Lautstärkeregler für den Regen | ✅ |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -157,6 +158,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.15.0** (2026-11-01) – Nutzerwunsch → App v0.21.0: drei getrennte Regler für Maschine, Musik und Regen, Regen auf eigenem Audio-Bus.
 - **v0.14.0** (2026-11-01) – Nutzerwunsch → App v0.20.0: Fenster stark vergrößert, Bewegung per Shader und Partikeln statt Video (kein Download, läuft endlos). Mögliche Ausbaustufe: echte Video-Loops für einzelne Aussichten.
 - **v0.13.0** (2026-10-31) – Nutzerwunsch → App v0.19.0: zwei Aussichten, generative Musik durch eigene Songs ersetzt. Neue Songs: Datei in `public/music` legen und in `TRACKS` (`src/audio/Music.ts`) eintragen.
 - **v0.12.0** (2026-10-31) – Nutzer-Feedback → App v0.18.0: „Nächstes Blatt“ behält alte Blätter bewusst im Manuskript, deshalb landeten sie im PDF; „Neues Dokument“ im Zahnrad-Menü setzt alles zurück. Regen ohne taktartige Tropfen, dafür Dach im Hintergrund. Tippklang mehrschichtig (Taste, Walze/Gehäuse, Schaltklinke, Hebelrückfall).
@@ -185,5 +187,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v0.20.0 auf echten Smartphones testen, Feedback sammeln.
+1. v0.21.0 auf echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

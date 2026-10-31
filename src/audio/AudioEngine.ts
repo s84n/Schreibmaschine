@@ -30,18 +30,20 @@ const BODY_MODES: [freq: number, gain: number, length: number][] = [
  * Signalweg der Maschinengeräusche:
  *   Stimmen → EQ (Tiefen-Shelf + Präsenz) → Kompressor → Ausgang
  *                                         ↘ kleiner Raumhall (Faltung) ↗
- * Musik läuft über einen eigenen Bus in den Ausgang; am Ende sitzt ein Limiter.
+ * Musik und Regen laufen über je einen eigenen Bus in den Ausgang; am Ende sitzt ein Limiter.
  */
 export class AudioEngine {
   private ctx?: AudioContext;
   private master?: GainNode;
   private sfx?: GainNode;
   private musicBus?: GainNode;
+  private rainBus?: GainNode;
   private strikes: AudioBuffer[] = [];
   private bell?: AudioBuffer;
   private ret?: AudioBuffer;
   private volume = 0.8;
   private musicVolume = 0.5;
+  private rainVolume = 0.5;
   private muted = false;
   private loading?: Promise<void>;
   private lastStrike = -1;
@@ -67,6 +69,8 @@ export class AudioEngine {
     this.sfx.connect(this.buildSfxChain(ctx, this.master));
     this.musicBus = ctx.createGain();
     this.musicBus.connect(this.master);
+    this.rainBus = ctx.createGain();
+    this.rainBus.connect(this.master);
     this.applyVolume();
     this.loading = this.load().catch((err) => console.warn('Sounds konnten nicht geladen werden', err));
   }
@@ -83,6 +87,12 @@ export class AudioEngine {
     return { ctx: this.ctx!, out: this.musicBus! };
   }
 
+  /** Kontext und Regen-Bus für das Regengeräusch. */
+  get rain(): { ctx: AudioContext; out: AudioNode } {
+    this.init();
+    return { ctx: this.ctx!, out: this.rainBus! };
+  }
+
   setVolume(v: number): void {
     this.volume = v;
     this.applyVolume();
@@ -90,6 +100,11 @@ export class AudioEngine {
 
   setMusicVolume(v: number): void {
     this.musicVolume = v;
+    this.applyVolume();
+  }
+
+  setRainVolume(v: number): void {
+    this.rainVolume = v;
     this.applyVolume();
   }
 
@@ -320,10 +335,11 @@ export class AudioEngine {
   }
 
   private applyVolume(): void {
-    if (!this.master || !this.sfx || !this.musicBus) return;
+    if (!this.master || !this.sfx || !this.musicBus || !this.rainBus) return;
     this.master.gain.value = this.muted ? 0 : 1;
     this.sfx.gain.value = this.volume;
     this.musicBus.gain.value = this.musicVolume;
+    this.rainBus.gain.value = this.rainVolume;
   }
 
   /** Schneidet die Stille vor dem Aufschlag ab: Die Samples beginnen bis zu 30 ms versetzt. */

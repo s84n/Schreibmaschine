@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.21.0] – 2026-11-01
+
+### Hinzugefügt
+- Eigener Lautstärkeregler für den Regen. Geräusche der Maschine, Musik und Regen lassen sich jetzt einzeln einstellen; der Regen startet so laut wie zuletzt.
+
 ## [0.20.0] – 2026-11-01
 
 ### Hinzugefügt

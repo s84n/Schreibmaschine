@@ -27,13 +27,14 @@ async function main(): Promise<void> {
   audio.setVolume(settings.volume);
   audio.setMuted(settings.muted);
   audio.setMusicVolume(settings.musicVolume);
+  audio.setRainVolume(settings.rainVolume);
   let music: Music | undefined;
   let rainSound: RainSound | undefined;
   let unlocked = false;
   const syncMusic = () => {
     if (!unlocked) return;
     if (music || settings.track) (music ??= new Music(audio.music.ctx, audio.music.out)).set(settings.track);
-    if (rainSound || settings.rain) (rainSound ??= new RainSound(audio.music.ctx, audio.music.out)).set(settings.rain);
+    if (rainSound || settings.rain) (rainSound ??= new RainSound(audio.rain.ctx, audio.rain.out)).set(settings.rain);
   };
 
   // Ein empfangener Brief läuft in einem eigenen Dokument, das eigene Blatt bleibt unangetastet
@@ -149,6 +150,7 @@ async function main(): Promise<void> {
       audio.setVolume(next.volume);
       audio.setMuted(next.muted);
       audio.setMusicVolume(next.musicVolume);
+      audio.setRainVolume(next.rainVolume);
       if (next.view !== settings.view) void stage.room.setView(next.view);
       const soundChanged = next.track !== settings.track || next.rain !== settings.rain;
       settings = { ...next };

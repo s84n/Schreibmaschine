@@ -378,29 +378,22 @@ export class Overlay {
     row(t.quality, select<Quality>(s.quality, [['high', t.qualityHigh], ['low', t.qualityLow]], (quality) => this.update({ quality })));
     row(t.color, select<BodyColorId>(s.color, (Object.keys(BODY_COLORS) as BodyColorId[]).map((id) => [id, t.colors[id]]), (color) => this.update({ color })));
 
-    const vol = el('input');
-    vol.type = 'range';
-    vol.min = '0';
-    vol.max = '1';
-    vol.step = '0.05';
-    vol.value = String(s.volume);
-    vol.oninput = () => {
-      this.settings.volume = Number(vol.value);
-      this.actions.onSettings(this.settings);
+    const slider = (label: string, key: 'volume' | 'musicVolume' | 'rainVolume') => {
+      const r = el('input');
+      r.type = 'range';
+      r.min = '0';
+      r.max = '1';
+      r.step = '0.05';
+      r.value = String(s[key]);
+      r.oninput = () => {
+        this.settings[key] = Number(r.value);
+        this.actions.onSettings(this.settings);
+      };
+      row(label, r);
     };
-    row(t.volume, vol);
-
-    const mvol = el('input');
-    mvol.type = 'range';
-    mvol.min = '0';
-    mvol.max = '1';
-    mvol.step = '0.05';
-    mvol.value = String(s.musicVolume);
-    mvol.oninput = () => {
-      this.settings.musicVolume = Number(mvol.value);
-      this.actions.onSettings(this.settings);
-    };
-    row(t.musicVolume, mvol);
+    slider(t.volume, 'volume');
+    slider(t.musicVolume, 'musicVolume');
+    slider(t.rainVolume, 'rainVolume');
 
     const mute = el('input');
     mute.type = 'checkbox';

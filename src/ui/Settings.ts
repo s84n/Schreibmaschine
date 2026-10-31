@@ -16,6 +16,7 @@ export interface Settings {
   view: ViewId;
   track: TrackId | '';
   musicVolume: number;
+  rainVolume: number;
   time: TimeOfDay;
   ribbon: RibbonId;
   model: ModelId;
@@ -41,6 +42,7 @@ function defaults(): Settings {
     view: 'alps',
     track: '',
     musicVolume: 0.5,
+    rainVolume: 0.5,
     time: 'day',
     ribbon: 'black',
     model: 'reise',
@@ -62,6 +64,8 @@ export function loadSettings(): Settings {
     const { ambience, music, ...stored } = JSON.parse(raw) as Partial<Settings> & { ambience?: string; music?: boolean };
     const merged = { ...base, ...stored, ...(ambience === 'rain' ? { rain: true } : {}) };
     if (music && stored.track === undefined) merged.track = TRACKS[0];
+    // Bis v0.20 teilten sich Musik und Regen einen Regler: Der Regen bleibt so laut wie zuletzt
+    if (stored.rainVolume === undefined && stored.musicVolume !== undefined) merged.rainVolume = stored.musicVolume;
     // Bis v0.19 hieß „America“ noch „Song 1“
     if ((merged.track as string) === 'SchreibMaschine - Song 1') merged.track = 'SchreibMaschine - America';
     if (merged.track && !TRACKS.includes(merged.track)) merged.track = '';
