@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.19.1] – 2026-10-31
+
+### Geändert
+- Song „SchreibMaschine - Song 1“ heißt jetzt „SchreibMaschine - America“ (im Menü und als Datei). Eine gespeicherte Auswahl wird übernommen.
+
 ## [0.19.0] – 2026-10-31
 
 ### Hinzugefügt

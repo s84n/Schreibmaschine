@@ -1,5 +1,5 @@
 /** Eigene Songs aus `public/music`: angezeigt wird der Dateiname ohne Endung. */
-export const TRACKS = ['SchreibMaschine - Asia', 'SchreibMaschine - Middle East', 'SchreibMaschine - Song 1'] as const;
+export const TRACKS = ['SchreibMaschine - Asia', 'SchreibMaschine - Middle East', 'SchreibMaschine - America'] as const;
 
 export type TrackId = (typeof TRACKS)[number];
 

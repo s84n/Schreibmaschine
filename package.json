@@ -1,7 +1,7 @@
 {
   "name": "schreibmaschine",
   "private": true,
-  "version": "0.19.0",
+  "version": "0.19.1",
   "description": "3D-Schreibmaschinen-Simulator im Browser",
   "type": "module",
   "scripts": {

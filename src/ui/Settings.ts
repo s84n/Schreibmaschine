@@ -60,6 +60,8 @@ export function loadSettings(): Settings {
     const { ambience, music, ...stored } = JSON.parse(raw) as Partial<Settings> & { ambience?: string; music?: boolean };
     const merged = { ...base, ...stored, ...(ambience === 'rain' ? { rain: true } : {}) };
     if (music && stored.track === undefined) merged.track = TRACKS[0];
+    // Bis v0.19 hieß „America“ noch „Song 1“
+    if ((merged.track as string) === 'SchreibMaschine - Song 1') merged.track = 'SchreibMaschine - America';
     if (merged.track && !TRACKS.includes(merged.track)) merged.track = '';
     return merged;
   } catch {

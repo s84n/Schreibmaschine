@@ -138,6 +138,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.17.0** | Mehrseitige Manuskripte, Brief als Link, Fokus-Modus, Kerze mit Rauch | ✅ |
 | **v0.18.0** | „Neues Dokument“, leiserer Regen mit Dachprasseln, realistischerer Tippklang | ✅ |
 | **v0.19.0** | Aussichten Chinesisches Dorf und Japanischer Ahornwald, eigene Songs statt generativer Musik | ✅ |
+| **v0.19.1** | Song umbenannt: „SchreibMaschine - America“ | ✅ |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -183,5 +184,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v0.19.0 auf echten Smartphones testen, Feedback sammeln.
+1. v0.19.1 auf echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.
