@@ -55,10 +55,19 @@ und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 | 💾 **Nichts verlieren** | Dein Blatt wird automatisch im Browser gespeichert und ist beim nächsten Besuch wieder da. |
 | 📄 **Exportieren** | Die fertige Seite als **PNG**, als **PDF** (A4) oder als reinen **Text** herunterladen. |
 | 📚 **Manuskript** | Fertige Blätter landen auf dem Stapel; PDF und Text enthalten alle Seiten. |
-| 🆕 **Neues Dokument** | Im Zahnrad-Menü: löscht alle Blätter und beginnt von vorn, damit im nächsten Export nichts Altes auftaucht. |
+| 🆕 **Neues Dokument** | Im Zahnrad-Menü: legt alle Blätter in die Schublade und beginnt von vorn, damit im nächsten Export nichts Altes auftaucht. |
 | 💌 **Brief als Link** | Der Empfänger sieht deinen Text Anschlag für Anschlag entstehen. Er steckt nur im Link, auf keinem Server. |
-| 🎯 **Fokus-Modus** | F2 blendet alles aus, außer Papier und Maschine. |
-| 🕯️ **Tag & Nacht** | Nachts brennt links eine Kerze mit flackerndem Licht, über dem Fenster leuchtet eine Lichterkette. |
+| 🌦️ **Stimmungen** | Ein Klick auf Regennacht, Sonntagmorgen, Herbst in Kyoto, Winterabend, Sternennacht oder Am Bosporus stellt Aussicht, Licht, Wetter, Musik und Anschlag zusammen. |
+| 🕹️ **Das Zimmer bedienen** | Kerze, Lampe, Fenster, Radio und Papierstapel lassen sich direkt anklicken. Ein Punkt zeigt, was geht, bis du es einmal benutzt hast; unter der Maus leuchtet es auf und sagt, was es tut. |
+| 🎯 **Nur noch schreiben** | Nach drei Anschlägen verschwinden Leisten und Mauszeiger, bei Mausbewegung oder Esc sind sie wieder da. |
+| 📖 **Nachlesen** | Alle Blätter flach und in Ruhe lesen, mit den Pfeiltasten umblättern. |
+| 🗄️ **Schublade** | „Neues Dokument“ legt das Manuskript hier ab. Von dort kannst du es lesen, wieder einspannen oder löschen. |
+| ↩️ **Sanfter Umbruch** | Am Zeilenende rutscht das Wort in die nächste Zeile, und ein volles Blatt wird von selbst gewechselt. Abschaltbar. |
+| ✂️ **Korrekturband** | Umschalt + Rücktaste entfernt ein Zeichen sauber. Per Schalter tut das auch die normale Rücktaste. |
+| 🪶 **Sanfter Anschlag** | Gedämpft wie auf Filz, dazu eigene Regler für Glocke und Wagenrücklauf. |
+| 👀 **Augen schonen** | Größere Schrift beim Lesen, warmes Creme-Papier und ruhige Bewegung ohne Flackern. |
+| 🔋 **Leiser Lüfter** | Im Stillstand sinkt die Bildrate von selbst. Dazu gibt es einen Akku-Modus. |
+| 🕯️ **Tag & Nacht** | Nachts brennt links eine Kerze mit flackerndem Licht, die Schreibtischlampe wirft warmes Leselicht aufs Papier, über dem Fenster leuchtet eine Lichterkette. |
 | 🎀 **Farbband wechseln** | Schwarz, Rot, Königsblau, Tannengrün, Violett oder Sepia – Geschriebenes behält seine Farbe. |
 | 🏛️ **Modell wählen** | Reise (1950er), Kontor (1930er, Messing) oder Flach (1960er) – eigene Entwürfe mit derselben Mechanik. |
 | 🌧️ **Regenwetter** | Tropfen laufen die Scheibe hinab, dazu leises Prasseln und im Hintergrund Tropfen auf dem Dach – per Schalter an und aus, mit eigenem Lautstärkeregler. |
@@ -74,6 +83,8 @@ und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 | Buchstaben, Zahlen, Zeichen | Anschlag |
 | Enter | Wagenrücklauf und Zeilenschaltung |
 | Rücktaste | Ein Schritt zurück (zum Überschreiben) |
+| Umschalt + Rücktaste | Korrekturband: Zeichen entfernen |
+| Esc | Offenes Fenster schließen, Oberfläche zurückholen |
 | Tab | Sprung zum nächsten Tabulator |
 | Umschalt / Feststelltaste | Großbuchstaben – der Typenkorb senkt sich sichtbar ab |
 

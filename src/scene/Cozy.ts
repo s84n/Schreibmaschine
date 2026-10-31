@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { animator, ease, type TweenHandle } from '../animation/Tweens';
 import { rng } from '../paper/InkCanvas';
 
 let glowTex: THREE.Texture | undefined;
@@ -60,6 +61,8 @@ export class Candle {
   /** Sekunden seit dem Auspusten; negativ = kein Rauch */
   private smokeAge = -1;
   private flameY = 0;
+  /** Ruhige Bewegung: Die Flamme steht fast still und das Licht zuckt nicht. */
+  calm = false;
 
   constructor() {
     const brass = new THREE.MeshStandardMaterial({ color: '#b08a45', metalness: 1, roughness: 0.32 });
@@ -185,16 +188,16 @@ export class Candle {
   }
 
   update(dt: number, camera: THREE.Camera): void {
-    this.time += dt;
+    this.time += this.calm ? dt * 0.2 : dt;
     const t = this.time;
     this.uniforms.uTime.value = t;
     this.updateSmoke(dt);
     if (this.night <= 0.02) return;
     // Überlagerte Schwingungen plus seltenes Aufflackern
-    const flick = 0.86 + 0.08 * Math.sin(t * 9.1) + 0.05 * Math.sin(t * 17.3 + 1) + 0.04 * Math.sin(t * 31.7) + 0.1 * Math.max(0, Math.sin(t * 1.3)) ** 12;
+    const flick = this.calm ? 0.92 : 0.86 + 0.08 * Math.sin(t * 9.1) + 0.05 * Math.sin(t * 17.3 + 1) + 0.04 * Math.sin(t * 31.7) + 0.1 * Math.max(0, Math.sin(t * 1.3)) ** 12;
     this.light.intensity = 620 * this.night * flick;
-    this.light.position.x = Math.sin(t * 11) * 0.14;
-    this.light.position.z = Math.cos(t * 13) * 0.14;
+    this.light.position.x = this.calm ? 0 : Math.sin(t * 11) * 0.14;
+    this.light.position.z = this.calm ? 0 : Math.cos(t * 13) * 0.14;
     const size = 15 * flick;
     this.glow.scale.set(size, size, 1);
     (this.glow.material as THREE.SpriteMaterial).opacity = 0.42 * this.night * flick;
@@ -202,6 +205,98 @@ export class Candle {
     // Flamme dreht sich nur um die Hochachse zur Kamera
     const p = this.group.position;
     this.flame.rotation.y = Math.atan2(camera.position.x - p.x, camera.position.z - p.z);
+  }
+}
+
+/**
+ * Schreibtischlampe mit Gelenkarm und warmem Lichtkegel aufs Papier.
+ * Ursprung = Tischplatte; `aim` ist der Zielpunkt relativ dazu. Sie wirft bewusst keinen eigenen
+ * Schatten: Das wäre eine weitere teure Schattenkarte, und nachts führt die Kerze die Schatten.
+ */
+export class DeskLamp {
+  readonly group = new THREE.Group();
+  /** Lampenkopf relativ zum Ursprung */
+  readonly head = new THREE.Vector3(23, 23, 25);
+  private readonly light: THREE.SpotLight;
+  private readonly bulb = new THREE.MeshBasicMaterial({ color: '#6d6357', toneMapped: false });
+  private readonly glow: THREE.Sprite;
+  private power = 0;
+  private night = 0;
+  private tween?: TweenHandle;
+
+  constructor(aim: THREE.Vector3) {
+    const enamel = new THREE.MeshStandardMaterial({ color: '#27443a', metalness: 0.35, roughness: 0.4 });
+    const brass = new THREE.MeshStandardMaterial({ color: '#b08a45', metalness: 1, roughness: 0.35 });
+    const base = new THREE.Mesh(new THREE.CylinderGeometry(6, 6.6, 1.3, 40), enamel);
+    base.position.y = 0.65;
+    this.group.add(base);
+
+    const elbow = new THREE.Vector3(0, 19, 3);
+    const rod = (from: THREE.Vector3, to: THREE.Vector3) => {
+      const m = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, from.distanceTo(to), 12), brass);
+      m.position.copy(from).add(to).multiplyScalar(0.5);
+      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize());
+      this.group.add(m);
+    };
+    rod(new THREE.Vector3(0, 1, 0), elbow);
+    rod(elbow, this.head);
+    const joint = new THREE.Mesh(new THREE.SphereGeometry(0.95, 16, 12), brass);
+    joint.position.copy(elbow);
+    this.group.add(joint);
+
+    // Schirm, Öffnung nach unten; danach auf das Papier ausgerichtet
+    const head = new THREE.Group();
+    head.position.copy(this.head);
+    const dir = aim.clone().sub(this.head).normalize();
+    head.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
+    const shade = new THREE.Mesh(
+      new THREE.LatheGeometry(
+        [[0.2, 2.6], [1.3, 2.4], [1.9, 1.3], [3.4, -1], [4.5, -2.6]].map(([x, y]) => new THREE.Vector2(x, y)),
+        40,
+      ),
+      new THREE.MeshStandardMaterial({ color: '#27443a', metalness: 0.35, roughness: 0.4, side: THREE.DoubleSide }),
+    );
+    const bulb = new THREE.Mesh(new THREE.SphereGeometry(1.2, 20, 14), this.bulb);
+    bulb.position.y = -0.7;
+    head.add(shade, bulb);
+    head.scale.setScalar(0.75);
+    this.group.add(head);
+    shadowed(this.group);
+    bulb.castShadow = false;
+
+    this.light = new THREE.SpotLight('#ffbe80', 0, 150, Math.PI / 3.6, 0.85, 1.6);
+    this.light.position.copy(this.head);
+    this.light.target.position.copy(aim);
+    this.group.add(this.light, this.light.target);
+
+    this.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: softTexture(), color: '#ffb066', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }));
+    this.glow.position.copy(this.head).addScaledVector(dir, 2.5);
+    this.glow.scale.setScalar(20);
+    this.glow.visible = false;
+    this.group.add(this.glow);
+  }
+
+  /** Schaltet mit kurzem Aufglühen wie eine Glühbirne. */
+  setOn(on: boolean, animate = true): void {
+    this.tween?.cancel();
+    const to = on ? 1 : 0;
+    if (!animate) return this.apply(to);
+    const from = this.power;
+    this.tween = animator.add({ duration: on ? 0.35 : 0.2, ease: ease.outQuad, onUpdate: (t) => this.apply(from + (to - from) * t) });
+  }
+
+  setNight(n: number): void {
+    this.night = n;
+    this.apply(this.power);
+  }
+
+  private apply(p: number): void {
+    this.power = p;
+    // Tagsüber kaum mehr als ein warmer Hauch, nachts das Leselicht
+    this.light.intensity = p * (60 + 520 * this.night);
+    this.bulb.color.set('#6d6357').lerp(new THREE.Color(3, 2.1, 1.2), p);
+    this.glow.visible = p > 0.01;
+    (this.glow.material as THREE.SpriteMaterial).opacity = p * (0.08 + 0.3 * this.night);
   }
 }
 

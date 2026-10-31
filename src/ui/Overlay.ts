@@ -7,7 +7,9 @@ import { RIBBONS, type RibbonId } from '../state/Document';
 import { BODY_COLORS, MODELS, type BodyColorId, type ModelId } from '../typewriter/materials';
 import { APP_VERSION } from '../version';
 import { strings, type Lang } from './i18n';
-import type { Settings } from './Settings';
+import { activeMood, MOODS, type MoodId } from './Moods';
+import type { Settings, TextSize } from './Settings';
+import type { PaperTone } from '../paper/InkCanvas';
 
 export interface OverlayActions {
   onView(view: CameraView): void;
@@ -15,7 +17,9 @@ export interface OverlayActions {
   onExport(kind: 'png' | 'pdf' | 'txt'): void;
   onSettings(next: Settings): void;
   onKeyboard(): void;
-  onFocus(on: boolean): void;
+  /** Oberfläche tritt beim Tippen zurück oder kommt wieder. */
+  onUiVisible(on: boolean): void;
+  onRead(): void;
   onShare(): void;
   onNewDocument(): void;
   onLetterPlay(): void;
@@ -28,6 +32,8 @@ export type LetterState = 'ready' | 'playing' | 'done';
 const touch = matchMedia('(pointer: coarse)');
 /** Wenig Platz (Smartphone): Werkzeugleiste verschwindet ins Zahnrad-Menü. */
 const small = matchMedia('(max-width: 820px), (max-height: 520px)');
+/** So viele Anschläge, dann blendet sich die Oberfläche aus. */
+const TYPING_HIDE_AFTER = 3;
 
 const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: string): HTMLElementTagNameMap[K] => {
   const e = document.createElement(tag);
@@ -44,7 +50,9 @@ export class Overlay {
   private started = false;
   private panelOpen = false;
   private coffeeOpen = false;
-  private focus = false;
+  private typed = 0;
+  private uiHidden = false;
+  private readonly label = el('div', 'room-label');
   private pages = 0;
   private letter?: LetterState;
   private keyboardOpen = false;
@@ -53,8 +61,59 @@ export class Overlay {
   constructor(root: HTMLElement, settings: Settings, private readonly actions: OverlayActions) {
     this.root = root;
     this.settings = { ...settings };
+    this.label.hidden = true;
+    document.body.append(this.label);
     this.render();
     small.addEventListener('change', () => this.render());
+  }
+
+  get isStarted(): boolean {
+    return this.started;
+  }
+
+  get isUiHidden(): boolean {
+    return this.uiHidden;
+  }
+
+  /** Jeder Anschlag: Nach den ersten Buchstaben tritt alles zurück, nur das Schreiben bleibt. */
+  noteTyping(): void {
+    if (this.letter || this.panelOpen || this.coffeeOpen || this.uiHidden) return;
+    if (++this.typed >= TYPING_HIDE_AFTER) this.setUiHidden(true);
+  }
+
+  /** Mausbewegung oder Berührung: Die Oberfläche ist sofort wieder da. */
+  revealUi(): void {
+    this.typed = 0;
+    if (this.uiHidden) this.setUiHidden(false);
+  }
+
+  private setUiHidden(on: boolean): void {
+    this.uiHidden = on;
+    document.body.classList.toggle('typing', on);
+    if (on) this.label.hidden = true;
+    this.actions.onUiVisible(!on);
+  }
+
+  /** Beschriftung am Mauszeiger über einem Ding im Zimmer. */
+  setRoomLabel(text: string | undefined, x: number, y: number): void {
+    this.label.hidden = !text;
+    if (!text) return;
+    this.label.textContent = text;
+    this.label.style.transform = `translate(${Math.min(x + 16, innerWidth - 300)}px, ${Math.max(y - 34, 6)}px)`;
+  }
+
+  /** Esc: das oberste Fenster schließen. Liefert false, wenn keines offen war. */
+  closeTop(): boolean {
+    if (!this.coffeeOpen && !this.panelOpen) return false;
+    if (this.coffeeOpen) this.coffeeOpen = false;
+    else this.panelOpen = false;
+    this.render();
+    return true;
+  }
+
+  /** Einstellungen von außen ändern (Dinge im Zimmer, automatische Grafik). */
+  change(patch: Partial<Settings>): void {
+    this.update(patch);
   }
 
   get isPanelOpen(): boolean {
@@ -72,18 +131,6 @@ export class Overlay {
   setView(view: CameraView): void {
     this.view = view;
     this.render();
-  }
-
-  get isFocused(): boolean {
-    return this.focus;
-  }
-
-  setFocus(on: boolean): void {
-    this.focus = on;
-    this.panelOpen = false;
-    this.actions.onFocus(on);
-    this.render();
-    if (on) this.toast(this.t.focusHint);
   }
 
   /** Anzahl fertiger Blätter für die Fußzeile. */
@@ -148,15 +195,8 @@ export class Overlay {
       this.render();
     };
     const tools: HTMLElement[] = [];
-    if (this.focus) {
-      const exit = el('button', 'btn', t.focusExit);
-      exit.onclick = () => this.setFocus(false);
-      tools.push(exit);
-      bar.classList.add('faint');
-    } else {
-      if (!small.matches) tools.push(...this.actionButtons(), el('span', 'sep'));
-      tools.push(time);
-    }
+    if (!small.matches) tools.push(...this.actionButtons(), el('span', 'sep'));
+    tools.push(time);
     if (touch.matches && !this.letter) {
       const kb = el('button', `btn icon kb${this.keyboardOpen ? ' active' : ''}`, '⌨\uFE0E');
       kb.title = t.keyboard;
@@ -167,11 +207,12 @@ export class Overlay {
       kb.onclick = () => this.actions.onKeyboard();
       tools.push(kb);
     }
-    if (!this.focus) tools.push(gear);
+    tools.push(gear);
     bar.append(...tools);
     // Buttons sollen keinen Tastaturfokus behalten (sonst löst Leertaste/Enter sie aus)
     bar.querySelectorAll('button').forEach((b) => b.addEventListener('mouseup', () => b.blur()));
     this.root.append(bar);
+    if (!small.matches && !this.letter) this.root.append(this.renderMoods());
 
     if (this.panelOpen) {
       const panel = this.renderPanel();
@@ -183,14 +224,14 @@ export class Overlay {
 
     // Startschirm
     const start = el('div', `start${this.started ? ' hidden' : ''}`);
-    start.append(el('h1', '', 'Schreibmaschine'), el('p', 'lead', t.start), el('p', 'sub', touch.matches ? t.startHintTouch : t.startHint));
+    start.append(el('h1', '', 'Schreibmaschine'), el('p', 'lead', t.start), el('p', 'sub', touch.matches ? t.startHintTouch : t.startHint), el('p', 'room-note', t.startRoom));
     this.root.append(start);
 
     const hint = el('div', 'hint', t.hint);
     const sheet = this.pages ? `${t.pageOf(this.pages + 1)} · ` : '';
     const footer = el('footer', 'footer', `Schreibmaschine v${APP_VERSION} · ${sheet}${t.saved}`);
     footer.title = t.credits;
-    if (!this.focus) this.root.append(hint, footer);
+    this.root.append(hint, footer);
     this.root.append(el('div', 'toast'), this.renderRotate());
   }
 
@@ -210,9 +251,9 @@ export class Overlay {
     sheetBtn.onclick = () => this.actions.onNewSheet();
     const share = el('button', 'btn', t.share);
     share.onclick = () => this.actions.onShare();
-    const focusBtn = el('button', 'btn', t.focus);
-    focusBtn.title = t.focusTitle;
-    focusBtn.onclick = () => this.setFocus(true);
+    const readBtn = el('button', 'btn', t.read);
+    readBtn.title = t.roomLabels.stack;
+    readBtn.onclick = () => this.actions.onRead();
     const png = el('button', 'btn', t.exportPng);
     png.onclick = () => this.actions.onExport('png');
     const pdf = el('button', 'btn', t.exportPdf);
@@ -245,8 +286,25 @@ export class Overlay {
       this.update({ track: music.value as TrackId | '' });
       music.blur();
     };
-    if (this.letter) return [viewBtn, el('span', 'sep'), png, pdf, txt, el('span', 'sep'), outlook, music];
-    return [viewBtn, focusBtn, sheetBtn, el('span', 'sep'), png, pdf, txt, share, el('span', 'sep'), outlook, music];
+    if (this.letter) return [viewBtn, readBtn, el('span', 'sep'), png, pdf, txt, el('span', 'sep'), outlook, music];
+    return [viewBtn, readBtn, sheetBtn, el('span', 'sep'), png, pdf, txt, share, el('span', 'sep'), outlook, music];
+  }
+
+  /** Stimmungen als kleine Schilder: ein Klick stellt alles passend ein. */
+  private renderMoods(): HTMLElement {
+    const t = this.t;
+    const active = activeMood(this.settings);
+    const box = el('nav', 'moods');
+    box.setAttribute('aria-label', t.moods);
+    for (const id of Object.keys(MOODS) as MoodId[]) {
+      const b = el('button', `btn mood${id === active ? ' active' : ''}`, t.moodNames[id]);
+      b.onclick = () => {
+        this.update(MOODS[id]);
+        b.blur();
+      };
+      box.append(b);
+    }
+    return box;
   }
 
   /** Hinweis im Hochformat auf Smartphones; sichtbar nur per CSS-Media-Query. */
@@ -312,6 +370,7 @@ export class Overlay {
     panel.append(el('h2', '', t.settings));
 
     if (small.matches) {
+      if (!this.letter) panel.append(this.renderMoods());
       const tools = el('div', 'tools');
       tools.append(...this.actionButtons().filter((b) => !b.classList.contains('sep')));
       panel.append(tools);
@@ -359,6 +418,9 @@ export class Overlay {
       return sel;
     };
 
+    const group = (label: string) => panel.append(el('h3', '', label));
+
+    group(t.groupWriting);
     row(t.model, select<ModelId>(s.model, (Object.keys(MODELS) as ModelId[]).map((id) => [id, t.models[id]]), (model) => this.update({ model, color: MODELS[model].color })));
     row(t.ribbon, select<RibbonId>(s.ribbon, (Object.keys(RIBBONS) as RibbonId[]).map((id) => [id, t.ribbons[id]]), (ribbon) => this.update({ ribbon })));
     const toggle = (label: string, checked: boolean, onChange: (v: boolean) => void) => {
@@ -368,17 +430,34 @@ export class Overlay {
       c.onchange = () => onChange(c.checked);
       row(label, c);
     };
+    toggle(t.softWrap, s.softWrap, (softWrap) => this.update({ softWrap }));
+    toggle(t.correction, s.correction, (correction) => this.update({ correction }));
+    panel.append(el('p', 'credits', t.correctionHint));
+    row(t.paperTone, select<PaperTone>(s.paperTone, [['classic', t.paperTones.classic], ['cream', t.paperTones.cream]], (paperTone) => this.update({ paperTone })));
+    row(t.textSize, select<TextSize>(s.textSize, [['normal', t.textSizes.normal], ['large', t.textSizes.large], ['xlarge', t.textSizes.xlarge]], (textSize) => this.update({ textSize })));
+    row(t.layout, select<LayoutId>(s.layout, (Object.keys(LAYOUTS) as LayoutId[]).map((id) => [id, LAYOUTS[id].label]), (layout) => this.update({ layout })));
+    row(t.language, select<Lang>(s.lang, [['de', 'Deutsch'], ['en', 'English']], (lang) => this.update({ lang })));
+    row(t.color, select<BodyColorId>(s.color, (Object.keys(BODY_COLORS) as BodyColorId[]).map((id) => [id, t.colors[id]]), (color) => this.update({ color })));
+
+    group(t.groupRoom);
+    toggle(t.lamp, s.lamp, (lamp) => this.update({ lamp }));
     toggle(t.rain, s.rain, (rain) => this.update({ rain }));
     toggle(t.life, s.life, (life) => this.update({ life }));
+    toggle(t.hints, s.hints, (hints) => this.update({ hints, hintsSeen: hints ? [] : s.hintsSeen }));
+
+    group(t.groupComfort);
+    toggle(t.calm, s.calm, (calm) => this.update({ calm }));
+    toggle(t.saver, s.saver, (saver) => this.update({ saver }));
+
+    group(t.groupGraphics);
+    row(t.quality, select<Quality>(s.quality, [['high', t.qualityHigh], ['low', t.qualityLow]], (quality) => this.update({ quality })));
     toggle(t.dust, s.dust, (dust) => this.update({ dust }));
     toggle(t.shafts, s.shafts, (shafts) => this.update({ shafts }));
     toggle(t.ao, s.ao, (ao) => this.update({ ao }));
-    row(t.layout, select<LayoutId>(s.layout, (Object.keys(LAYOUTS) as LayoutId[]).map((id) => [id, LAYOUTS[id].label]), (layout) => this.update({ layout })));
-    row(t.language, select<Lang>(s.lang, [['de', 'Deutsch'], ['en', 'English']], (lang) => this.update({ lang })));
-    row(t.quality, select<Quality>(s.quality, [['high', t.qualityHigh], ['low', t.qualityLow]], (quality) => this.update({ quality })));
-    row(t.color, select<BodyColorId>(s.color, (Object.keys(BODY_COLORS) as BodyColorId[]).map((id) => [id, t.colors[id]]), (color) => this.update({ color })));
 
-    const slider = (label: string, key: 'volume' | 'musicVolume' | 'rainVolume') => {
+    group(t.groupSound);
+    toggle(t.softStrike, s.softStrike, (softStrike) => this.update({ softStrike }));
+    const slider = (label: string, key: 'volume' | 'musicVolume' | 'rainVolume' | 'bellVolume' | 'returnVolume') => {
       const r = el('input');
       r.type = 'range';
       r.min = '0';
@@ -389,9 +468,14 @@ export class Overlay {
         this.settings[key] = Number(r.value);
         this.actions.onSettings(this.settings);
       };
+      // Der Regler darf den Fokus nicht behalten, sonst läuft das Tippen danach ins Leere
+      r.onpointerup = () => r.blur();
+      r.onchange = () => r.blur();
       row(label, r);
     };
     slider(t.volume, 'volume');
+    slider(t.bellVolume, 'bellVolume');
+    slider(t.returnVolume, 'returnVolume');
     slider(t.musicVolume, 'musicVolume');
     slider(t.rainVolume, 'rainVolume');
 

@@ -4,7 +4,10 @@ import type { ViewId } from '../scene/Room';
 import type { Quality, TimeOfDay } from '../scene/Scene';
 import type { RibbonId } from '../state/Document';
 import type { BodyColorId, ModelId } from '../typewriter/materials';
+import type { PaperTone } from '../paper/InkCanvas';
 import type { Lang } from './i18n';
+
+export type TextSize = 'normal' | 'large' | 'xlarge';
 
 export interface Settings {
   layout: LayoutId;
@@ -25,6 +28,26 @@ export interface Settings {
   shafts: boolean;
   life: boolean;
   ao: boolean;
+  /** Sanfter Umbruch am Zeilenende */
+  softWrap: boolean;
+  /** Korrekturband: Rücktaste entfernt das Zeichen */
+  correction: boolean;
+  /** Schreibtischlampe an */
+  lamp: boolean;
+  /** Gedämpfter Anschlag */
+  softStrike: boolean;
+  bellVolume: number;
+  returnVolume: number;
+  /** Akku-Modus */
+  saver: boolean;
+  /** Ruhige Bewegung */
+  calm: boolean;
+  textSize: TextSize;
+  paperTone: PaperTone;
+  /** Leuchtende Punkte an den bedienbaren Dingen */
+  hints: boolean;
+  /** Dinge, die schon einmal benutzt wurden und keinen Punkt mehr brauchen */
+  hintsSeen: string[];
 }
 
 const KEY = 'schreibmaschine.settings';
@@ -51,6 +74,18 @@ function defaults(): Settings {
     shafts: true,
     life: true,
     ao: true,
+    softWrap: true,
+    correction: false,
+    lamp: true,
+    softStrike: false,
+    bellVolume: 1,
+    returnVolume: 1,
+    saver: false,
+    calm: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    textSize: 'normal',
+    paperTone: 'classic',
+    hints: true,
+    hintsSeen: [],
   };
 }
 

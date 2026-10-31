@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../animation/Tweens';
-import { buildBookStack, buildCurtain, buildPencilCup, buildRainGlass, Candle, Dust, FairyLights, LightShafts, PaperStack, Steam } from './Cozy';
-import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, type DecorMaterials } from './Decor';
+import { buildBookStack, buildCurtain, buildPencilCup, buildRainGlass, Candle, DeskLamp, Dust, FairyLights, LightShafts, PaperStack, Steam } from './Cozy';
+import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, Radio, type DecorMaterials } from './Decor';
+import { RoomTargets } from './Targets';
 import { animatePanorama, OutdoorParticles, setPanoramaLife, setPanoramaMotion, tickPanorama, type ViewLife } from './OutdoorLife';
 
 export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'chinavillage' | 'japanforest' | 'starnight' | 'istanbul' | 'newyork' | 'dubai';
@@ -45,6 +46,14 @@ const ROOM = { x0: -100, x1: 100, z0: WALL_Z, z1: 130, floor: DESK_Y - 76, ceil:
 /** Wandfarbe: gebrochenes Weiß für Kontrast zum dunklen Tisch */
 const WALL_COLOR = '#fbf7f0';
 const MUG_POS = { x: 27, z: 0 };
+const CANDLE_POS = { x: -32, z: 3 };
+const STACK_POS = { x: 29, z: 21 };
+const BOOKS_POS = { x: 38, z: -24 };
+const LAMP_POS = new THREE.Vector3(-49, DESK_Y, -19);
+/** Dorthin zeigt die Schreibtischlampe: auf den Druckpunkt */
+const LAMP_AIM = new THREE.Vector3(0, 13, -4);
+/** Bewegung bei „Ruhige Bewegung“ */
+const CALM_SPEED = 0.3;
 /** Elevationsbereich des Panorama-Bands (aus dem Zuschnitt) */
 const BAND_TOP_DEG = 34.94;
 const BAND_HEIGHT_DEG = 60.06;
@@ -86,8 +95,10 @@ export class Room {
   private lifeOn = true;
   private shaftStrength = 1;
   private readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
-  /** Unsichtbarer, etwas größerer Klickbereich um die Tasse */
-  readonly mugHit: THREE.Mesh;
+  readonly lamp = new DeskLamp(LAMP_AIM.clone().sub(LAMP_POS));
+  readonly radio = new Radio();
+  readonly targets = new RoomTargets();
+  private calm = false;
 
   constructor(private readonly scene: THREE.Scene, private readonly anisotropy: number) {
     this.group.name = 'room';
@@ -122,10 +133,8 @@ export class Room {
     );
     this.group.add(this.shafts.group, this.dust.points);
 
-    this.mugHit = new THREE.Mesh(new THREE.CylinderGeometry(7, 7, 14, 12), new THREE.MeshBasicMaterial());
-    this.mugHit.position.set(MUG_POS.x, DESK_Y + 6, MUG_POS.z);
-    this.mugHit.visible = false;
-    this.group.add(this.mugHit);
+    this.buildTargets();
+    this.group.add(this.targets.group);
     this.applyLight();
   }
 
@@ -134,7 +143,39 @@ export class Room {
     this.night = n;
     this.candle.setNight(n);
     this.fairy.setNight(n);
+    this.lamp.setNight(n);
     this.applyLight();
+  }
+
+  /** Unsichtbare, etwas großzügige Klickbereiche und ihre Hinweise. */
+  private buildTargets(): void {
+    const hitMat = new THREE.MeshBasicMaterial();
+    const box = (w: number, h: number, d: number, x: number, y: number, z: number) => {
+      const m = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), hitMat);
+      m.position.set(x, y, z);
+      return m;
+    };
+    const t = this.targets;
+    const { x: cx, z: cz } = CANDLE_POS;
+    t.add('candle', box(13, 19, 13, cx, DESK_Y + 9, cz), new THREE.Vector3(cx, DESK_Y + 15, cz), 26);
+    const head = this.lamp.head.clone().add(LAMP_POS);
+    t.add('lamp', box(16, 16, 16, head.x, head.y, head.z), head.clone().add(new THREE.Vector3(1, 5, 0)), 30);
+    const r = this.radio;
+    const radioPos = r.group.position;
+    t.add('radio', box(r.size.w + 3, r.size.h + 3, r.size.d + 4, radioPos.x, radioPos.y + r.size.h / 2, radioPos.z), radioPos.clone().add(new THREE.Vector3(r.size.w / 2 - 1, r.size.h + 2, 3)), 34);
+    t.add('stack', box(24, 6, 32, STACK_POS.x, DESK_Y + 3, STACK_POS.z), new THREE.Vector3(STACK_POS.x + 2, DESK_Y + 3, STACK_POS.z - 11), 42);
+    t.add('mug', box(14, 14, 14, MUG_POS.x, DESK_Y + 6, MUG_POS.z), new THREE.Vector3(MUG_POS.x + 6, DESK_Y + 12, MUG_POS.z), 24);
+    // Das Fenster zuletzt: Es liegt hinter allem und leuchtet nur schwach auf
+    const pane = box(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0, 0.2, (WIN.x0 + WIN.x1) / 2, (WIN.y0 + WIN.y1) / 2, WALL_Z - 3);
+    t.add('window', pane, new THREE.Vector3(WIN.x1 - 36, WIN.y0 + 28, WALL_Z - 2), 150, false);
+  }
+
+  /** Ruhige Bewegung: Flamme, Staub, Regen und Lichtstrahlen werden langsam, die Aussicht steht still. */
+  setCalm(on: boolean): void {
+    this.calm = on;
+    this.candle.calm = on;
+    this.targets.calm = on;
+    this.setLife(this.lifeOn);
   }
 
   /** Regenwetter mit weicher Überblendung (beim Start ohne). */
@@ -166,8 +207,9 @@ export class Room {
 
   setLife(on: boolean): void {
     this.lifeOn = on;
-    setPanoramaMotion(on);
-    this.outdoorParticles.points.visible = on && !!this.current && !!VIEWS[this.current].life?.particles;
+    const moving = on && !this.calm;
+    setPanoramaMotion(moving);
+    this.outdoorParticles.points.visible = moving && !!this.current && !!VIEWS[this.current].life?.particles;
   }
 
   private applyRain(r: number): void {
@@ -178,13 +220,15 @@ export class Room {
   }
 
   update(dt: number, camera: THREE.Camera): void {
+    const slow = this.calm ? dt * CALM_SPEED : dt;
     this.candle.update(dt, camera);
-    this.steam.update(dt);
-    this.dust.update(dt, window.innerHeight);
-    this.shafts.update(dt);
-    this.rainGlass.uniforms.uTime.value += dt;
+    this.steam.update(slow);
+    this.dust.update(slow, window.innerHeight);
+    this.shafts.update(slow);
+    this.rainGlass.uniforms.uTime.value += slow;
     tickPanorama(dt);
     this.outdoorParticles.update(dt, window.innerHeight);
+    this.targets.update(dt);
   }
 
   private applyLight(): void {
@@ -235,7 +279,7 @@ export class Room {
         this.dusk = !!view.dusk;
         setPanoramaLife(view.life);
         this.outdoorParticles.setKind(view.life?.particles);
-        this.outdoorParticles.points.visible &&= this.lifeOn;
+        this.outdoorParticles.points.visible &&= this.lifeOn && !this.calm;
         animator.add({
           duration: 0.5,
           ease: ease.outQuad,
@@ -443,16 +487,25 @@ export class Room {
     g.add(mug, this.steam.group);
 
     // Kerze links neben der Maschine (außerhalb der Wagenbahn)
-    this.candle.group.position.set(-32, DESK_Y, 3);
+    this.candle.group.position.set(CANDLE_POS.x, DESK_Y, CANDLE_POS.z);
     g.add(this.candle.group);
+
+    // Schreibtischlampe links hinten, ihr Licht fällt aufs Papier
+    this.lamp.group.position.copy(LAMP_POS);
+    g.add(this.lamp.group);
 
     // Schreibtisch-Kleinigkeiten
     const stack = buildBookStack(9);
-    stack.position.set(38, DESK_Y, -24);
+    stack.position.set(BOOKS_POS.x, DESK_Y, BOOKS_POS.z);
     stack.rotation.y = 0.25;
+    // Das Radio steht auf dem Bücherstapel
+    const booksTop = new THREE.Box3().setFromObject(stack).max.y;
+    this.radio.group.position.set(BOOKS_POS.x, booksTop, BOOKS_POS.z);
+    this.radio.group.rotation.y = -0.18;
+    g.add(this.radio.group);
     const pencils = buildPencilCup(4);
     pencils.position.set(-38, DESK_Y, -20);
-    this.paper.group.position.set(29, DESK_Y, 21);
+    this.paper.group.position.set(STACK_POS.x, DESK_Y, STACK_POS.z);
     this.paper.group.rotation.y = -0.12;
     g.add(stack, pencils, this.paper.group);
 

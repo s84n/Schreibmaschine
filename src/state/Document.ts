@@ -10,7 +10,7 @@ export const PAGE = {
 };
 
 export const MAX_COLS = Math.floor((PAGE.widthCm - 2 * PAGE.marginLeftCm) / PAGE.pitchCm); // 65
-export const MAX_LINES = Math.floor((PAGE.heightCm - PAGE.marginTopCm - PAGE.marginBottomCm) / PAGE.lineCm); // 59
+export const MAX_LINES = Math.floor((PAGE.heightCm - PAGE.marginTopCm - PAGE.marginBottomCm) / PAGE.lineCm); // 60
 /** Glocke ertönt so viele Anschläge vor dem rechten Rand. */
 export const BELL_COLS_BEFORE_END = 8;
 
@@ -45,6 +45,16 @@ interface Stored {
 
 const STORAGE_KEY = 'schreibmaschine.doc';
 const PAGES_KEY = 'schreibmaschine.pages';
+const DRAWER_KEY = 'schreibmaschine.drawer';
+
+/** Ein abgelegtes Manuskript in der Schublade. */
+export interface DrawerEntry {
+  id: string;
+  title: string;
+  /** Zeitpunkt des Ablegens (ms seit 1970) */
+  at: number;
+  pages: Strike[][];
+}
 
 /** Logischer Zustand des eingespannten Blatts: alle Anschläge + Wagenposition. */
 export class TypedDocument {
@@ -53,6 +63,8 @@ export class TypedDocument {
   col = 0;
   /** Fertige Blätter des Manuskripts, ältestes zuerst */
   pages: Strike[][] = [];
+  /** Abgelegte Manuskripte, neuestes zuerst */
+  drawer: DrawerEntry[] = [];
   /** Aus: Ein empfangener Brief darf das eigene Blatt nicht überschreiben. */
   persist = true;
   /** Wird gerufen, wenn der Browser-Speicher voll ist und nicht gesichert werden konnte. */
@@ -60,6 +72,12 @@ export class TypedDocument {
   private saveTimer = 0;
 
   load(): boolean {
+    try {
+      const drawer = JSON.parse(localStorage.getItem(DRAWER_KEY) ?? '[]') as unknown;
+      if (Array.isArray(drawer)) this.drawer = drawer as DrawerEntry[];
+    } catch {
+      /* beschädigte Schublade überspringen */
+    }
     try {
       const pages = JSON.parse(localStorage.getItem(PAGES_KEY) ?? '[]') as unknown;
       if (Array.isArray(pages)) this.pages = pages as Strike[][];
@@ -96,12 +114,49 @@ export class TypedDocument {
     if (this.persist) this.write(PAGES_KEY, JSON.stringify(this.pages));
   }
 
-  private write(key: string, value: string): void {
+  private write(key: string, value: string): boolean {
     try {
       localStorage.setItem(key, value);
+      return true;
     } catch {
       this.onSaveFailed?.();
+      return false;
     }
+  }
+
+  /**
+   * Legt das ganze Manuskript in die Schublade und beginnt leer.
+   * Passt es nicht mehr in den Speicher, bleibt alles unverändert (Rückgabe false).
+   */
+  archive(): boolean {
+    const pages = this.allPages();
+    if (!pages.length) return true;
+    const entry: DrawerEntry = { id: `${Date.now().toString(36)}-${Math.floor(Math.random() * 1e6).toString(36)}`, title: titleOf(pages), at: Date.now(), pages };
+    if (this.persist && !this.write(DRAWER_KEY, JSON.stringify([entry, ...this.drawer]))) return false;
+    this.drawer.unshift(entry);
+    this.discardAll();
+    return true;
+  }
+
+  /** Spannt ein Manuskript aus der Schublade wieder ein; das aktuelle tauscht den Platz mit ihm. */
+  takeFromDrawer(id: string): boolean {
+    const entry = this.drawer.find((e) => e.id === id);
+    if (!entry || !this.archive()) return false;
+    this.deleteFromDrawer(id);
+    const last = entry.pages[entry.pages.length - 1] ?? [];
+    this.pages = entry.pages.slice(0, -1);
+    this.strikes = [...last];
+    const end = last.reduce<Strike | undefined>((a, s) => (!a || s.line > a.line || (s.line === a.line && s.col >= a.col) ? s : a), undefined);
+    this.line = end?.line ?? 0;
+    this.col = end ? Math.min(end.col + 1, MAX_COLS) : 0;
+    this.savePages();
+    this.saveNow();
+    return true;
+  }
+
+  deleteFromDrawer(id: string): void {
+    this.drawer = this.drawer.filter((e) => e.id !== id);
+    if (this.persist) this.write(DRAWER_KEY, JSON.stringify(this.drawer));
   }
 
   /** Legt das Blatt aufs Manuskript (leere Blätter nicht) und beginnt ein neues. */
@@ -135,6 +190,15 @@ export class TypedDocument {
   toPlainText(): string {
     return this.allPages().map(pageText).join('\n\n\f\n');
   }
+}
+
+/** Erste beschriebene Zeile als Titel. */
+function titleOf(pages: Strike[][]): string {
+  for (const page of pages) {
+    const line = pageText(page).split('\n').map((l) => l.trim()).find(Boolean);
+    if (line) return line.length > 48 ? `${line.slice(0, 47)}…` : line;
+  }
+  return '';
 }
 
 function pageText(strikes: Strike[]): string {

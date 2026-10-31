@@ -2,6 +2,35 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.22.0] – 2026-11-01
+
+### Hinzugefügt
+- **Stimmungen:** Ein Klick auf Regennacht, Sonntagmorgen, Herbst in Kyoto, Winterabend, Sternennacht oder Am Bosporus stellt Aussicht, Tageszeit, Regen, Lampe, Musik und Anschlag zusammen.
+- **Dinge im Zimmer bedienen:** Kerze (Tag/Nacht), Schreibtischlampe, Fenster (nächste Aussicht), Radio (nächster Song/aus) und Papierstapel (Nachlesen). Ein bernsteinfarbener Punkt zeigt jedes Ding, bis es einmal benutzt wurde; unter der Maus leuchtet es auf und nennt seine Funktion. Die Punkte lassen sich im Menü aus- und wieder einschalten.
+- **Schreibtischlampe und Radio** als neue Gegenstände. Die Lampe gibt nachts warmes Leselicht aufs Papier, die Radioskala leuchtet, solange Musik läuft.
+- **Leseansicht:** Alle Blätter flach und in Ruhe nachlesen, mit Pfeiltasten umblättern.
+- **Schublade:** Abgelegte Manuskripte lesen, wieder einspannen oder löschen.
+- **Sanfter Umbruch** (Schalter, standardmäßig an): Am Zeilenende rutscht das Wort samt Wagenrücklauf in die nächste Zeile, auf der letzten Zeile aufs nächste Blatt.
+- **Korrekturband:** Umschalt + Rücktaste entfernt das Zeichen immer, per Schalter auch die normale Rücktaste. Das Überschreiben bleibt der Standard.
+- **Sanfter Anschlag** (gedämpft wie auf Filz) sowie eigene Regler für Glocke und Wagenrücklauf.
+- **Akku-Modus:** halbe Bildrate, geringere Auflösung, keine Kontaktschatten.
+- **Ruhige Bewegung:** Flamme, Staub, Regen und Dampf werden langsam, die Aussicht steht still, die Kamera wechselt ohne Fahrt. Standardmäßig an, wenn das System weniger Bewegung wünscht.
+- **Schriftgröße** für Papieransicht und Leseansicht sowie **warmes Creme-Papier** (auch im Export).
+
+### Geändert
+- Die Oberfläche blendet sich nach drei Anschlägen aus, samt Mauszeiger, und kommt bei Mausbewegung, Berührung oder Esc zurück.
+- „Neues Dokument“ legt das Manuskript in die Schublade, statt es zu löschen; die Sicherheitsabfrage entfällt.
+- Volles Blatt: Enter auf der letzten Zeile spannt selbst das nächste Blatt ein, statt die Zeile zu überschreiben.
+- Die Bildrate folgt dem Geschehen (60 aktiv, 30 und 20 im Stillstand, 15 im Hintergrund, 5 unter der Leseansicht), Schattenkarten werden im Stillstand seltener erneuert. Bleibt das Bild dauerhaft zu langsam, sinkt erst die Auflösung, dann die Grafikstufe.
+- Einstellungen in Gruppen geordnet, Esc schließt offene Fenster.
+
+### Behoben
+- Während des Blattwechsels getippte Zeichen gingen verloren; sie landen jetzt auf dem neuen Blatt. Auch der Rückstau beim schnellen Tippen ist größer.
+- Nach dem Verstellen eines Lautstärkereglers lief das Tippen ins Leere.
+
+### Entfernt
+- Fokus-Modus (F2): Das automatische Ausblenden ersetzt ihn.
+
 ## [0.21.0] – 2026-11-01
 
 ### Hinzugefügt

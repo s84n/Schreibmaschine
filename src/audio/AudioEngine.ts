@@ -44,6 +44,11 @@ export class AudioEngine {
   private volume = 0.8;
   private musicVolume = 0.5;
   private rainVolume = 0.5;
+  private bellVolume = 1;
+  private returnVolume = 1;
+  private soft = false;
+  private softFilter?: BiquadFilterNode;
+  private softGain?: GainNode;
   private muted = false;
   private loading?: Promise<void>;
   private lastStrike = -1;
@@ -66,7 +71,12 @@ export class AudioEngine {
     this.noise = ctx.createBuffer(1, ctx.sampleRate, ctx.sampleRate);
     this.noise.getChannelData(0).forEach((_, i, d) => (d[i] = Math.random() * 2 - 1));
     this.sfx = ctx.createGain();
-    this.sfx.connect(this.buildSfxChain(ctx, this.master));
+    // Sanfter Anschlag: als läge ein Filz unter der Maschine, dumpfer und leiser
+    this.softFilter = ctx.createBiquadFilter();
+    this.softFilter.type = 'lowpass';
+    this.softFilter.Q.value = 0.3;
+    this.softGain = ctx.createGain();
+    this.sfx.connect(this.softFilter).connect(this.softGain).connect(this.buildSfxChain(ctx, this.master));
     this.musicBus = ctx.createGain();
     this.musicBus.connect(this.master);
     this.rainBus = ctx.createGain();
@@ -108,6 +118,19 @@ export class AudioEngine {
     this.applyVolume();
   }
 
+  setBellVolume(v: number): void {
+    this.bellVolume = v;
+  }
+
+  setReturnVolume(v: number): void {
+    this.returnVolume = v;
+  }
+
+  setSoft(on: boolean): void {
+    this.soft = on;
+    this.applyVolume();
+  }
+
   setMuted(m: boolean): void {
     this.muted = m;
     this.applyVolume();
@@ -144,15 +167,17 @@ export class AudioEngine {
         this.playBuffer(this.pickStrike(), when, { rate: 0.6, gain: 0.35 * g, lowpass: 600 });
         break;
       case 'bell':
-        this.playBuffer(this.bell, when, { rate: 0.98 + Math.random() * 0.04, gain: 0.6 * g });
+        this.playBuffer(this.bell, when, { rate: 0.98 + Math.random() * 0.04, gain: 0.6 * g * this.bellVolume });
         break;
-      case 'return':
+      case 'return': {
         // Zeilenschaltung: zwei Ratschen-Klicks des Hebels, dann Wagenlauf + Anschlag
+        const level = g * this.returnVolume;
         for (const dt of [0, 0.055]) {
-          this.playBuffer(this.pickStrike(), when + dt, { rate: 1.35 + Math.random() * 0.1, gain: 0.32 * g, lowpass: 3500 });
+          this.playBuffer(this.pickStrike(), when + dt, { rate: 1.35 + Math.random() * 0.1, gain: 0.32 * level, lowpass: 3500 });
         }
-        this.playBuffer(this.ret, when + 0.04, { gain: 1.0 * g, offset: opts.offset });
+        this.playBuffer(this.ret, when + 0.04, { gain: level, offset: opts.offset });
         break;
+      }
     }
   }
 
@@ -161,7 +186,7 @@ export class AudioEngine {
     const gap = when - this.lastHit;
     this.lastHit = when;
     // Ein bewusster Einzelanschlag trifft härter als einer mitten im schnellen Tippen
-    const force = (0.68 + 0.2 * Math.min(1, gap / 0.35) + Math.random() * 0.2 + (opts.heavy ? 0.08 : 0)) * (opts.gain ?? 1);
+    const force = (0.68 + 0.2 * Math.min(1, gap / 0.35) + Math.random() * 0.2 + (opts.heavy ? 0.08 : 0)) * (opts.gain ?? 1) * (this.soft ? 0.75 : 1);
     const voice = hash(opts.ch?.toLowerCase() ?? '');
     const out = this.panned(opts.pan);
 
@@ -340,6 +365,11 @@ export class AudioEngine {
     this.sfx.gain.value = this.volume;
     this.musicBus.gain.value = this.musicVolume;
     this.rainBus.gain.value = this.rainVolume;
+    if (this.softFilter && this.softGain && this.ctx) {
+      const now = this.ctx.currentTime;
+      this.softFilter.frequency.setTargetAtTime(this.soft ? 1500 : 20000, now, 0.05);
+      this.softGain.gain.setTargetAtTime(this.soft ? 0.6 : 1, now, 0.05);
+    }
   }
 
   /** Schneidet die Stille vor dem Aufschlag ab: Die Samples beginnen bis zu 30 ms versetzt. */

@@ -2,7 +2,7 @@
 
 > Zentrale Quelle für alle Planungsdetails. Jede Planänderung wird hier festgehalten (mit Versionsnummer).
 
-**Aktuelle Planversion:** v0.11.0 (2026-10-30) · **Aktuelle App-Version:** v0.17.0
+**Aktuelle Planversion:** v0.16.0 (2026-11-01) · **Aktuelle App-Version:** v0.22.0
 
 ---
 
@@ -33,6 +33,9 @@ originalgetreu. Hosting über **GitHub Pages**, installierbar als **PWA**.
 | Smartphone | Echtes Erzwingen des Querformats geht nur per Vollbild + Orientation-Lock (nicht in iOS Safari). Daher: Sperrhinweis im Hochformat überall, Lock-Button wo verfügbar. Kein CSS-Drehen der Seite, weil die Systemtastatur sonst quer zum Bild aufginge |
 | Modelle | Eigene Entwürfe nach Epochen (Reise, Kontor, Flach) statt Nachbauten: Markennamen und Logos wie Olympia werden nicht verwendet |
 | Katze | Bewusst nicht im Konzept: vom Nutzer als Modell verworfen (v0.14.0) |
+| Bequemlichkeit | Leitlinie seit v0.22.0: Nichts soll den Schreibfluss unterbrechen, wenig Einstellen, nichts geht verloren. Bewusst keine Serien, Abzeichen, Benachrichtigungen oder Tagesziele |
+| Bedienung im Zimmer | Dinge sind direkt anklickbar. Erkennbar durch Punkt (bis zur ersten Benutzung), Aufleuchten und Beschriftung unter der Maus. Die Leiste bleibt als zweiter Weg erhalten |
+| Fokus-Modus | Entfernt (v0.22.0): Das automatische Ausblenden beim Tippen ersetzt ihn |
 | Kaffee-Link | Nur ein externer Link (`DONATE_URL` in `src/config.ts`), kein eingebettetes Widget, kein Tracking, keine Gegenleistung; Wortlaut „Kaffee ausgeben“ statt „Spende“ |
 | Versionierung | **SemVer** (`MAJOR.MINOR.PATCH`), `CHANGELOG.md`, Git-Tags `vX.Y.Z`, Version in `package.json` und im UI-Footer |
 
@@ -74,7 +77,8 @@ schreibmaschine/
 │   │   ├── Environment.ts   # RoomEnvironment-Reflexionen, Lampe, Gegenlicht
 │   │   ├── Room.ts          # Tisch, Raumhülle, Fenster, Aussicht (Kugel), Fensterlicht
 │   │   ├── Decor.ts         # Regale, Efeutute, Bücher, Bild, Tasse (prozedural)
-│   │   └── Cozy.ts          # Kerze, Dampf, Lichterkette, Vorhang, Regen auf der Scheibe, Schreibtisch-Kleinigkeiten
+│   │   ├── Cozy.ts          # Kerze, Lampe, Dampf, Lichterkette, Vorhang, Regen auf der Scheibe, Schreibtisch-Kleinigkeiten
+│   │   └── Targets.ts       # Bedienbare Dinge im Zimmer: Klickbereiche, Punkte, Aufleuchten
 │   ├── typewriter/
 │   │   ├── Typewriter.ts    # Zusammenbau, Zustandsmaschine
 │   │   ├── dims.ts          # zentrale Maße (cm), Druckpunkt
@@ -99,7 +103,9 @@ schreibmaschine/
 │   ├── export/
 │   │   └── Export.ts        # PNG / PDF (jsPDF, nachgeladen) / TXT
 │   ├── ui/
-│   │   ├── Overlay.ts       # Werkzeugleiste, Einstellungs-Panel, Startschirm, Toasts
+│   │   ├── Overlay.ts       # Werkzeugleiste, Einstellungs-Panel, Startschirm, Toasts, Ausblenden beim Tippen
+│   │   ├── Moods.ts         # Stimmungen: Bündel aus Aussicht, Licht, Wetter, Musik, Anschlag
+│   │   ├── Reader.ts        # Leseansicht und Schublade
 │   │   ├── Settings.ts      # Einstellungen laden/speichern
 │   │   └── i18n.ts          # DE/EN Strings
 │   ├── config.ts            # DONATE_URL
@@ -141,6 +147,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.19.1** | Song umbenannt: „SchreibMaschine - America“ | ✅ |
 | **v0.20.0** | Panoramafenster, 8K-Aussichten, belebte Aussicht | ✅ (Bildrate und 8K-Texturen auf echten Geräten offen) |
 | **v0.21.0** | Eigener Lautstärkeregler für den Regen | ✅ |
+| **v0.22.0** | Bequemlichkeit: Stimmungen, bedienbare Dinge im Zimmer, Lampe, Radio, Leseansicht, Schublade, sanfter Umbruch, Korrekturband, sanfter Anschlag, Ausblenden beim Tippen, gedrosselte Bildrate, Akku-Modus, ruhige Bewegung, Schriftgröße, Creme-Papier | ✅ (Lüfter und Bildrate auf echter GPU offen, Test auf echten Smartphones offen) |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -158,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.16.0** (2026-11-01) – Nutzerwunsch → App v0.22.0: Komfort-Paket aus der Ideenliste. Schublade nur im nötigen Umfang (ablegen, lesen, wieder einspannen, löschen), weil „Neues Dokument“ nichts mehr löschen soll; sie liegt weiter im localStorage. Noch nicht umgesetzt aus der Liste: siehe Abschnitt 8.
 - **v0.15.0** (2026-11-01) – Nutzerwunsch → App v0.21.0: drei getrennte Regler für Maschine, Musik und Regen, Regen auf eigenem Audio-Bus.
 - **v0.14.0** (2026-11-01) – Nutzerwunsch → App v0.20.0: Fenster stark vergrößert, Bewegung per Shader und Partikeln statt Video (kein Download, läuft endlos). Mögliche Ausbaustufe: echte Video-Loops für einzelne Aussichten.
 - **v0.13.0** (2026-10-31) – Nutzerwunsch → App v0.19.0: zwei Aussichten, generative Musik durch eigene Songs ersetzt. Neue Songs: Datei in `public/music` legen und in `TRACKS` (`src/audio/Music.ts`) eintragen.
@@ -181,11 +189,12 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 - Cozy-Ideen: Tag/Nacht nach Uhrzeit, Tippen auf den 3D-Tasten, verblassendes Farbband.
 - Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz, Performance auf schwächerer Hardware.
 - Ideen: Umgebungsgeräusche passend zur Aussicht (Wellen, Vögel, Grillen), weitere Aussichten, Musik-Varianten (Tonarten/Tempi), sichtbare Schreibtischlampe.
+- Aus der Komfort-Liste noch offen: Tageszeit nach Uhrzeit und goldene Abendstunde, Kamera merken, Wiedergabeliste und Überblendung, Einschlaf-Timer, Geräusche passend zur Aussicht, Songs offline speichern, IndexedDB statt localStorage, Sichern und Öffnen als Datei, `pagehide`-Speichern, Wake Lock, Kerze als stille Uhr, Schreibimpuls, Feierabend-Geste.
 - Bundle-Größe (~720 kB JS, davon Three.js) – optional Code-Splitting.
 
 ---
 
 ## Nächster Schritt
 
-1. v0.21.0 auf echten Smartphones testen, Feedback sammeln.
+1. v0.22.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

@@ -255,3 +255,55 @@ export function buildPicture(m: DecorMaterials, w: number, h: number, seed: numb
   frame(F, h + 8, (w + 8) / 2 + F / 2, 0);
   return shadowed(g);
 }
+
+/** Röhrenradio aus Holz; Ursprung = Boden, Front zeigt nach +z. */
+export class Radio {
+  readonly group = new THREE.Group();
+  readonly size = { w: 17, h: 10, d: 7 };
+  private readonly dial = new THREE.MeshBasicMaterial({ color: '#4a3f2c', toneMapped: false });
+
+  constructor() {
+    const { w, h, d } = this.size;
+    const wood = new THREE.MeshStandardMaterial({ color: '#5d3620', roughness: 0.5 });
+    const cabinet = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wood);
+    cabinet.position.y = h / 2;
+    this.group.add(cabinet);
+
+    // Bespannung des Lautsprechers mit feinem Webmuster
+    const c = document.createElement('canvas');
+    c.width = c.height = 64;
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = '#b09a78';
+    ctx.fillRect(0, 0, 64, 64);
+    ctx.fillStyle = '#8c7758';
+    for (let i = 0; i < 64; i += 4) {
+      ctx.fillRect(i, 0, 1, 64);
+      ctx.fillRect(0, i, 64, 1);
+    }
+    const cloth = new THREE.CanvasTexture(c);
+    cloth.colorSpace = THREE.SRGBColorSpace;
+    cloth.wrapS = cloth.wrapT = THREE.RepeatWrapping;
+    cloth.repeat.set(3, 2);
+    const grille = new THREE.Mesh(new THREE.PlaneGeometry(9, 6.6), new THREE.MeshStandardMaterial({ map: cloth, roughness: 1 }));
+    grille.position.set(-3, h / 2, d / 2 + 0.02);
+    this.group.add(grille);
+
+    const dial = new THREE.Mesh(new THREE.PlaneGeometry(5, 2.2), this.dial);
+    dial.position.set(5, h / 2 + 2, d / 2 + 0.02);
+    this.group.add(dial);
+    const brass = new THREE.MeshStandardMaterial({ color: '#b08a45', metalness: 1, roughness: 0.35 });
+    for (const x of [3.3, 6.7]) {
+      const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.05, 1, 20), brass);
+      knob.rotation.x = Math.PI / 2;
+      knob.position.set(x, h / 2 - 1.9, d / 2 + 0.5);
+      this.group.add(knob);
+    }
+    shadowed(this.group);
+    this.setOn(false);
+  }
+
+  /** Die Skala leuchtet, solange Musik läuft. */
+  setOn(on: boolean): void {
+    this.dial.color.set(on ? '#ffbf6a' : '#4a3f2c');
+  }
+}

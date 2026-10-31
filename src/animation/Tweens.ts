@@ -50,6 +50,11 @@ export class Animator {
     return this.add({ duration: 0, delay, onUpdate: () => {}, onComplete: fn });
   }
 
+  /** Läuft gerade etwas? Dann braucht die Szene volle Bildrate. */
+  get busy(): boolean {
+    return this.tweens.length > 0;
+  }
+
   update(dt: number): void {
     const list = this.tweens;
     this.tweens = [];

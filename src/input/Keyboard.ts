@@ -38,7 +38,8 @@ export function bindKeyboard(tw: Typewriter, onFirstInput: () => void, enabled: 
         tw.carriageReturn();
         break;
       case 'Backspace':
-        tw.backspace();
+        // Umschalt+Rücktaste nimmt immer das Korrekturband
+        tw.backspace(e.shiftKey);
         break;
       case 'Tab':
         tw.tab();

@@ -13,12 +13,16 @@ import { STRIKE_UP, Typebars } from './parts/Typebars';
 
 /** Mindestabstand zwischen zwei Anschlägen (zwei Typen können nicht gleichzeitig am Druckpunkt sein). */
 const STRIKE_GAP = 0.045;
-/** Maximaler Rückstau an Eingaben in Sekunden – darüber wird ignoriert ("verklemmt"). */
-const MAX_BACKLOG = 0.8;
+/** Rückstau an Eingaben in Sekunden, den die Mechanik abarbeitet: Kein Buchstabe soll verloren gehen. */
+const MAX_BACKLOG = 4;
+/** Gehaltene Rücktaste läuft nicht nach, wenn man sie loslässt. */
+const MAX_BACKSPACE_BACKLOG = 0.3;
+/** Eingaben, die während eines Blattwechsels warten. */
+const MAX_PENDING = 80;
 /** Zeitpunkt des Anschlags im Rücklauf-Sample (Wagen schlägt an). */
 const RETURN_THUNK_AT = 1.15;
 
-export type TypewriterEvent = 'pageEnd' | 'change' | 'sheet';
+export type TypewriterEvent = 'pageEnd' | 'change' | 'sheet' | 'input';
 
 /**
  * Die komplette Maschine: Aufbau der 3D-Teile und Mechanik-Logik.
@@ -40,6 +44,13 @@ export class Typewriter {
   private body: THREE.Group;
   private ribbonId: RibbonId = 'black';
   private listeners: Partial<Record<TypewriterEvent, (() => void)[]>> = {};
+  /** Blatt wird gewechselt: Eingaben warten, damit sie auf dem neuen Blatt landen */
+  private sheetChanging = false;
+  private pending: (() => void)[] = [];
+  /** Sanfter Umbruch: Am Zeilenende rutscht das Wort in die nächste Zeile, statt zu sperren. */
+  softWrap = false;
+  /** Korrekturband: Die Rücktaste entfernt das Zeichen, statt nur zurückzusetzen. */
+  correction = false;
 
   constructor(
     layout: Layout,
@@ -112,6 +123,12 @@ export class Typewriter {
   // ───────────────────────── Eingaben ─────────────────────────
 
   type(ch: string, code: string): void {
+    if (this.hold(() => this.type(ch, code))) return;
+    this.emit('input');
+    if (this.doc.col >= MAX_COLS && this.softWrap) {
+      this.wrapWord();
+      if (this.hold(() => this.type(ch, code))) return;
+    }
     const key = this.keyboard.find(ch, code);
     if (key?.def && this.shiftLocked && ch === key.def.lower) ch = key.def.upper;
     const slot = this.reserve(STRIKE_GAP);
@@ -147,6 +164,10 @@ export class Typewriter {
   }
 
   space(): void {
+    if (this.hold(() => this.space())) return;
+    this.emit('input');
+    // Das Leerzeichen am Zeilenende ist der Umbruch selbst
+    if (this.doc.col >= MAX_COLS && this.softWrap) return this.carriageReturn();
     const slot = this.reserve(0.035);
     if (slot < 0) return;
     const bar = this.keyboard.getSpecial('space');
@@ -163,8 +184,13 @@ export class Typewriter {
     this.at(slot + 0.02, () => this.carriage.moveToCol(col));
   }
 
-  backspace(): void {
-    const slot = this.reserve(0.06);
+  /** Rückschritt; mit Korrekturband (eingeschaltet oder `erase`) verschwindet das Zeichen dabei. */
+  backspace(erase = false): void {
+    if (this.hold(() => this.backspace(erase))) return;
+    this.emit('input');
+    const correcting = (erase || this.correction) && this.doc.col > 0;
+    // Das Band arbeitet erst, wenn alle Typen davor aufgeschlagen haben
+    const slot = this.reserve(correcting ? STRIKE_UP + 0.05 : 0.06, MAX_BACKSPACE_BACKLOG);
     if (slot < 0) return;
     this.at(slot, () => this.keyboard.press(this.keyboard.getSpecial('backspace')));
     if (this.doc.col === 0) return;
@@ -173,9 +199,20 @@ export class Typewriter {
     this.doc.scheduleSave();
     this.audio.play('soft', slot + 0.02);
     this.at(slot + 0.02, () => this.carriage.moveToCol(col, 0.06));
+    if (!correcting) return;
+    const line = this.doc.line;
+    this.doc.strikes = this.doc.strikes.filter((s) => s.line !== line || s.col !== col);
+    this.emit('change');
+    this.audio.play('soft', slot + STRIKE_UP, { gain: 0.5 });
+    this.at(slot + 0.02, () => this.ribbon.lift(STRIKE_UP));
+    // Stand von jetzt: Später getippte Zeichen zeichnen sich bei ihrem Aufschlag selbst
+    const rest = [...this.doc.strikes];
+    this.at(slot + STRIKE_UP + 0.03, () => this.ink.repaint(line, col, col, rest));
   }
 
   tab(): void {
+    if (this.hold(() => this.tab())) return;
+    this.emit('input');
     const target = Math.min(MAX_COLS, Math.floor(this.doc.col / 5) * 5 + 5);
     const dist = target - this.doc.col;
     const duration = 0.05 + dist * 0.012;
@@ -189,19 +226,76 @@ export class Typewriter {
   }
 
   carriageReturn(): void {
+    if (this.hold(() => this.carriageReturn())) return;
+    this.emit('input');
+    // Auf der letzten Zeile: Blatt ist voll, das nächste wird von selbst eingespannt
+    if (this.doc.line + 1 >= MAX_LINES) {
+      this.emit('pageEnd');
+      this.newSheet();
+      return;
+    }
     const frac = this.doc.col / MAX_COLS;
     const duration = 0.16 + 0.42 * frac;
     const slot = this.reserve(duration + 0.12);
     if (slot < 0) return;
-    const canFeed = this.doc.line + 1 < MAX_LINES;
     this.doc.col = 0;
-    if (canFeed) this.doc.line++;
+    this.doc.line++;
     const line = this.doc.line;
     this.doc.scheduleSave();
     this.emit('change');
     this.audio.play('return', slot, { offset: Math.max(0, RETURN_THUNK_AT - (duration + 0.06)) });
-    this.at(slot, () => this.carriage.carriageReturn(0, line, duration, canFeed));
-    if (!canFeed) this.emit('pageEnd');
+    this.at(slot, () => this.carriage.carriageReturn(0, line, duration, true));
+  }
+
+  /**
+   * Sanfter Umbruch: Das angefangene Wort wandert samt Wagenrücklauf in die nächste Zeile.
+   * Ein Wort, das die ganze Zeile füllt, bleibt stehen und wird nur fortgesetzt.
+   */
+  private wrapWord(): void {
+    const line = this.doc.line;
+    const filled = new Set(this.doc.strikes.filter((s) => s.line === line).map((s) => s.col));
+    let start = MAX_COLS;
+    while (start > 0 && filled.has(start - 1)) start--;
+    if (start === 0 || start === MAX_COLS) return this.carriageReturn();
+
+    const word = this.doc.strikes.filter((s) => s.line === line && s.col >= start);
+    this.doc.strikes = this.doc.strikes.filter((s) => s.line !== line || s.col < start);
+
+    // Letzte Zeile: Das Wort beginnt das nächste Blatt und wird dort wie neu getippt
+    if (line + 1 >= MAX_LINES) {
+      const rest = this.doc.strikes;
+      this.at(this.busyFor + STRIKE_UP + 0.02, () => this.ink.repaint(line, start, MAX_COLS - 1, rest));
+      this.emit('pageEnd');
+      this.newSheet();
+      const last = new Map(word.map((s) => [s.col, s.ch]));
+      for (const ch of [...last.entries()].sort((a, b) => a[0] - b[0]).map(([, c]) => c)) this.pending.push(() => this.type(ch, ''));
+      return;
+    }
+
+    const moved = word.map((s) => ({ ...s, line: line + 1, col: s.col - start }));
+    const col = Math.max(...moved.map((s) => s.col)) + 1;
+    const duration = 0.16 + 0.42 * (1 - col / MAX_COLS);
+    // Erst aufräumen, wenn die letzte Type des Worts aufgeschlagen hat
+    const slot = this.reserve(STRIKE_UP + 0.02 + duration + 0.12, Infinity);
+    const moveAt = slot + STRIKE_UP + 0.02;
+    this.doc.strikes.push(...moved);
+    this.doc.line = line + 1;
+    this.doc.col = col;
+    this.doc.scheduleSave();
+    this.emit('change');
+    this.audio.play('return', moveAt, { offset: Math.max(0, RETURN_THUNK_AT - (duration + 0.06)) });
+    this.at(moveAt, () => {
+      this.ink.repaint(line, start, MAX_COLS - 1, this.doc.strikes);
+      this.carriage.carriageReturn(col, line + 1, duration, true);
+    });
+    this.at(moveAt + duration * 0.6, () => moved.forEach((s) => this.ink.draw(s)));
+  }
+
+  /** Während des Blattwechsels: Eingabe merken statt verlieren. */
+  private hold(input: () => void): boolean {
+    if (!this.sheetChanging) return false;
+    if (this.pending.length < MAX_PENDING) this.pending.push(input);
+    return true;
   }
 
   setShift(side: 'left' | 'right', down: boolean): void {
@@ -236,14 +330,15 @@ export class Typewriter {
   newSheet(discard = false): void {
     // Verworfen wird sofort: Ein Export während der Animation darf nichts Altes mehr enthalten
     if (discard) this.doc.discardAll();
-    const slot = this.reserve(2.0);
-    if (slot < 0) {
+    if (this.sheetChanging) {
       if (discard) {
-        this.restore();
+        this.pending = [];
         this.emit('sheet');
       }
       return;
     }
+    this.sheetChanging = true;
+    const slot = this.reserve(2.0, Infinity);
     this.audio.play('return', slot, { offset: 0.3, gain: 0.6 });
     this.at(slot, () => this.carriage.ejectPaper(0.8));
     this.at(slot + 0.9, () => {
@@ -262,6 +357,12 @@ export class Typewriter {
       });
       this.audio.play('soft', 0.85);
     });
+    this.at(slot + 1.9, () => {
+      this.sheetChanging = false;
+      const waiting = this.pending;
+      this.pending = [];
+      waiting.forEach((input) => input());
+    });
   }
 
   // ───────────────────────── Hilfsfunktionen ─────────────────────────
@@ -276,10 +377,10 @@ export class Typewriter {
   }
 
   /** Reserviert ein Zeitfenster auf der Mechanik-Zeitleiste; liefert Verzögerung in s oder -1. */
-  private reserve(duration: number): number {
+  private reserve(duration: number, maxBacklog = MAX_BACKLOG): number {
     const now = performance.now() / 1000;
     const start = Math.max(now, this.busyUntil);
-    if (start - now > MAX_BACKLOG) return -1;
+    if (start - now > maxBacklog) return -1;
     this.busyUntil = start + duration;
     return start - now;
   }

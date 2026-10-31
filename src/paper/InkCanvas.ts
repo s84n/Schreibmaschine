@@ -11,6 +11,9 @@ const CELL = PAGE.pitchCm * PX_PER_CM;
 const FONT_PX = Math.round(0.44 * PX_PER_CM);
 const GLYPH_BOX = Math.ceil(FONT_PX * 1.6);
 
+export type PaperTone = 'classic' | 'cream';
+const PAPER_COLORS: Record<PaperTone, string> = { classic: '#f4efe3', cream: '#efe2c6' };
+
 /** Deterministischer Zufallsgenerator (mulberry32). */
 export function rng(seed: number): () => number {
   let a = seed >>> 0;
@@ -31,12 +34,12 @@ export class InkCanvas {
   readonly canvas: HTMLCanvasElement;
   readonly texture: THREE.CanvasTexture;
   private readonly ctx: CanvasRenderingContext2D;
-  private readonly paper: HTMLCanvasElement;
+  private paper: HTMLCanvasElement;
   private readonly glyph: HTMLCanvasElement;
   private readonly gctx: CanvasRenderingContext2D;
   private dirty = false;
 
-  constructor() {
+  constructor(private tone: PaperTone = 'classic') {
     this.canvas = document.createElement('canvas');
     this.canvas.width = W;
     this.canvas.height = H;
@@ -61,6 +64,39 @@ export class InkCanvas {
   redraw(strikes: Strike[]): void {
     this.clear();
     for (const s of strikes) this.draw(s);
+  }
+
+  /** Neuer Papierton; der Text muss danach neu gezeichnet werden. */
+  setTone(tone: PaperTone): void {
+    if (tone === this.tone) return;
+    this.tone = tone;
+    this.paper = this.makePaper();
+  }
+
+  /**
+   * Stellt die Spalten col0–col1 einer Zeile wieder her, als stünde dort nur noch `strikes`.
+   * So kostet Korrigieren und Umbrechen nicht das Neuzeichnen des ganzen Blatts.
+   */
+  repaint(line: number, col0: number, col1: number, strikes: Strike[]): void {
+    const x = (PAGE.marginLeftCm + col0 * PAGE.pitchCm) * PX_PER_CM - 3;
+    const w = (col1 - col0 + 1) * CELL + 6;
+    const baseline = (PAGE.marginTopCm + line * PAGE.lineCm) * PX_PER_CM;
+    const y = baseline - FONT_PX * 0.85;
+    const h = FONT_PX * 1.25;
+    const ctx = this.ctx;
+    ctx.save();
+    ctx.beginPath();
+    ctx.rect(x, y, w, h);
+    ctx.clip();
+    ctx.globalCompositeOperation = 'source-over';
+    ctx.globalAlpha = 1;
+    ctx.drawImage(this.paper, 0, 0);
+    // Nachbarn ragen in den Bereich hinein und müssen mitgezeichnet werden
+    for (const s of strikes) {
+      if (Math.abs(s.line - line) <= 1 && s.col >= col0 - 2 && s.col <= col1 + 2) this.draw(s);
+    }
+    ctx.restore();
+    this.dirty = true;
   }
 
   /** Zeichnet einen Anschlag: Glyphe mit Druckvariation, Farbbandstruktur und leichtem Versatz. */
@@ -127,7 +163,7 @@ export class InkCanvas {
     c.width = W;
     c.height = H;
     const ctx = c.getContext('2d')!;
-    ctx.fillStyle = '#f4efe3';
+    ctx.fillStyle = PAPER_COLORS[this.tone];
     ctx.fillRect(0, 0, W, H);
     const r = rng(1234);
     // Fasern
