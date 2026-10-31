@@ -6,7 +6,7 @@ Ohne Installation, ohne Konto, auf jedem Rechner.
 
 ### ▶ [Jetzt ausprobieren: s84n.github.io/Schreibmaschine](https://s84n.github.io/Schreibmaschine/)
 
-![Die Schreibmaschine auf dem Schreibtisch, im Hintergrund ein Fenster mit Blick auf die Alpen](docs/screenshot.jpg)
+![Die Schreibmaschine auf dem Schreibtisch, dahinter ein großes Panoramafenster mit Blick auf einen roten japanischen Ahornwald](docs/screenshot.jpg)
 
 ---
 
@@ -28,12 +28,20 @@ normalen Tastatur – und die Maschine antwortet:
   Walze dreht eine Zeile weiter und der Wagen rauscht zurück.
 - Die Geräusche stammen von **echten Schreibmaschinen-Aufnahmen**.
 
-Dazu ein ruhiges Zimmer: weiße Wände, ein Holztisch, eine Kaffeetasse, ein Regal mit
-Efeutute – und ein Fenster, durch das du hinausschaust.
+Dazu ein ruhiges Zimmer: weiße Wände, ein Holztisch, eine Kaffeetasse, Kerze und Bücher –
+und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 
 ![Nahaufnahme: getippter Text auf dem Papier in der Walze](docs/screenshot-paper.jpg)
 
-![Nachtmodus: Kerze neben der Schreibmaschine, dunkles Fenster](docs/screenshot-night.jpg)
+![Nachtmodus: brennende Kerze neben der Schreibmaschine, draußen die letzte Dämmerung über dem See](docs/screenshot-night.jpg)
+
+![Aussicht auf ein Dorf mit bunten Holzhäusern in China](docs/screenshot-village.jpg)
+
+![Bergsee im Winter: Schnee fällt vor dem Fenster](docs/screenshot-winter.jpg)
+
+![Regenwetter am nordischen See: Tropfen auf der Scheibe](docs/screenshot-rain.jpg)
+
+![Einstellungen mit „Neues Dokument“, Songauswahl und getrennten Reglern für Geräusche, Musik und Regen](docs/screenshot-settings.jpg)
 
 ## Was du alles machen kannst
 
@@ -41,21 +49,23 @@ Efeutute – und ein Fenster, durch das du hinausschaust.
 |---|---|
 | ✍️ **Schreiben** | Einfach lostippen. Rücktaste setzt den Wagen zurück – Überschreiben wie früher inklusive. |
 | 🏔️ **Aussicht wählen** | Alpen, Bergsee im Winter, nordischer See, Mittelmeer, ein chinesisches Dorf, ein japanischer Ahornwald, Istanbul, ein Büro hoch über Manhattan, Dubai in der Dämmerung oder eine Sternennacht am See. |
-| 🌿 **Lebendige Aussicht** | Hinter dem großen Panoramafenster ziehen Wolken, das Wasser kräuselt sich, Wind geht durchs Laub, und je nach Ort fliegen Vögel, fällt Schnee oder segeln Ahornblätter. |
-| 🎷 **Musik wählen** | Drei eigene Songs, passend zum Schreiben, laufen in Dauerschleife. |
+| 🌿 **Lebendige Aussicht** | Hinter dem großen Panoramafenster ziehen Wolken, das Wasser kräuselt sich, Wind geht durchs Laub, und je nach Ort fliegen Vögel, fällt Schnee, segeln Ahornblätter oder tanzen Glühwürmchen – per Schalter an und aus. |
+| 🎷 **Musik wählen** | Drei eigene Songs laufen in Dauerschleife: Asia, Middle East und America. |
+| 🎚️ **Alles einzeln regeln** | Geräusche der Maschine, Musik und Regen haben je einen eigenen Lautstärkeregler. |
 | 💾 **Nichts verlieren** | Dein Blatt wird automatisch im Browser gespeichert und ist beim nächsten Besuch wieder da. |
 | 📄 **Exportieren** | Die fertige Seite als **PNG**, als **PDF** (A4) oder als reinen **Text** herunterladen. |
 | 📚 **Manuskript** | Fertige Blätter landen auf dem Stapel; PDF und Text enthalten alle Seiten. |
+| 🆕 **Neues Dokument** | Im Zahnrad-Menü: löscht alle Blätter und beginnt von vorn, damit im nächsten Export nichts Altes auftaucht. |
 | 💌 **Brief als Link** | Der Empfänger sieht deinen Text Anschlag für Anschlag entstehen. Er steckt nur im Link, auf keinem Server. |
 | 🎯 **Fokus-Modus** | F2 blendet alles aus, außer Papier und Maschine. |
 | 🕯️ **Tag & Nacht** | Nachts brennt links eine Kerze mit flackerndem Licht, über dem Fenster leuchtet eine Lichterkette. |
 | 🎀 **Farbband wechseln** | Schwarz, Rot, Königsblau, Tannengrün, Violett oder Sepia – Geschriebenes behält seine Farbe. |
 | 🏛️ **Modell wählen** | Reise (1950er), Kontor (1930er, Messing) oder Flach (1960er) – eigene Entwürfe mit derselben Mechanik. |
-| 🌧️ **Regenwetter** | Tropfen laufen die Scheibe hinab, dazu Regen mit Prasseln an der Scheibe und Tropfen vom Dach – per Schalter an und aus. |
-| ✨ **Grafik-Effekte** | Staub im Licht, Lichtstrahlen und Kontaktschatten – jeweils per Schalter. |
+| 🌧️ **Regenwetter** | Tropfen laufen die Scheibe hinab, dazu leises Prasseln und im Hintergrund Tropfen auf dem Dach – per Schalter an und aus, mit eigenem Lautstärkeregler. |
+| ✨ **Grafik-Effekte** | Staub im Licht, Lichtstrahlen und Kontaktschatten – jeweils per Schalter. Fünf Aussichten sowie Dorf und Ahornwald liegen in hoher Auflösung bis 8K vor. |
 | 🎨 **Anpassen** | Gehäusefarbe (Salbeigrün, Bordeaux, Schwarz, Creme), QWERTZ oder QWERTY, Deutsch oder Englisch, zwei Grafikstufen. |
 | 📲 **Am Smartphone** | Im Querformat; ⌨ öffnet die Tastatur, alles Weitere liegt im Zahnrad-Menü. |
-| 📱 **Als App installieren** | Die Seite lässt sich wie eine App installieren und funktioniert danach auch **offline**. |
+| 📱 **Als App installieren** | Die Seite lässt sich wie eine App installieren und funktioniert danach auch **offline**. Nur Songs brauchen Internet, und Aussichten stehen offline bereit, sobald du sie einmal geöffnet hast. |
 
 ### Tasten
 
@@ -81,10 +91,12 @@ zum Herunterladen.
 - **Das Papier** ist eine gezeichnete Textur, die sich um die Walze biegt. Jeder
   Buchstabe wird mit eigenem Zufallswert aufgedruckt – deshalb sieht der Export genauso
   aus wie das Blatt in der Maschine.
-- **Der Klang** läuft über die **Web Audio API**: echte Aufnahmen, leicht in Tonhöhe und
-  Lautstärke variiert, mit etwas Kompression und einem Hauch Raumhall.
-- **Die Musik** sind eigene, mit KI erstellte Songs aus `public/music`; sie laufen über
-  denselben Audio-Weg wie die Geräusche und folgen dem Lautstärkeregler.
+- **Der Klang** läuft über die **Web Audio API**: echte Aufnahmen, ergänzt um Taste, Walze,
+  Gehäuse, Schaltklinke und zurückfallenden Hebel. Jede Taste klingt etwas anders, schnelles
+  Tippen weicher. Der Regen wird komplett im Browser erzeugt.
+- **Die Aussicht** lebt im Shader: Wolken, Wellen und Wind entstehen in Echtzeit auf dem
+  Panoramafoto, Vögel, Schnee und Blätter sind Partikel davor. Videos sind dafür nicht nötig.
+- **Die Musik** sind eigene, mit KI erstellte Songs aus `public/music`.
 - **Gebaut** mit [Vite](https://vite.dev) und TypeScript, **veröffentlicht** automatisch
   über GitHub Pages, **installierbar** dank [vite-plugin-pwa](https://vite-pwa-org.netlify.app).
 
@@ -109,15 +121,19 @@ Dieses Projekt steht auf den Schultern von Menschen, die ihre Arbeit frei teilen
 
 **Aussichten aus dem Fenster**
 - [Poly Haven](https://polyhaven.com) (CC0): Alpen, Bergsee im Winter, nordischer See, Mittelmeer, Sternennacht
+- [„Tofuku-ji, Kyoto“](https://commons.wikimedia.org/wiki/File:Tofuku-ji,_Kyoto_-_Tofukuji6598.jpg) von **lumoplank**, CC0
+- [„Jiuzhaigou Valley, Shuzheng Village panorama“](https://commons.wikimedia.org/wiki/File:1_jiuzhaigou_valley_shuzheng_village_panorama_2011.jpg) von **Chensiyuan**, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
 - [„Galata panorama 1“](https://commons.wikimedia.org/wiki/File:Galata_panorama_1_-_panoramio.jpg) von **müşfik öztürk**, [CC BY 3.0](https://creativecommons.org/licenses/by/3.0/)
 - [„New York march 2025 Gn-092“](https://commons.wikimedia.org/wiki/File:New_York_march_2025_Gn-092.jpg) von **Gnangarra**, [CC BY 2.5 AU](https://creativecommons.org/licenses/by/2.5/au/deed.en)
 - [„Dubai skyscrapers“](https://commons.wikimedia.org/wiki/File:Dubai_skyscrapers.jpg) von **Challiyan**, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+
+**Musik** – eigene Songs des Projekts, erstellt mit KI
 
 **Texturen** – [Poly Haven](https://polyhaven.com) (CC0): Holztisch, Putzwand, Dielenboden
 
 **Schrift** – [Special Elite](https://fonts.google.com/specimen/Special+Elite) von Astigmatic, Apache License 2.0
 
-Die Klänge wurden zugeschnitten und im Pegel angepasst, die Fotos verkleinert und zu
-Panoramabändern erweitert. Details stehen in [`public/sounds/LICENSES.md`](public/sounds/LICENSES.md),
+Die Klänge wurden zugeschnitten und im Pegel angepasst, die Fotos zugeschnitten, in Farbe
+angepasst und zu Panoramabändern erweitert. Details stehen in [`public/sounds/LICENSES.md`](public/sounds/LICENSES.md),
 [`public/views/LICENSES.md`](public/views/LICENSES.md) und
 [`public/textures/LICENSES.md`](public/textures/LICENSES.md).
