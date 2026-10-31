@@ -2,6 +2,19 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.20.0] – 2026-11-01
+
+### Hinzugefügt
+- Belebte Aussicht (Schalter im Zahnrad-Menü, standardmäßig an): ziehende Wolken, Wellen und Glitzern auf dem Wasser, Wind im Laub, funkelnde Sterne, dazu je nach Aussicht Vögel, Schnee, fallende Ahornblätter oder Glühwürmchen.
+
+### Geändert
+- Panoramafenster: deutlich breiter und höher (140 × 63 cm statt 60 × 51 cm), mittig, drei große Scheiben mit Oberlicht.
+- Aussichten schärfer: Poly-Haven-Bilder, Dorf und Ahornwald jetzt mit 8192 px Breite, Tiefenunschärfe halbiert. Ahornwald ohne sichtbare Spiegelung.
+- Aussichten werden nicht mehr vorab fürs Offline-Nutzen geladen, sondern beim ersten Ansehen gespeichert.
+
+### Entfernt
+- Regal an der Fensterwand samt Pflanze und Büchern: Dort ist jetzt Fenster.
+
 ## [0.19.1] – 2026-10-31
 
 ### Geändert

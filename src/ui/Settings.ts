@@ -22,6 +22,7 @@ export interface Settings {
   rain: boolean;
   dust: boolean;
   shafts: boolean;
+  life: boolean;
   ao: boolean;
 }
 
@@ -46,6 +47,7 @@ function defaults(): Settings {
     rain: false,
     dust: true,
     shafts: true,
+    life: true,
     ao: true,
   };
 }

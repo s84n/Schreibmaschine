@@ -17,7 +17,15 @@ export default defineConfig({
       includeAssets: ['icons/*.png', 'icons/*.svg'],
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff,woff2,wav,png,svg,jpg}'],
-        maximumFileSizeToCacheInBytes: 4 * 1024 * 1024,
+        // Die 8K-Aussichten nicht alle vorab laden: gespeichert wird, was einmal angesehen wurde
+        globIgnores: ['views/**'],
+        runtimeCaching: [
+          {
+            urlPattern: /\/views\/.*\.jpg$/,
+            handler: 'CacheFirst',
+            options: { cacheName: 'views', cacheableResponse: { statuses: [200] } },
+          },
+        ],
       },
       manifest: {
         name: 'Schreibmaschine',

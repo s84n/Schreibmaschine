@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../animation/Tweens';
 import { buildBookStack, buildCurtain, buildPencilCup, buildRainGlass, Candle, Dust, FairyLights, LightShafts, PaperStack, Steam } from './Cozy';
 import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, type DecorMaterials } from './Decor';
+import { animatePanorama, OutdoorParticles, setPanoramaLife, setPanoramaMotion, tickPanorama, type ViewLife } from './OutdoorLife';
 
 export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'chinavillage' | 'japanforest' | 'starnight' | 'istanbul' | 'newyork' | 'dubai';
 
@@ -18,25 +19,27 @@ export interface OutdoorView {
   ambient: number;
   /** Bild zeigt schon Dämmerung/Nacht: wird im Nachtmodus kaum abgedunkelt */
   dusk?: boolean;
+  /** Was sich in dieser Aussicht bewegt */
+  life?: ViewLife;
 }
 
 export const VIEWS: Record<ViewId, OutdoorView> = {
-  alps: { file: 'alps_field.jpg', u: 0.75, drop: 11, light: '#fff3e0', lightIntensity: 2.2, ambient: 0.55 },
-  winterlake: { file: 'lago_disola.jpg', u: 0.8, drop: 16, light: '#e8f0ff', lightIntensity: 2.0, ambient: 0.55 },
-  nordiclake: { file: 'lakeside.jpg', u: 0.68, drop: 3, light: '#fff6e8', lightIntensity: 2.3, ambient: 0.55 },
-  mediterranean: { file: 'spiaggia_di_mondello.jpg', u: 0.03, drop: 4, light: '#ffe9c4', lightIntensity: 2.6, ambient: 0.6 },
-  chinavillage: { file: 'china_village.jpg', u: 0.5, drop: 2, light: '#fff1dc', lightIntensity: 2.2, ambient: 0.55 },
-  japanforest: { file: 'japan_maple.jpg', u: 0.5, drop: 2, light: '#ffe2c8', lightIntensity: 2.1, ambient: 0.55 },
-  istanbul: { file: 'istanbul.jpg', u: 0.5, drop: 3, light: '#fff1dc', lightIntensity: 2.4, ambient: 0.58 },
-  newyork: { file: 'newyork.jpg', u: 0.5, drop: 2, light: '#f4f6ff', lightIntensity: 2.2, ambient: 0.58 },
+  alps: { file: 'alps_field.jpg', u: 0.75, drop: 11, light: '#fff3e0', lightIntensity: 2.2, ambient: 0.55, life: { sky: 0.5, particles: 'birds' } },
+  winterlake: { file: 'lago_disola.jpg', u: 0.8, drop: 16, light: '#e8f0ff', lightIntensity: 2.0, ambient: 0.55, life: { sky: 0.55, foliage: [0.45, 1], particles: 'snow' } },
+  nordiclake: { file: 'lakeside.jpg', u: 0.68, drop: 3, light: '#fff6e8', lightIntensity: 2.3, ambient: 0.55, life: { sky: 0.47, water: [0, 0.42], foliage: [0.5, 1], particles: 'birds' } },
+  mediterranean: { file: 'spiaggia_di_mondello.jpg', u: 0.53, drop: 4, light: '#ffe9c4', lightIntensity: 2.6, ambient: 0.6, life: { sky: 0.45, foliage: [0.46, 0.8], particles: 'birds' } },
+  chinavillage: { file: 'china_village.jpg', u: 0.5, drop: 2, light: '#fff1dc', lightIntensity: 2.2, ambient: 0.55, life: { sky: 0.55, foliage: [0.3, 0.72], particles: 'birds' } },
+  japanforest: { file: 'japan_maple.jpg', u: 0.5, drop: 2, light: '#ffe2c8', lightIntensity: 2.1, ambient: 0.55, life: { foliage: [0, 1], particles: 'leaves' } },
+  istanbul: { file: 'istanbul.jpg', u: 0.5, drop: 3, light: '#fff1dc', lightIntensity: 2.4, ambient: 0.58, life: { sky: 0.55, water: [0.28, 0.42], particles: 'birds' } },
+  newyork: { file: 'newyork.jpg', u: 0.5, drop: 2, light: '#f4f6ff', lightIntensity: 2.2, ambient: 0.58, life: { sky: 0.55 } },
   dubai: { file: 'dubai.jpg', u: 0.5, drop: 10, light: '#ff9fb0', lightIntensity: 0.6, ambient: 0.28, dusk: true },
-  starnight: { file: 'lakeside_night.jpg', u: 0.4, drop: 5, light: '#ffb070', lightIntensity: 0.35, ambient: 0.18, dusk: true },
+  starnight: { file: 'lakeside_night.jpg', u: 0.4, drop: 5, light: '#ffb070', lightIntensity: 0.35, ambient: 0.18, dusk: true, life: { sky: 0.5, water: [0.14, 0.42], stars: true, particles: 'fireflies' } },
 };
 
 const DESK_Y = -0.45;
 const WALL_Z = -34;
 /** Fensterausschnitt in der Wand (Brüstung knapp über der Tischplatte) */
-const WIN = { x0: -46, x1: 14, y0: 2.6, y1: 54 };
+const WIN = { x0: -70, x1: 70, y0: 2.6, y1: 66 };
 /** Zimmermaße: Tischhöhe 76 cm über dem Boden */
 const ROOM = { x0: -100, x1: 100, z0: WALL_Z, z1: 130, floor: DESK_Y - 76, ceil: 150 };
 /** Wandfarbe: gebrochenes Weiß für Kontrast zum dunklen Tisch */
@@ -76,9 +79,11 @@ export class Room {
   readonly candle = new Candle();
   private readonly steam = new Steam();
   readonly paper = new PaperStack(13);
+  private readonly outdoorParticles = new OutdoorParticles();
   private readonly dust = new Dust(new THREE.Vector3(-32, 11, 3));
   private readonly shafts: LightShafts;
   private shaftsOn = true;
+  private lifeOn = true;
   private shaftStrength = 1;
   private readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
   /** Unsichtbarer, etwas größerer Klickbereich um die Tasse */
@@ -96,10 +101,11 @@ export class Room {
       THREE.MathUtils.degToRad(BAND_HEIGHT_DEG),
     );
     this.outsideMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, color: '#000' });
+    animatePanorama(this.outsideMat);
     this.outside = new THREE.Mesh(geo, this.outsideMat);
     this.tilt.position.set(0, 20, 40);
     this.tilt.add(this.outside);
-    this.group.add(this.tilt);
+    this.group.add(this.tilt, this.outdoorParticles.points);
 
     // Licht durchs Fenster (fällt von hinten links auf die Maschine)
     this.windowLight = new THREE.DirectionalLight('#fff3e0', 2);
@@ -158,6 +164,12 @@ export class Room {
     this.applyLight();
   }
 
+  setLife(on: boolean): void {
+    this.lifeOn = on;
+    setPanoramaMotion(on);
+    this.outdoorParticles.points.visible = on && !!this.current && !!VIEWS[this.current].life?.particles;
+  }
+
   private applyRain(r: number): void {
     this.rain = r;
     this.rainGlass.mesh.visible = r > 0.01;
@@ -171,6 +183,8 @@ export class Room {
     this.dust.update(dt, window.innerHeight);
     this.shafts.update(dt);
     this.rainGlass.uniforms.uTime.value += dt;
+    tickPanorama(dt);
+    this.outdoorParticles.update(dt, window.innerHeight);
   }
 
   private applyLight(): void {
@@ -188,6 +202,7 @@ export class Room {
     const sun = (1 - n) * (1 - 0.8 * r) * (this.dusk ? 0.2 : 1);
     this.shafts.setPower(this.shaftsOn ? sun * this.shaftStrength : 0);
     this.dust.setLight(sun, n);
+    this.outdoorParticles.setLight(this.fade, n, r);
     // Tropfen spiegeln nachts nur noch wenig Himmel
     this.rainGlass.uniforms.uLight.value = 1 + (0.22 - 1) * n;
   }
@@ -218,6 +233,9 @@ export class Room {
         this.aim(view.u);
         this.tilt.rotation.x = -THREE.MathUtils.degToRad(view.drop);
         this.dusk = !!view.dusk;
+        setPanoramaLife(view.life);
+        this.outdoorParticles.setKind(view.life?.particles);
+        this.outdoorParticles.points.visible &&= this.lifeOn;
         animator.add({
           duration: 0.5,
           ease: ease.outQuad,
@@ -397,19 +415,9 @@ export class Room {
     return g;
   }
 
-  /** Deko: Regale mit Pflanzen und Büchern, Bild, Tasse, Kerze, Schreibtisch-Kleinigkeiten, Vorhänge, Lichterkette. */
+  /** Deko: Regal mit Pflanze und Büchern, Bild, Tasse, Kerze, Schreibtisch-Kleinigkeiten, Vorhänge, Lichterkette. */
   private buildDecor(m: DecorMaterials): THREE.Object3D {
     const g = new THREE.Group();
-    const shelfY = 34;
-    const shelf = buildShelf(m, 46, 16);
-    shelf.position.set(46, shelfY, WALL_Z);
-    const plant = buildTrailingPlant(7, new THREE.Vector3(0, 0, 1), 34);
-    // Ganz rechts auf dem Regal: Die Ranken dürfen nicht über die Tasse hängen
-    plant.position.set(56, shelfY + 2, WALL_Z + 7);
-    const books = buildBooks(3, 7, 15);
-    books.position.set(25, shelfY + 2, WALL_Z + 14.5);
-    g.add(shelf, plant, books);
-
     // Bild an der linken Wand
     const picture = buildPicture(m, 44, 30, 11);
     picture.rotation.y = Math.PI / 2;
@@ -457,7 +465,7 @@ export class Room {
     rod.rotation.z = Math.PI / 2;
     rod.position.set((WIN.x0 + WIN.x1) / 2, rodY, WALL_Z + 3.4);
     g.add(rod);
-    for (const [x, seed] of [[WIN.x0 - 5, 3], [WIN.x1 + 2, 8]] as const) {
+    for (const [x, seed] of [[WIN.x0 - 5, 3], [WIN.x1 + 5, 8]] as const) {
       const curtain = buildCurtain(15, rodY - 0.5 - DESK_Y, seed);
       curtain.position.set(x, rodY - 0.3, WALL_Z + 3.4);
       g.add(curtain);
@@ -505,17 +513,14 @@ export class Room {
     bar(w, F, cx, WIN.y0 + F / 2);
     bar(F, h, WIN.x0 + F / 2, cy);
     bar(F, h, WIN.x1 - F / 2, cy);
-    // Flügel-Mittelpfosten und Kämpfer
-    bar(2.6, h, cx, cy, 2.8);
-    bar(w, 2.2, cx, WIN.y0 + h * 0.68, 2.8);
-    // Sprossen
-    for (const x of [cx - w / 4, cx + w / 4]) bar(1.1, h * 0.68, x, WIN.y0 + h * 0.34, 1.6);
-    bar(w, 1.1, cx, WIN.y0 + h * 0.34, 1.6);
+    // Panoramafenster: drei große Scheiben, darüber ein schmales Oberlicht
+    for (const x of [cx - w / 3, cx + w / 3]) bar(2.6, h, x, cy, 2.8);
+    bar(w, 2.2, cx, WIN.y0 + h * 0.8, 2.8);
 
     // Leicht spiegelndes Glas
     const glass = new THREE.Mesh(
       new THREE.PlaneGeometry(w, h),
-      new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.05, metalness: 0, transparent: true, opacity: 0.08 }),
+      new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.05, metalness: 0, transparent: true, opacity: 0.08, depthWrite: false }),
     );
     glass.position.set(cx, cy, z - 0.2);
     this.rainGlass.mesh.position.set(cx, cy, z - 0.1);

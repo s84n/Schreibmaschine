@@ -64,7 +64,7 @@ export class PostFX {
     );
     this.composer.addPass(this.aoPass);
 
-    this.dof = new DepthOfFieldEffect(camera, { focusRange: 22, bokehScale: 3.2, resolutionScale: 0.5 });
+    this.dof = new DepthOfFieldEffect(camera, { focusRange: 22, bokehScale: 1.5, resolutionScale: 0.5 });
     this.dof.target = focus;
     this.composer.addPass(new EffectPass(camera, this.dof));
 

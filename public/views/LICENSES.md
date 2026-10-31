@@ -1,6 +1,6 @@
 # Aussichten (Fensterpanoramen)
 
-Alle Aussichten sind als Horizontband (5120 × 854 px, 360° × 60°) aufbereitet.
+Alle Aussichten sind als Horizontband (360° × 60°) aufbereitet: die Poly-Haven-Bilder, das chinesische Dorf und der Ahornwald mit 8192 × 1367 px, die Städte mit 5120 × 854 px.
 
 ## Poly Haven – CC0 (gemeinfrei)
 

@@ -41,6 +41,7 @@ Efeutute – und ein Fenster, durch das du hinausschaust.
 |---|---|
 | ✍️ **Schreiben** | Einfach lostippen. Rücktaste setzt den Wagen zurück – Überschreiben wie früher inklusive. |
 | 🏔️ **Aussicht wählen** | Alpen, Bergsee im Winter, nordischer See, Mittelmeer, ein chinesisches Dorf, ein japanischer Ahornwald, Istanbul, ein Büro hoch über Manhattan, Dubai in der Dämmerung oder eine Sternennacht am See. |
+| 🌿 **Lebendige Aussicht** | Hinter dem großen Panoramafenster ziehen Wolken, das Wasser kräuselt sich, Wind geht durchs Laub, und je nach Ort fliegen Vögel, fällt Schnee oder segeln Ahornblätter. |
 | 🎷 **Musik wählen** | Drei eigene Songs, passend zum Schreiben, laufen in Dauerschleife. |
 | 💾 **Nichts verlieren** | Dein Blatt wird automatisch im Browser gespeichert und ist beim nächsten Besuch wieder da. |
 | 📄 **Exportieren** | Die fertige Seite als **PNG**, als **PDF** (A4) oder als reinen **Text** herunterladen. |

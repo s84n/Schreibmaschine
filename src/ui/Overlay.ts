@@ -369,6 +369,7 @@ export class Overlay {
       row(label, c);
     };
     toggle(t.rain, s.rain, (rain) => this.update({ rain }));
+    toggle(t.life, s.life, (life) => this.update({ life }));
     toggle(t.dust, s.dust, (dust) => this.update({ dust }));
     toggle(t.shafts, s.shafts, (shafts) => this.update({ shafts }));
     toggle(t.ao, s.ao, (ao) => this.update({ ao }));
