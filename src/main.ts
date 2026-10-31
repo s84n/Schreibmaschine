@@ -72,7 +72,7 @@ async function main(): Promise<void> {
   };
   function* pdfPages(): Iterable<HTMLCanvasElement> {
     for (const page of doc.pages) yield renderSheet(page);
-    if (doc.strikes.length || !doc.pages.length) yield tw.ink.canvas;
+    if (doc.strikes.length || !doc.pages.length) yield renderSheet(doc.strikes);
   }
   const syncStack = () => {
     const last = doc.pages[doc.pages.length - 1];
@@ -112,7 +112,12 @@ async function main(): Promise<void> {
       stage.flyTo(view);
     },
     onShare: () => void share(),
-    onDiscard: () => tw.newSheet(true),
+    onNewDocument: () => {
+      const sheets = doc.allPages().length;
+      if (sheets && !confirm(overlay.t.confirmNewDocument(sheets))) return;
+      newDocumentPending = true;
+      tw.newSheet(true);
+    },
     onLetterPlay: () => void playLetter(),
     onLetterSkip: () => (letterSkipped = true),
     onLetterWrite: () => location.replace(location.pathname),
@@ -122,9 +127,12 @@ async function main(): Promise<void> {
     },
     onExport: (kind) => {
       tw.update();
-      if (kind === 'png') exportPng(tw.ink.canvas);
-      else if (kind === 'pdf') void exportPdf(pdfPages());
+      if (kind === 'png') return exportPng(renderSheet(doc.strikes));
+      if (kind === 'pdf') void exportPdf(pdfPages());
       else exportText(doc.toPlainText());
+      // Mehrere Blätter ansagen, damit alte Texte im Export nicht überraschen
+      const sheets = doc.allPages().length;
+      if (sheets > 1) overlay.toast(overlay.t.exportedSheets(sheets));
     },
     onSettings: (next: Settings) => {
       if (next.layout !== settings.layout) tw.setLayout(LAYOUTS[next.layout]);
@@ -175,10 +183,12 @@ async function main(): Promise<void> {
 
   tw.on('pageEnd', () => overlay.toast(overlay.t.pageEnd));
   let newSheetPending = false;
+  let newDocumentPending = false;
   tw.on('sheet', () => {
     syncStack();
     if (newSheetPending) overlay.toast(overlay.t.sheetDone(doc.pages.length));
-    newSheetPending = false;
+    else if (newDocumentPending) overlay.toast(overlay.t.newDocumentDone);
+    newSheetPending = newDocumentPending = false;
   });
   doc.onSaveFailed = () => overlay.toast(overlay.t.saveFailed);
   if (doc.pages.length) syncStack();

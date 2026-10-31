@@ -2,6 +2,19 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.18.0] – 2026-10-31
+
+### Hinzugefügt
+- „Neues Dokument“ im Zahnrad-Menü (immer sichtbar, ersetzt „Manuskript verwerfen“): löscht alle Blätter, das eingespannte eingeschlossen, sofort auch aus dem Browser-Speicher. Enthält das Dokument Text, wird vorher nachgefragt.
+- Hinweis nach PDF- und Text-Export, wenn mehrere Blätter enthalten sind.
+
+### Geändert
+- Regen: Die regelmäßigen Tropfstellen und das Glucksen der Regenrinne sind weg. Stattdessen ein dichter, leiser und dumpfer Teppich aus Tropfen auf dem Dach im Hintergrund, Prasseln am Fenster deutlich leiser, nur noch selten ein ferner Einzeltropfen.
+- Tippklang: Ein Anschlag besteht jetzt aus Tastenanschlag, Aufschlag auf Gummiwalze und Gehäuse, Schaltklinke und zurückfallendem Hebel. Jede Taste hat ihren eigenen Klang, schnelles Tippen klingt weicher und dumpfer, Großbuchstaben satter, und der Klang sitzt im Stereobild an der Taste. Die Samples sitzen nun exakt auf dem Aufschlag (vorher bis zu 30 ms versetzt).
+
+### Behoben
+- PDF und PNG werden aus den gespeicherten Anschlägen erzeugt, nicht aus der sichtbaren Papierfläche, die während des Blattwechsels noch alten Text zeigt.
+
 ## [0.17.0] – 2026-10-30
 
 ### Hinzugefügt

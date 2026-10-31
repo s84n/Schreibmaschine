@@ -131,7 +131,10 @@ export class Typewriter {
     this.emit('change');
 
     const bar = key ? this.barOfKey.get(key) ?? 0 : Math.floor(this.typebars.count / 2);
-    this.audio.play('strike', slot + STRIKE_UP - 0.004);
+    const pan = (bar / Math.max(1, this.typebars.count - 1) - 0.5) * 0.18;
+    const heavy = this.shiftLocked || this.shiftHeld.left || this.shiftHeld.right;
+    this.audio.play('key', slot, { pan });
+    this.audio.play('strike', slot + STRIKE_UP - 0.004, { pan, ch, heavy });
     if (col === MAX_COLS - BELL_COLS_BEFORE_END) this.audio.play('bell', slot + STRIKE_UP + 0.02);
     this.at(slot, () => {
       this.ribbon.lift(STRIKE_UP);
@@ -231,13 +234,20 @@ export class Typewriter {
 
   /** Blatt herausdrehen, aufs Manuskript legen (oder verwerfen) und ein neues einspannen. */
   newSheet(discard = false): void {
+    // Verworfen wird sofort: Ein Export während der Animation darf nichts Altes mehr enthalten
+    if (discard) this.doc.discardAll();
     const slot = this.reserve(2.0);
-    if (slot < 0) return;
+    if (slot < 0) {
+      if (discard) {
+        this.restore();
+        this.emit('sheet');
+      }
+      return;
+    }
     this.audio.play('return', slot, { offset: 0.3, gain: 0.6 });
     this.at(slot, () => this.carriage.ejectPaper(0.8));
     this.at(slot + 0.9, () => {
-      if (discard) this.doc.discardAll();
-      else this.doc.nextSheet();
+      if (!discard) this.doc.nextSheet();
       this.ink.clear();
       this.emit('change');
       this.emit('sheet');

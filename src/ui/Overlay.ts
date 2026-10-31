@@ -16,7 +16,7 @@ export interface OverlayActions {
   onKeyboard(): void;
   onFocus(on: boolean): void;
   onShare(): void;
-  onDiscard(): void;
+  onNewDocument(): void;
   onLetterPlay(): void;
   onLetterSkip(): void;
   onLetterWrite(): void;
@@ -85,7 +85,7 @@ export class Overlay {
     if (on) this.toast(this.t.focusHint);
   }
 
-  /** Anzahl fertiger Blätter für Fußzeile und „Verwerfen“. */
+  /** Anzahl fertiger Blätter für die Fußzeile. */
   setPages(n: number): void {
     this.pages = n;
     this.render();
@@ -205,6 +205,7 @@ export class Overlay {
       this.render();
     };
     const sheetBtn = el('button', 'btn', t.newSheet);
+    sheetBtn.title = t.newSheetTitle;
     sheetBtn.onclick = () => this.actions.onNewSheet();
     const share = el('button', 'btn', t.share);
     share.onclick = () => this.actions.onShare();
@@ -306,6 +307,16 @@ export class Overlay {
       panel.append(tools);
     }
     const extras = el('div', 'tools');
+    if (!this.letter) {
+      const fresh = el('button', 'btn', `✦ ${t.newDocument}`);
+      fresh.title = t.newDocumentTitle;
+      fresh.onclick = () => {
+        this.panelOpen = false;
+        this.render();
+        this.actions.onNewDocument();
+      };
+      extras.append(fresh);
+    }
     if (document.documentElement.requestFullscreen) {
       const fs = el('button', 'btn', `⛶ ${t.fullscreen}`);
       fs.onclick = () => {
@@ -318,13 +329,6 @@ export class Overlay {
       const coffee = el('button', 'btn', t.coffee);
       coffee.onclick = () => this.openCoffee();
       extras.append(coffee);
-    }
-    if (this.pages && !this.letter) {
-      const discard = el('button', 'btn', t.discard);
-      discard.onclick = () => {
-        if (confirm(t.confirmDiscard)) this.actions.onDiscard();
-      };
-      extras.append(discard);
     }
     if (extras.childElementCount) panel.append(extras);
 

@@ -1,29 +1,29 @@
-/** Eine feste Tropfstelle: tropft fast regelmäßig, jede mit eigenem Klang und Ort. */
+/** Eine ferne Tropfstelle: tropft selten, jede mit eigenem Klang und Ort. */
 interface DripSpot {
   period: number;
   freq: number;
   pan: number;
   gain: number;
-  kind: 'puddle' | 'sill' | 'wood';
+  kind: 'puddle' | 'wood';
 }
 
 /** So viele Sekunden werden Klänge im Voraus geplant; muss über dem 1-s-Takt gedrosselter Timer liegen. */
 const LOOKAHEAD = 1.6;
 
 const DRIP_SPOTS: DripSpot[] = [
-  { period: 1.15, freq: 620, pan: -0.55, gain: 0.3, kind: 'puddle' },
-  { period: 1.9, freq: 2300, pan: 0.35, gain: 0.16, kind: 'sill' },
-  { period: 2.7, freq: 840, pan: 0.7, gain: 0.26, kind: 'puddle' },
-  { period: 3.6, freq: 420, pan: -0.2, gain: 0.22, kind: 'wood' },
-  { period: 0.72, freq: 1050, pan: -0.8, gain: 0.13, kind: 'puddle' },
+  { period: 11, freq: 620, pan: -0.5, gain: 0.05, kind: 'puddle' },
+  { period: 17, freq: 420, pan: 0.45, gain: 0.05, kind: 'wood' },
 ];
+
+/** Zufällige Abstände ohne erkennbaren Takt, wie bei echtem Regen (Mittelwert in ms). */
+const irregular = (mean: number) => -Math.log(1 - Math.random()) * mean;
 
 /**
  * Generiertes Regengeräusch – keine Dateien, keine Lizenzfragen.
  *
  * Aufgebaut, wie man Regen am Fenster hört: Rauschen in drei Bändern (durch die Scheibe
- * gedämpft) mit langsam wechselnder Stärke, Prasseln auf dem Glas, eine leise laufende Regenrinne
- * und einzelne Tropfstellen vom Dach, die mit etwas Raumklang aus dem Hintergrund kommen.
+ * gedämpft) mit langsam wechselnder Stärke, leises Prasseln auf dem Glas und vor allem viele
+ * gedämpfte Tropfen auf dem Dach, die im Hintergrund bleiben. Einzelne Tropfstellen sind nur selten zu hören.
  */
 export class RainSound {
   private readonly noise: AudioBuffer;
@@ -68,56 +68,55 @@ export class RainSound {
     this.layer(bed, 'bandpass', 800, 0.13, 0.6);
     this.layer(bed, 'lowpass', 170, 0.13, 0.7);
 
-    // Der Regen wird in langen Wellen stärker und schwächer
-    this.loop(
-      (t) => bed.gain.setTargetAtTime(0.65 + Math.random() * 0.55, t, 1.8),
-      () => 3000 + Math.random() * 5000,
-    );
-
-    // Raumklang für alles, was von draußen kommt
+    // Alles von Dach und Hof: dumpf durch die Decke, mit Raumklang weit weg gerückt
+    const distant = this.ctx.createGain();
+    const ceiling = this.ctx.createBiquadFilter();
+    ceiling.type = 'lowpass';
+    ceiling.frequency.value = 1900;
     const room = this.ctx.createConvolver();
     room.buffer = this.outdoorImpulse();
     const wet = this.ctx.createGain();
-    wet.gain.value = 0.35;
-    const drips = this.ctx.createGain();
-    drips.connect(bus);
-    drips.connect(room).connect(wet).connect(bus);
+    wet.gain.value = 0.5;
+    distant.connect(ceiling).connect(bus);
+    ceiling.connect(room).connect(wet).connect(bus);
 
-    // Prasseln: viele sehr leise, helle Einschläge auf dem Glas
+    // Der Regen wird in langen Wellen stärker und schwächer
     this.loop(
-      (t) => this.tick(bed, t, 2200 + Math.random() * 4300, 0.05 + Math.random() ** 3 * 0.32, (Math.random() - 0.5) * 1.6),
-      () => 18 + Math.random() ** 2 * 170,
+      (t) => {
+        const strength = 0.65 + Math.random() * 0.55;
+        bed.gain.setTargetAtTime(strength, t, 1.8);
+        distant.gain.setTargetAtTime(strength, t, 1.8);
+      },
+      () => 3000 + Math.random() * 5000,
     );
 
-    // Regenrinne: dichtes Glucksen aus vielen kleinen Blasen auf einer Seite
+    // Dach: dichte, leise Tropfen, die zu einem Teppich verschmelzen
     this.loop(
-      (t) => this.bubble(drips, t, 480 + Math.random() * 800, 0.012 + Math.random() ** 2 * 0.05, 0.75, 0.04),
-      () => 25 + Math.random() * 110,
+      (t) => this.tick(distant, t, 500 + Math.random() * 1300, 0.05 + Math.random() ** 3 * 0.2, (Math.random() - 0.5) * 1.8, 0.8),
+      () => irregular(30),
     );
 
-    // Tropfstellen vom Dach: fast im Takt, mit leichtem Schwanken, ab und zu ein Doppeltropfen
+    // Prasseln: wenige, sehr leise, helle Einschläge auf dem Glas
+    this.loop(
+      (t) => this.tick(bed, t, 2200 + Math.random() * 4300, 0.02 + Math.random() ** 3 * 0.1, (Math.random() - 0.5) * 1.6),
+      () => irregular(180),
+    );
+
+    // Tropfstellen: selten und ohne festen Takt
     for (const spot of DRIP_SPOTS) {
       this.loop(
-        (t) => {
-          this.drip(drips, t, spot);
-          if (Math.random() < 0.15) this.drip(drips, t + 0.09 + Math.random() * 0.12, spot, 0.6);
-        },
-        () => spot.period * 1000 * (0.82 + Math.random() * 0.36),
+        (t) => this.drip(distant, t, spot),
+        () => spot.period * 1000 * (0.5 + Math.random()),
         Math.random() * spot.period * 1000,
       );
     }
   }
 
-  private drip(out: AudioNode, t: number, spot: DripSpot, scale = 1): void {
+  private drip(out: AudioNode, t: number, spot: DripSpot): void {
     const f = spot.freq * (0.94 + Math.random() * 0.12);
-    const g = spot.gain * scale * (0.7 + Math.random() * 0.45);
+    const g = spot.gain * (0.7 + Math.random() * 0.45);
     if (spot.kind === 'puddle') {
       this.bubble(out, t, f, g, spot.pan, 0.075);
-    } else if (spot.kind === 'sill') {
-      // Blech der Fensterbank: heller Klang mit unharmonischem Oberton und kurzem Anschlag
-      this.ping(out, t, f, g, spot.pan, 0.09);
-      this.ping(out, t, f * 2.76, g * 0.4, spot.pan, 0.04);
-      this.tick(out, t, 4000, g * 0.8, spot.pan);
     } else {
       // Holz, nasse Dielen: dumpfes Klopfen
       this.ping(out, t, f, g, spot.pan, 0.05);
@@ -151,14 +150,14 @@ export class RainSound {
     osc.stop(t + length + 0.01);
   }
 
-  /** Sehr kurzer gefärbter Rauschimpuls: Einschlag auf dem Glas. */
-  private tick(out: AudioNode, now: number, freq: number, gain: number, pan = 0): void {
+  /** Sehr kurzer gefärbter Rauschimpuls: ein einzelner Einschlag. */
+  private tick(out: AudioNode, now: number, freq: number, gain: number, pan = 0, q = 2): void {
     const src = this.ctx.createBufferSource();
     src.buffer = this.noise;
     const f = this.ctx.createBiquadFilter();
     f.type = 'bandpass';
     f.frequency.value = freq;
-    f.Q.value = 2;
+    f.Q.value = q;
     const g = this.ctx.createGain();
     g.gain.setValueAtTime(gain, now);
     g.gain.exponentialRampToValueAtTime(0.0001, now + 0.015 + Math.random() * 0.04);
