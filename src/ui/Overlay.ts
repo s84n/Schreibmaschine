@@ -1,3 +1,4 @@
+import { TRACKS, type TrackId } from '../audio/Music';
 import { DONATE_URL } from '../config';
 import { LAYOUTS, type LayoutId } from '../input/layouts';
 import { VIEWS, type ViewId } from '../scene/Room';
@@ -231,10 +232,19 @@ export class Overlay {
       this.update({ view: outlook.value as ViewId });
       outlook.blur();
     };
-    const music = el('button', `btn${s.music ? ' active' : ''}`, `♪ ${t.music}`);
-    music.title = t.musicTitle;
-    music.setAttribute('aria-pressed', String(s.music));
-    music.onclick = () => this.update({ music: !this.settings.music });
+    const music = el('select', `btn select music${s.track ? ' active' : ''}`);
+    music.title = t.music;
+    music.setAttribute('aria-label', t.music);
+    for (const [id, label] of [['', `♪ ${t.musicOff}`], ...TRACKS.map((id) => [id, `♪ ${id}`])]) {
+      const o = el('option', '', label);
+      o.value = id;
+      o.selected = id === s.track;
+      music.append(o);
+    }
+    music.onchange = () => {
+      this.update({ track: music.value as TrackId | '' });
+      music.blur();
+    };
     if (this.letter) return [viewBtn, el('span', 'sep'), png, pdf, txt, el('span', 'sep'), outlook, music];
     return [viewBtn, focusBtn, sheetBtn, el('span', 'sep'), png, pdf, txt, share, el('span', 'sep'), outlook, music];
   }

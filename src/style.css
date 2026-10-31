@@ -62,6 +62,9 @@ body {
   top: 14px;
   right: 14px;
   display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  max-width: calc(100vw - 28px);
   align-items: center;
   gap: 6px;
   padding: 6px;
@@ -102,6 +105,10 @@ body {
   appearance: none;
   padding-right: 10px;
   max-width: 190px;
+}
+
+.btn.select.music {
+  max-width: 270px;
 }
 
 .btn.select option {

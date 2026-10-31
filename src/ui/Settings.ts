@@ -1,3 +1,4 @@
+import { TRACKS, type TrackId } from '../audio/Music';
 import type { LayoutId } from '../input/layouts';
 import type { ViewId } from '../scene/Room';
 import type { Quality, TimeOfDay } from '../scene/Scene';
@@ -13,7 +14,7 @@ export interface Settings {
   quality: Quality;
   color: BodyColorId;
   view: ViewId;
-  music: boolean;
+  track: TrackId | '';
   musicVolume: number;
   time: TimeOfDay;
   ribbon: RibbonId;
@@ -37,7 +38,7 @@ function defaults(): Settings {
     quality: lowEnd ? 'low' : 'high',
     color: 'sage',
     view: 'alps',
-    music: false,
+    track: '',
     musicVolume: 0.5,
     time: 'day',
     ribbon: 'black',
@@ -55,8 +56,12 @@ export function loadSettings(): Settings {
     const raw = localStorage.getItem(KEY);
     if (!raw) return base;
     // Bis v0.12 war Regen ein Wert der entfernten Einstellung „Geräuschkulisse“
-    const { ambience, ...stored } = JSON.parse(raw) as Partial<Settings> & { ambience?: string };
-    return { ...base, ...stored, ...(ambience === 'rain' ? { rain: true } : {}) };
+    // Bis v0.18 war Musik ein Schalter für das generative Stück: wer sie hörte, bekommt den ersten Song
+    const { ambience, music, ...stored } = JSON.parse(raw) as Partial<Settings> & { ambience?: string; music?: boolean };
+    const merged = { ...base, ...stored, ...(ambience === 'rain' ? { rain: true } : {}) };
+    if (music && stored.track === undefined) merged.track = TRACKS[0];
+    if (merged.track && !TRACKS.includes(merged.track)) merged.track = '';
+    return merged;
   } catch {
     return base;
   }

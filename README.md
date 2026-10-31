@@ -40,8 +40,8 @@ Efeutute – und ein Fenster, durch das du hinausschaust.
 | | |
 |---|---|
 | ✍️ **Schreiben** | Einfach lostippen. Rücktaste setzt den Wagen zurück – Überschreiben wie früher inklusive. |
-| 🏔️ **Aussicht wählen** | Alpen, Bergsee im Winter, nordischer See, Mittelmeer, Istanbul, ein Büro hoch über Manhattan, Dubai in der Dämmerung oder eine Sternennacht am See. |
-| 🎷 **Musik an** | Ruhiger Lo-Fi-Jazz mit E-Piano und Plattenknistern – wird live im Browser erzeugt und wiederholt sich nie exakt. |
+| 🏔️ **Aussicht wählen** | Alpen, Bergsee im Winter, nordischer See, Mittelmeer, ein chinesisches Dorf, ein japanischer Ahornwald, Istanbul, ein Büro hoch über Manhattan, Dubai in der Dämmerung oder eine Sternennacht am See. |
+| 🎷 **Musik wählen** | Drei eigene Songs, passend zum Schreiben, laufen in Dauerschleife. |
 | 💾 **Nichts verlieren** | Dein Blatt wird automatisch im Browser gespeichert und ist beim nächsten Besuch wieder da. |
 | 📄 **Exportieren** | Die fertige Seite als **PNG**, als **PDF** (A4) oder als reinen **Text** herunterladen. |
 | 📚 **Manuskript** | Fertige Blätter landen auf dem Stapel; PDF und Text enthalten alle Seiten. |
@@ -82,8 +82,8 @@ zum Herunterladen.
   aus wie das Blatt in der Maschine.
 - **Der Klang** läuft über die **Web Audio API**: echte Aufnahmen, leicht in Tonhöhe und
   Lautstärke variiert, mit etwas Kompression und einem Hauch Raumhall.
-- **Die Musik** wird ebenfalls mit Web Audio erzeugt – Akkorde, Bass, Schlagzeug und
-  Knistern sind kleine Synthesizer, gesteuert von einem Sequenzer.
+- **Die Musik** sind eigene, mit KI erstellte Songs aus `public/music`; sie laufen über
+  denselben Audio-Weg wie die Geräusche und folgen dem Lautstärkeregler.
 - **Gebaut** mit [Vite](https://vite.dev) und TypeScript, **veröffentlicht** automatisch
   über GitHub Pages, **installierbar** dank [vite-plugin-pwa](https://vite-pwa-org.netlify.app).
 

@@ -32,8 +32,7 @@ async function main(): Promise<void> {
   let unlocked = false;
   const syncMusic = () => {
     if (!unlocked) return;
-    if (settings.music) (music ??= new Music(audio.music.ctx, audio.music.out)).start();
-    else music?.stop();
+    if (music || settings.track) (music ??= new Music(audio.music.ctx, audio.music.out)).set(settings.track);
     if (rainSound || settings.rain) (rainSound ??= new RainSound(audio.music.ctx, audio.music.out)).set(settings.rain);
   };
 
@@ -149,7 +148,7 @@ async function main(): Promise<void> {
       audio.setMuted(next.muted);
       audio.setMusicVolume(next.musicVolume);
       if (next.view !== settings.view) void stage.room.setView(next.view);
-      const soundChanged = next.music !== settings.music || next.rain !== settings.rain;
+      const soundChanged = next.track !== settings.track || next.rain !== settings.rain;
       settings = { ...next };
       saveSettings(settings);
       if (soundChanged) {

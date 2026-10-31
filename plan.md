@@ -26,7 +26,7 @@ originalgetreu. Hosting über **GitHub Pages**, installierbar als **PWA**.
 | Layout | **QWERTZ/QWERTY umschaltbar**, UI **Deutsch + Englisch** |
 | Lizenzen | CC0 bevorzugt; CC BY / CC BY-SA nur mit Namensnennung (README + `LICENSES.md` + Credits in der App). BY-SA gilt nur für die bearbeitete Bilddatei, nicht für den Code |
 | Atmosphäre | Geschlossenes Zimmer (weiße Putzwände, Dielenboden, Decke) mit Sprossenfenster knapp über Tischhöhe und Deko (Regale, Efeutute, Bücher, Bild, Tasse); Aussicht wählbar (Poly-Haven-Panoramen CC0, als Horizontband auf Kugel hinter dem Fenster); Tisch/Wand mit Poly-Haven-PBR-Texturen (CC0) |
-| Musik | **Generativer Lo-Fi-Jazz** in Web Audio (keine Dateien, keine Lizenzfragen, offline), standardmäßig aus, eigener Lautstärkeregler |
+| Musik | **Eigene KI-Songs** aus `public/music` (Auswahlmenü, Dauerschleife), gestreamt und nicht im PWA-Precache (offline keine Musik), standardmäßig aus, eigener Lautstärkeregler |
 | Klangkette | Anschläge → EQ → Kompressor (+ dezenter Faltungshall) → Limiter; Ziel: Tippen ≈ −18 LUFS, Musik ≈ 6–7 dB darunter |
 | Schrift | **Special Elite** (Apache 2.0) über `@fontsource/special-elite`, lokal gebündelt (offline-fähig) |
 | GitHub | Repo `s84n/Schreibmaschine`, Push per eigenem Deploy-Key (SSH), Autor `s84n` mit noreply-Adresse – keine privaten Daten im Repo. Deploy über GitHub Actions → Pages |
@@ -89,7 +89,7 @@ schreibmaschine/
 │   │   └── layouts.ts       # QWERTZ / QWERTY
 │   ├── audio/
 │   │   ├── AudioEngine.ts   # Web Audio, Sample-Pool, Effektkette, Limiter, Unlock bei erster Eingabe
-│   │   ├── Music.ts         # generativer Lo-Fi-Jazz (Sequenzer + Synth-Instrumente)
+│   │   ├── Music.ts         # Abspielen der eigenen Songs (public/music)
 │   │   └── RainSound.ts     # generiertes Regengeräusch
 │   ├── animation/
 │   │   └── Tweens.ts        # schlanke Tween-/Easing-Utilities, Queue für schnelles Tippen
@@ -137,6 +137,7 @@ Keine schwere Physik-Engine – Bewegungen sind keyframe-/tween-basiert.
 | **v0.16.0** | Grafik-Schalter: Staub, Lichtstrahlen, Kontaktschatten | ✅ (Bildrate auf echter GPU offen) |
 | **v0.17.0** | Mehrseitige Manuskripte, Brief als Link, Fokus-Modus, Kerze mit Rauch | ✅ |
 | **v0.18.0** | „Neues Dokument“, leiserer Regen mit Dachprasseln, realistischerer Tippklang | ✅ |
+| **v0.19.0** | Aussichten Chinesisches Dorf und Japanischer Ahornwald, eigene Songs statt generativer Musik | ✅ |
 | **v1.0.0** | Release | offen |
 
 Regeln: Jede Version → Eintrag in `CHANGELOG.md`, Bump in `package.json`, Git-Tag, Aktualisierung des
@@ -154,6 +155,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.13.0** (2026-10-31) – Nutzerwunsch → App v0.19.0: zwei Aussichten, generative Musik durch eigene Songs ersetzt. Neue Songs: Datei in `public/music` legen und in `TRACKS` (`src/audio/Music.ts`) eintragen.
 - **v0.12.0** (2026-10-31) – Nutzer-Feedback → App v0.18.0: „Nächstes Blatt“ behält alte Blätter bewusst im Manuskript, deshalb landeten sie im PDF; „Neues Dokument“ im Zahnrad-Menü setzt alles zurück. Regen ohne taktartige Tropfen, dafür Dach im Hintergrund. Tippklang mehrschichtig (Taste, Walze/Gehäuse, Schaltklinke, Hebelrückfall).
 - **v0.11.0** (2026-10-30) – Manuskripte, Brief-Link, Fokus-Modus, Kerze → App v0.17.0. Brief-Link bewusst ohne Server: Text steckt komprimiert im #-Teil der Adresse.
 - **v0.10.0** (2026-10-30) – Grafikpaket mit Schaltern → App v0.16.0; Konzeptideen in Abschnitt 8.
@@ -181,5 +183,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v0.18.0 auf echten Smartphones testen, Feedback sammeln.
+1. v0.19.0 auf echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

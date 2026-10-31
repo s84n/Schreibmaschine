@@ -2,6 +2,18 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.19.0] – 2026-10-31
+
+### Hinzugefügt
+- Zwei neue Aussichten: Chinesisches Dorf (Shuzheng, Jiuzhaigou) und Japanischer Ahornwald (Tofuku-ji, Kyoto) mit roten Blättern.
+- Eigene Songs im Musik-Menü, benannt wie die Dateien; der gewählte Song läuft in Dauerschleife. Wer bisher Musik an hatte, bekommt den ersten Song.
+
+### Entfernt
+- Das generative Lo-Fi-Jazz-Stück.
+
+### Geändert
+- Die Werkzeugleiste bricht bei wenig Breite um, statt aus dem Bild zu laufen.
+
 ## [0.18.0] – 2026-10-31
 
 ### Hinzugefügt
