@@ -2,6 +2,10 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.0.0] – 2026-11-01
+
+Erste Hauptversion: inhaltlich derselbe Stand wie 0.23.0.
+
 ## [0.23.0] – 2026-11-01
 
 ### Geändert
