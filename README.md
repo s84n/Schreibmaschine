@@ -48,7 +48,7 @@ und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 | | |
 |---|---|
 | ✍️ **Schreiben** | Einfach lostippen. Rücktaste setzt den Wagen zurück – Überschreiben wie früher inklusive. |
-| 🏔️ **Aussicht wählen** | Alpen, Bergsee im Winter, nordischer See, Mittelmeer, ein chinesisches Dorf, ein japanischer Ahornwald, Istanbul, ein Büro hoch über Manhattan, Dubai in der Dämmerung oder eine Sternennacht am See. |
+| 🏔️ **Aussicht wählen** | Alpen, Bergsee im Winter, nordischer See, Mittelmeer, ein chinesisches Dorf, ein japanischer Ahornwald, Rio de Janeiro, Paris, Udaipur, Elmina, Granada, Buenos Aires, Machu Picchu, die Serengeti, Istanbul, ein Büro hoch über Manhattan, Dubai in der Dämmerung oder eine Sternennacht am See. |
 | 🌿 **Lebendige Aussicht** | Hinter dem großen Panoramafenster ziehen Wolken, das Wasser kräuselt sich, Wind geht durchs Laub, und je nach Ort fliegen Vögel, fällt Schnee, segeln Ahornblätter oder tanzen Glühwürmchen – per Schalter an und aus. |
 | 🎷 **Musik wählen** | Drei eigene Songs laufen in Dauerschleife: Asia, Middle East und America. |
 | 🎚️ **Alles einzeln regeln** | Geräusche der Maschine, Musik und Regen haben je einen eigenen Lautstärkeregler. |
@@ -138,9 +138,18 @@ Dieses Projekt steht auf den Schultern von Menschen, die ihre Arbeit frei teilen
 - [„New York march 2025 Gn-092“](https://commons.wikimedia.org/wiki/File:New_York_march_2025_Gn-092.jpg) von **Gnangarra**, [CC BY 2.5 AU](https://creativecommons.org/licenses/by/2.5/au/deed.en)
 - [„Dubai skyscrapers“](https://commons.wikimedia.org/wiki/File:Dubai_skyscrapers.jpg) von **Challiyan**, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
 
+- [„Panorama do Rio de Janeiro“](https://commons.wikimedia.org/wiki/File:Panorama_do_Rio_de_Janeiro_a_partir_do_Parque_das_Ru%C3%ADnas_2024_11_24.jpg) von **Tet**, [CC BY 4.0](https://creativecommons.org/licenses/by/4.0/)
+- [„Paris panorama from the top of the Sacré-Cœur“](https://commons.wikimedia.org/wiki/File:Paris_panorama_from_the_top_of_the_Sacr%C3%A9-C%C5%93ur_Basilica,_July_2015.jpg) von **Joe deSousa**, CC0
+- [„Lake palace 05a“](https://commons.wikimedia.org/wiki/File:Lake_palace_05a.jpg) von **KenWalker**, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+- [„Castle, Elmina“](https://commons.wikimedia.org/wiki/File:Castle,_Elmina_(P1100203-Pano).jpg) von **Matti Blume**, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+- [„Alhambra evening panorama“](https://commons.wikimedia.org/wiki/File:Alhambra_evening_panorama_Mirador_San_Nicolas_sRGB-1.jpg) von **Slaunger**, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+- [„Panorama boca000“](https://commons.wikimedia.org/wiki/File:Panorama_boca000.jpg) von **Moemoemoe**, CC0
+- [„99 - Machu Picchu“](https://commons.wikimedia.org/wiki/File:99_-_Machu_Picchu_-_Juin_2009.jpg) von **Martin St-Amant**, [CC BY-SA 3.0](https://creativecommons.org/licenses/by-sa/3.0/)
+- [„Sunrise at Serengeti National Park“](https://commons.wikimedia.org/wiki/File:004_Sunrise_at_Serengeti_National_Park_Photo_by_Giles_Laurent.jpg) von **Giles Laurent**, [CC BY-SA 4.0](https://creativecommons.org/licenses/by-sa/4.0/)
+
 **Musik** – eigene Songs des Projekts, erstellt mit KI
 
-**Texturen** – [Poly Haven](https://polyhaven.com) (CC0): Holztisch, Putzwand, Dielenboden
+**Texturen** – [Poly Haven](https://polyhaven.com) (CC0): Mahagoni, Putzwand, Dielenboden
 
 **Schrift** – [Special Elite](https://fonts.google.com/specimen/Special+Elite) von Astigmatic, Apache License 2.0
 

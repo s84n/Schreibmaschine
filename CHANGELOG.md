@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.3.0] – 2026-11-01
+
+### Hinzugefügt
+- **Acht neue Aussichten** für die künftigen Songs aus aller Welt: Rio de Janeiro, Paris, Udaipur, Elmina (Ghana), Granada, Buenos Aires, Machu Picchu und die Serengeti, jeweils mit Bewegung im Himmel, und wo es passt mit Vögeln, Wellen oder Wind im Gras.
+
 ## [1.2.0] – 2026-11-01
 
 ### Geändert

@@ -6,7 +6,7 @@ import { mergeStatic } from './merge';
 import { RoomTargets } from './Targets';
 import { animatePanorama, OutdoorParticles, setPanoramaLife, setPanoramaMotion, tickPanorama, type ViewLife } from './OutdoorLife';
 
-export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'chinavillage' | 'japanforest' | 'starnight' | 'istanbul' | 'newyork' | 'dubai';
+export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'chinavillage' | 'japanforest' | 'starnight' | 'istanbul' | 'newyork' | 'dubai' | 'rio' | 'paris' | 'udaipur' | 'elmina' | 'granada' | 'buenosaires' | 'machupicchu' | 'serengeti';
 
 export interface OutdoorView {
   file: string;
@@ -35,6 +35,14 @@ export const VIEWS: Record<ViewId, OutdoorView> = {
   istanbul: { file: 'istanbul.jpg', u: 0.5, drop: 3, light: '#fff1dc', lightIntensity: 1.32, ambient: 0.36, life: { sky: 0.55, water: [0.28, 0.42], particles: 'birds' } },
   newyork: { file: 'newyork.jpg', u: 0.5, drop: 2, light: '#f4f6ff', lightIntensity: 1.21, ambient: 0.36, life: { sky: 0.55 } },
   dubai: { file: 'dubai.jpg', u: 0.5, drop: 10, light: '#ff9fb0', lightIntensity: 0.6, ambient: 0.28, dusk: true },
+  rio: { file: 'rio.jpg', u: 0.5, drop: 3, light: '#fff3dc', lightIntensity: 1.3, ambient: 0.36, life: { sky: 0.52, particles: 'birds' } },
+  paris: { file: 'paris.jpg', u: 0.5, drop: 3, light: '#fff4e4', lightIntensity: 1.2, ambient: 0.35, life: { sky: 0.44, particles: 'birds' } },
+  udaipur: { file: 'udaipur.jpg', u: 0.5, drop: 3, light: '#ffeed6', lightIntensity: 1.25, ambient: 0.35, life: { sky: 0.63, water: [0.2, 0.41], particles: 'birds' } },
+  elmina: { file: 'elmina.jpg', u: 0.5, drop: 3, light: '#fff2dc', lightIntensity: 1.35, ambient: 0.36, life: { sky: 0.45, particles: 'birds' } },
+  granada: { file: 'granada.jpg', u: 0.5, drop: 3, light: '#ffd9a8', lightIntensity: 1.1, ambient: 0.32, life: { sky: 0.56, particles: 'birds' } },
+  buenosaires: { file: 'buenosaires.jpg', u: 0.5, drop: 3, light: '#f4f2ec', lightIntensity: 1.1, ambient: 0.34, life: { sky: 0.72, water: [0.32, 0.41] } },
+  machupicchu: { file: 'machupicchu.jpg', u: 0.5, drop: 3, light: '#fff4e0', lightIntensity: 1.25, ambient: 0.35, life: { sky: 0.6, particles: 'birds' } },
+  serengeti: { file: 'serengeti.jpg', u: 0.5, drop: 3, light: '#ffd7ae', lightIntensity: 1.05, ambient: 0.3, life: { sky: 0.49, foliage: [0.2, 0.41], particles: 'birds' } },
   starnight: { file: 'lakeside_night.jpg', u: 0.4, drop: 5, light: '#ffb070', lightIntensity: 0.35, ambient: 0.18, dusk: true, life: { sky: 0.5, water: [0.14, 0.42], stars: true, particles: 'fireflies' } },
 };
 
