@@ -50,7 +50,7 @@ und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 | ✍️ **Schreiben** | Einfach lostippen. Rücktaste setzt den Wagen zurück – Überschreiben wie früher inklusive. |
 | 🏔️ **Aussicht wählen** | Alpen, Bergsee im Winter, nordischer See, Mittelmeer, ein chinesisches Dorf, ein japanischer Ahornwald, Rio de Janeiro, Paris, Udaipur, Elmina, Granada, Buenos Aires, Machu Picchu, die Serengeti, Istanbul, ein Büro hoch über Manhattan, Dubai in der Dämmerung oder eine Sternennacht am See. |
 | 🌿 **Lebendige Aussicht** | Hinter dem großen Panoramafenster ziehen Wolken, das Wasser kräuselt sich, Wind geht durchs Laub, und je nach Ort fliegen Vögel, fällt Schnee, segeln Ahornblätter oder tanzen Glühwürmchen – per Schalter an und aus. |
-| 🎷 **Musik wählen** | 14 eigene Songs aus aller Welt laufen in Dauerschleife, von Bossa Nova über Raga und Kora bis Tango und Nordic Folk. |
+| 🎷 **Musik wählen** | 14 eigene Songs aus aller Welt laufen in weich überblendeter Dauerschleife, von Bossa Nova über Raga und Kora bis Tango und Nordic Folk. |
 | 🎚️ **Alles einzeln regeln** | Geräusche der Maschine, Musik und Regen haben je einen eigenen Lautstärkeregler. |
 | 💾 **Nichts verlieren** | Dein Blatt wird automatisch im Browser gespeichert und ist beim nächsten Besuch wieder da. |
 | 📄 **Exportieren** | Die fertige Seite als **PNG**, als **PDF** (A4) oder als reinen **Text** herunterladen. |

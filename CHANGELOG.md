@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.5.0] – 2026-11-01
+
+### Geändert
+- **Weicher Übergang in der Schleife:** Am Songende blendet der Song fünf Sekunden lang in seinen eigenen Anfang über, statt hart neu zu beginnen. Wo der Browser das verweigert, läuft die Schleife wie bisher.
+
 ## [1.4.0] – 2026-11-01
 
 ### Hinzugefügt

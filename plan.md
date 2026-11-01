@@ -165,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.22.0** (2026-11-01) – Nutzerwunsch → App v1.5.0: Überblendung am Songende mit zwei Spielern. Laut Nutzer gelten für alle 14 Songs dieselben Bedingungen, er besitzt volle, auch kommerzielle Nutzungsrechte.
 - **v0.21.0** (2026-11-01) – Nutzer-Songs eingebaut → App v1.4.0: 14 Songs, 16 Stimmungen, Stimmungen als Klappmenü. Songs nicht nachgeregelt, alle liegen bei etwa −16 LUFS.
 - **v0.20.0** (2026-11-01) – Nutzerwunsch → App v1.3.0: acht Aussichten für neue Musikregionen vorbereitet (Liste in Abschnitt 8). Motive liegen neben dem Blatt, weil das Fenster nur rund 70° des Bands zeigt.
 - **v0.19.0** (2026-11-01) – Nutzer-Feedback → App v1.2.0: Tageslicht gedämpft, Lampe am Tag wirksam. Ihr Lichtkegel läuft dafür auch tagsüber in jedem Pixel mit; die Einsparung aus v1.0.0 an dieser Stelle ist bewusst zurückgenommen.
@@ -202,5 +203,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v1.4.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
+1. v1.5.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.
