@@ -2,6 +2,7 @@ import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../animation/Tweens';
 import { buildBookStack, buildCurtain, buildPencilCup, buildRainGlass, Candle, DeskLamp, Dust, FairyLights, LightShafts, PaperStack, Steam } from './Cozy';
 import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, Radio, type DecorMaterials } from './Decor';
+import { mergeStatic } from './merge';
 import { RoomTargets } from './Targets';
 import { animatePanorama, OutdoorParticles, setPanoramaLife, setPanoramaMotion, tickPanorama, type ViewLife } from './OutdoorLife';
 
@@ -45,11 +46,13 @@ const WIN = { x0: -70, x1: 70, y0: 2.6, y1: 66 };
 const ROOM = { x0: -100, x1: 100, z0: WALL_Z, z1: 130, floor: DESK_Y - 76, ceil: 150 };
 /** Wandfarbe: gebrochenes Weiß für Kontrast zum dunklen Tisch */
 const WALL_COLOR = '#fbf7f0';
-const MUG_POS = { x: 27, z: 0 };
-const CANDLE_POS = { x: -32, z: 3 };
+const MUG_POS = { x: 25, z: 1 };
+/** Rechts neben der Tasse, etwas zum Rand hin */
+const CANDLE_POS = { x: 40, z: -5 };
 const STACK_POS = { x: 29, z: 21 };
 const BOOKS_POS = { x: 38, z: -24 };
-const LAMP_POS = new THREE.Vector3(-49, DESK_Y, -19);
+const LAMP_POS = new THREE.Vector3(-41, DESK_Y, -14);
+const PENCILS_POS = { x: -30, z: -26 };
 /** Dorthin zeigt die Schreibtischlampe: auf den Druckpunkt */
 const LAMP_AIM = new THREE.Vector3(0, 13, -4);
 /** Bewegung bei „Ruhige Bewegung“ */
@@ -89,12 +92,12 @@ export class Room {
   private readonly steam = new Steam();
   readonly paper = new PaperStack(13);
   private readonly outdoorParticles = new OutdoorParticles();
-  private readonly dust = new Dust(new THREE.Vector3(-32, 11, 3));
+  private readonly dust = new Dust(new THREE.Vector3(CANDLE_POS.x, 11, CANDLE_POS.z));
   private readonly shafts: LightShafts;
   private shaftsOn = true;
   private lifeOn = true;
   private shaftStrength = 1;
-  private readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
+  readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
   readonly lamp = new DeskLamp(LAMP_AIM.clone().sub(LAMP_POS));
   readonly radio = new Radio();
   readonly targets = new RoomTargets();
@@ -103,7 +106,13 @@ export class Room {
   constructor(private readonly scene: THREE.Scene, private readonly anisotropy: number) {
     this.group.name = 'room';
     const deskMat = this.deskMaterial();
-    this.group.add(this.buildDesk(deskMat), this.buildShell(), this.buildReveal(), this.buildWindow(), this.buildDecor({ wood: deskMat }));
+    // Große Flächen zuletzt: Was davorsteht, ist dann schon in der Tiefe und spart ihre teuren Pixel
+    for (const part of [this.buildDesk(deskMat), this.buildShell(), this.buildReveal(), this.buildWindow()]) {
+      mergeStatic(part);
+      part.traverse((o) => (o.renderOrder = (o as THREE.Mesh).isMesh && !((o as THREE.Mesh).material as THREE.Material).transparent ? 1 : o.renderOrder));
+      this.group.add(part);
+    }
+    this.group.add(this.buildDecor({ wood: deskMat }));
 
     // Außenwelt: Kugelausschnitt mit Panorama, nur durchs Fenster sichtbar
     const geo = new THREE.SphereGeometry(
@@ -114,6 +123,8 @@ export class Room {
     this.outsideMat = new THREE.MeshBasicMaterial({ side: THREE.BackSide, fog: false, color: '#000' });
     animatePanorama(this.outsideMat);
     this.outside = new THREE.Mesh(geo, this.outsideMat);
+    // Zuletzt zeichnen: Vom teuren Himmel-Shader bleibt so nur, was wirklich durchs Fenster sichtbar ist
+    this.outside.renderOrder = 2;
     this.tilt.position.set(0, 20, 40);
     this.tilt.add(this.outside);
     this.group.add(this.tilt, this.outdoorParticles.points);
@@ -157,9 +168,10 @@ export class Room {
     };
     const t = this.targets;
     const { x: cx, z: cz } = CANDLE_POS;
-    t.add('candle', box(13, 19, 13, cx, DESK_Y + 9, cz), new THREE.Vector3(cx, DESK_Y + 15, cz), 26);
+    t.add('candle', box(11, 19, 11, cx, DESK_Y + 9, cz), new THREE.Vector3(cx, DESK_Y + 15, cz), 26);
     const head = this.lamp.head.clone().add(LAMP_POS);
-    t.add('lamp', box(16, 16, 16, head.x, head.y, head.z), head.clone().add(new THREE.Vector3(1, 5, 0)), 30);
+    // Fuß, Stab und Schirm: Die ganze Lampe ist anklickbar
+    t.add('lamp', box(19, head.y - DESK_Y + 6, 16, LAMP_POS.x + 2, (head.y + DESK_Y + 6) / 2, LAMP_POS.z), head.clone().add(new THREE.Vector3(0, 6, 0)), 34);
     const r = this.radio;
     const radioPos = r.group.position;
     t.add('radio', box(r.size.w + 3, r.size.h + 3, r.size.d + 4, radioPos.x, radioPos.y + r.size.h / 2, radioPos.z), radioPos.clone().add(new THREE.Vector3(r.size.w / 2 - 1, r.size.h + 2, 3)), 34);
@@ -319,7 +331,8 @@ export class Room {
         tex.colorSpace = THREE.SRGBColorSpace;
         tex.wrapS = THREE.RepeatWrapping;
         tex.repeat.x = -1;
-        tex.anisotropy = this.anisotropy;
+        // Das Panorama wird fast frontal betrachtet, mehr brächte nur teure Texturzugriffe
+        tex.anisotropy = Math.min(this.anisotropy, 4);
         return tex;
       });
       this.cache.set(id, p);
@@ -327,11 +340,11 @@ export class Room {
     return p;
   }
 
-  private tex(file: string, repeat: [number, number], color: boolean): THREE.Texture {
+  private tex(file: string, repeat: [number, number], color: boolean, anisotropy = 4): THREE.Texture {
     const t = this.loader.load(`${import.meta.env.BASE_URL}textures/${file}`);
     t.wrapS = t.wrapT = THREE.RepeatWrapping;
     t.repeat.set(...repeat);
-    t.anisotropy = this.anisotropy;
+    t.anisotropy = Math.min(this.anisotropy, anisotropy);
     if (color) t.colorSpace = THREE.SRGBColorSpace;
     return t;
   }
@@ -339,7 +352,8 @@ export class Room {
   private deskMaterial(): THREE.MeshStandardMaterial {
     const repeat: [number, number] = [2.2, 1.3];
     return new THREE.MeshStandardMaterial({
-      map: this.tex('desk_diff.jpg', repeat, true),
+      // Nur auf der flach betrachteten Tischplatte lohnt sich die Mehrarbeit, und nur bei der Farbe
+      map: this.tex('desk_diff.jpg', repeat, true, 8),
       normalMap: this.tex('desk_nor.jpg', repeat, false),
       roughnessMap: this.tex('desk_rough.jpg', repeat, false),
       roughness: 0.85,
@@ -486,7 +500,7 @@ export class Room {
     this.steam.group.position.set(MUG_POS.x, DESK_Y + 8, MUG_POS.z);
     g.add(mug, this.steam.group);
 
-    // Kerze links neben der Maschine (außerhalb der Wagenbahn)
+    // Kerze rechts neben der Tasse
     this.candle.group.position.set(CANDLE_POS.x, DESK_Y, CANDLE_POS.z);
     g.add(this.candle.group);
 
@@ -504,7 +518,7 @@ export class Room {
     this.radio.group.rotation.y = -0.18;
     g.add(this.radio.group);
     const pencils = buildPencilCup(4);
-    pencils.position.set(-38, DESK_Y, -20);
+    pencils.position.set(PENCILS_POS.x, DESK_Y, PENCILS_POS.z);
     this.paper.group.position.set(STACK_POS.x, DESK_Y, STACK_POS.z);
     this.paper.group.rotation.y = -0.12;
     g.add(stack, pencils, this.paper.group);
@@ -524,6 +538,8 @@ export class Room {
       g.add(curtain);
     }
     g.add(this.fairy.group);
+    // Was sich bewegt oder umschaltet, bleibt getrennt; diese Teile fügen ihr Festes selbst zusammen
+    mergeStatic(g, [this.candle.group, this.lamp.group, this.radio.group, this.paper.group, this.steam.group, this.fairy.group]);
     return g;
   }
 
@@ -573,7 +589,7 @@ export class Room {
     // Leicht spiegelndes Glas
     const glass = new THREE.Mesh(
       new THREE.PlaneGeometry(w, h),
-      new THREE.MeshPhysicalMaterial({ color: '#ffffff', roughness: 0.05, metalness: 0, transparent: true, opacity: 0.08, depthWrite: false }),
+      new THREE.MeshStandardMaterial({ color: '#ffffff', roughness: 0.05, metalness: 0, transparent: true, opacity: 0.08, depthWrite: false }),
     );
     glass.position.set(cx, cy, z - 0.2);
     this.rainGlass.mesh.position.set(cx, cy, z - 0.1);

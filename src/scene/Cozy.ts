@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../animation/Tweens';
 import { rng } from '../paper/InkCanvas';
+import { mergeStatic } from './merge';
 
 let glowTex: THREE.Texture | undefined;
 /** Weicher, runder Lichthof für Kerze, Lichterkette und Dampf. */
@@ -152,6 +153,7 @@ export class Candle {
       this.smoke.push({ s: puff, phase: i / 22 });
       this.group.add(puff);
     }
+    mergeStatic(this.group);
   }
 
   setNight(n: number): void {
@@ -161,6 +163,8 @@ export class Candle {
     const lit = n > 0.02;
     this.flame.visible = lit;
     this.glow.visible = lit;
+    // Ein unsichtbares Licht kostet nichts, eines mit Stärke 0 rechnet in jedem Pixel mit
+    this.light.visible = lit;
     if (!lit) this.light.intensity = 0;
     this.wax.emissiveIntensity = n * 0.75;
     // Flamme wächst beim Anzünden vom Docht aus
@@ -208,69 +212,112 @@ export class Candle {
   }
 }
 
+const LAMP_SCALE = 0.72;
+
 /**
- * Schreibtischlampe mit Gelenkarm und warmem Lichtkegel aufs Papier.
+ * Bankerlampe, wie sie seit den 1910er-Jahren auf Schreibtischen steht: Messingfuß, geschwungener
+ * Stab und liegender Schirm aus grünem, innen weißem Glas.
  * Ursprung = Tischplatte; `aim` ist der Zielpunkt relativ dazu. Sie wirft bewusst keinen eigenen
  * Schatten: Das wäre eine weitere teure Schattenkarte, und nachts führt die Kerze die Schatten.
  */
 export class DeskLamp {
   readonly group = new THREE.Group();
-  /** Lampenkopf relativ zum Ursprung */
-  readonly head = new THREE.Vector3(23, 23, 25);
-  private readonly light: THREE.SpotLight;
+  /** Mitte des Schirms relativ zum Ursprung */
+  readonly head: THREE.Vector3;
+  readonly light: THREE.SpotLight;
   private readonly bulb = new THREE.MeshBasicMaterial({ color: '#6d6357', toneMapped: false });
+  private readonly glass = new THREE.MeshStandardMaterial({ color: '#124f35', roughness: 0.16, metalness: 0.1, emissive: '#3fae6c', emissiveIntensity: 0 });
+  private readonly opal = new THREE.MeshStandardMaterial({ color: '#f3e8cf', roughness: 0.5, side: THREE.BackSide, emissive: '#ffd9a0', emissiveIntensity: 0 });
   private readonly glow: THREE.Sprite;
   private power = 0;
   private night = 0;
   private tween?: TweenHandle;
 
   constructor(aim: THREE.Vector3) {
-    const enamel = new THREE.MeshStandardMaterial({ color: '#27443a', metalness: 0.35, roughness: 0.4 });
-    const brass = new THREE.MeshStandardMaterial({ color: '#b08a45', metalness: 1, roughness: 0.35 });
-    const base = new THREE.Mesh(new THREE.CylinderGeometry(6, 6.6, 1.3, 40), enamel);
-    base.position.y = 0.65;
-    this.group.add(base);
+    // Alle Maße unten sind die eines großen Originals; im Bild steht sie etwas kleiner
+    const body = new THREE.Group();
+    body.scale.setScalar(LAMP_SCALE);
+    const brass = new THREE.MeshStandardMaterial({ color: '#b08a45', metalness: 1, roughness: 0.32 });
+    const profile = (pts: number[][]) => pts.map(([x, y]) => new THREE.Vector2(x, y));
 
-    const elbow = new THREE.Vector3(0, 19, 3);
-    const rod = (from: THREE.Vector3, to: THREE.Vector3) => {
-      const m = new THREE.Mesh(new THREE.CylinderGeometry(0.42, 0.42, from.distanceTo(to), 12), brass);
-      m.position.copy(from).add(to).multiplyScalar(0.5);
-      m.quaternion.setFromUnitVectors(new THREE.Vector3(0, 1, 0), to.clone().sub(from).normalize());
-      this.group.add(m);
+    // Gestufter Fuß
+    body.add(new THREE.Mesh(new THREE.LatheGeometry(profile([[0, 0], [7, 0], [7.2, 0.35], [6.6, 0.95], [4.3, 1.5], [2.3, 2.2], [1.1, 3.3], [0.65, 4.4], [0, 4.4]]), 48), brass));
+
+    // Stab: gerade hoch, dann im Bogen zur Mitte des Schirms
+    const toward = new THREE.Vector3(aim.x, 0, aim.z).normalize();
+    const over = (reach: number, y: number) => toward.clone().multiplyScalar(reach).setY(y);
+    const center = over(5.5, 29);
+    this.head = center.clone().multiplyScalar(LAMP_SCALE);
+    const stem = new THREE.CatmullRomCurve3([over(0, 4), over(0, 16), over(0, 26), over(0.7, 30), over(3, 32.6), over(5.5, 32.3), center.clone().setY(30.5)]);
+    body.add(new THREE.Mesh(new THREE.TubeGeometry(stem, 48, 0.42, 10), brass));
+    for (const y of [9, 20]) {
+      const collar = new THREE.Mesh(new THREE.LatheGeometry(profile([[0.42, -0.8], [0.72, -0.5], [0.85, 0], [0.72, 0.5], [0.42, 0.8]]), 20), brass);
+      collar.position.y = y;
+      body.add(collar);
+    }
+
+    // Schirm: liegender Halbzylinder, schräg zum Tisch und leicht zum Papier geneigt
+    const LENGTH = 22;
+    const R = 5.4;
+    const shade = new THREE.Group();
+    shade.position.copy(center);
+    shade.rotation.set(-0.3, 0.65, 0, 'YXZ');
+    const half = (radius: number, mat: THREE.Material) => {
+      const geo = new THREE.CylinderGeometry(radius, radius, LENGTH, 40, 1, true, 0, Math.PI);
+      geo.rotateZ(Math.PI / 2);
+      geo.scale(1, 0.86, 1);
+      return new THREE.Mesh(geo, mat);
     };
-    rod(new THREE.Vector3(0, 1, 0), elbow);
-    rod(elbow, this.head);
-    const joint = new THREE.Mesh(new THREE.SphereGeometry(0.95, 16, 12), brass);
-    joint.position.copy(elbow);
-    this.group.add(joint);
+    shade.add(half(R, this.glass), half(R - 0.14, this.opal));
+    for (const side of [-1, 1]) {
+      // Stirnseiten aus Glas mit Messingrand
+      const cap = new THREE.CircleGeometry(R, 32, 0, Math.PI);
+      cap.scale(1, 0.86, 1);
+      cap.rotateY((side * Math.PI) / 2);
+      const end = new THREE.Mesh(cap, this.glass);
+      end.position.x = (side * LENGTH) / 2;
+      const rimGeo = new THREE.TorusGeometry(R, 0.2, 8, 32, Math.PI);
+      rimGeo.scale(1, 0.86, 1);
+      rimGeo.rotateY(Math.PI / 2);
+      const rim = new THREE.Mesh(rimGeo, brass);
+      rim.position.x = (side * LENGTH) / 2;
+      const edge = new THREE.Mesh(new THREE.CylinderGeometry(0.2, 0.2, LENGTH, 10), brass);
+      edge.rotation.z = Math.PI / 2;
+      edge.position.z = side * R;
+      shade.add(end, rim, edge);
+    }
+    // Messingschelle oben, an ihr hängt der Schirm
+    const clampGeo = new THREE.TorusGeometry(R + 0.06, 0.34, 8, 32, Math.PI);
+    clampGeo.scale(1, 0.86, 1);
+    clampGeo.rotateY(Math.PI / 2);
+    shade.add(new THREE.Mesh(clampGeo, brass));
+    // Längliche Soffittenbirne im Schirm
+    const bulb = new THREE.Mesh(new THREE.CapsuleGeometry(0.85, 9, 6, 14), this.bulb);
+    bulb.rotation.z = Math.PI / 2;
+    bulb.position.y = 1.5;
+    shade.add(bulb);
+    body.add(shade);
 
-    // Schirm, Öffnung nach unten; danach auf das Papier ausgerichtet
-    const head = new THREE.Group();
-    head.position.copy(this.head);
-    const dir = aim.clone().sub(this.head).normalize();
-    head.quaternion.setFromUnitVectors(new THREE.Vector3(0, -1, 0), dir);
-    const shade = new THREE.Mesh(
-      new THREE.LatheGeometry(
-        [[0.2, 2.6], [1.3, 2.4], [1.9, 1.3], [3.4, -1], [4.5, -2.6]].map(([x, y]) => new THREE.Vector2(x, y)),
-        40,
-      ),
-      new THREE.MeshStandardMaterial({ color: '#27443a', metalness: 0.35, roughness: 0.4, side: THREE.DoubleSide }),
-    );
-    const bulb = new THREE.Mesh(new THREE.SphereGeometry(1.2, 20, 14), this.bulb);
-    bulb.position.y = -0.7;
-    head.add(shade, bulb);
-    head.scale.setScalar(0.75);
-    this.group.add(head);
-    shadowed(this.group);
+    // Zugkette mit Messingperle hängt senkrecht unter dem Schirm
+    const pull = new THREE.Vector3(4.5, 0.2, 1.8).applyEuler(shade.rotation).add(center);
+    const chain = new THREE.Mesh(new THREE.CylinderGeometry(0.05, 0.05, 5.5, 5), brass);
+    chain.position.copy(pull).setY(pull.y - 2.75);
+    const bead = new THREE.Mesh(new THREE.SphereGeometry(0.34, 12, 10), brass);
+    bead.position.copy(pull).setY(pull.y - 5.7);
+    body.add(chain, bead);
+    shadowed(body);
     bulb.castShadow = false;
+    mergeStatic(body);
+    this.group.add(body);
 
+    const lightAt = this.head.clone().setY(this.head.y - 1);
     this.light = new THREE.SpotLight('#ffbe80', 0, 150, Math.PI / 3.6, 0.85, 1.6);
-    this.light.position.copy(this.head);
+    this.light.position.copy(lightAt);
     this.light.target.position.copy(aim);
     this.group.add(this.light, this.light.target);
 
     this.glow = new THREE.Sprite(new THREE.SpriteMaterial({ map: softTexture(), color: '#ffb066', transparent: true, blending: THREE.AdditiveBlending, depthWrite: false, opacity: 0 }));
-    this.glow.position.copy(this.head).addScaledVector(dir, 2.5);
+    this.glow.position.copy(lightAt);
     this.glow.scale.setScalar(20);
     this.glow.visible = false;
     this.group.add(this.glow);
@@ -294,6 +341,10 @@ export class DeskLamp {
     this.power = p;
     // Tagsüber kaum mehr als ein warmer Hauch, nachts das Leselicht
     this.light.intensity = p * (60 + 520 * this.night);
+    // Tagsüber wäre ihr Lichtkegel kaum zu sehen, kostete aber in jedem Pixel: Dann glüht sie nur
+    this.light.visible = p > 0.005 && this.night > 0.02;
+    this.glass.emissiveIntensity = p * (0.12 + 0.5 * this.night);
+    this.opal.emissiveIntensity = p * (0.25 + 1 * this.night);
     this.bulb.color.set('#6d6357').lerp(new THREE.Color(3, 2.1, 1.2), p);
     this.glow.visible = p > 0.01;
     (this.glow.material as THREE.SpriteMaterial).opacity = p * (0.08 + 0.3 * this.night);
@@ -332,7 +383,7 @@ export class FairyLights {
   private readonly bulbs: THREE.InstancedMesh;
   private readonly glow: THREE.PointsMaterial;
   private readonly bulbMat = new THREE.MeshBasicMaterial({ color: '#6b5a42', toneMapped: false });
-  private readonly fill = new THREE.PointLight('#ffb36b', 0, 110, 1.5);
+  readonly fill = new THREE.PointLight('#ffb36b', 0, 110, 1.5);
 
   constructor(x0: number, x1: number, y: number, z: number) {
     const pts: THREE.Vector3[] = [];
@@ -371,6 +422,7 @@ export class FairyLights {
     this.glow.opacity = 0.85 * n;
     this.glow.visible = n > 0.02;
     this.fill.intensity = 170 * n;
+    this.fill.visible = n > 0.02;
   }
 }
 
@@ -399,12 +451,13 @@ export function buildBookStack(seed: number): THREE.Group {
   const g = new THREE.Group();
   const colors = ['#6a2a26', '#27415e', '#3e5a3f', '#8a6a3a'];
   const pages = new THREE.MeshStandardMaterial({ color: '#e8dfca', roughness: 0.95 });
+  const covers = new Map(colors.map((color) => [color, new THREE.MeshStandardMaterial({ color, roughness: 0.7 })]));
   let y = 0;
   for (let i = 0; i < 3; i++) {
     const h = 1.8 + r() * 1.2;
     const w = 19 - i * 2 + r();
     const d = 13 - i + r();
-    const cover = new THREE.MeshStandardMaterial({ color: colors[Math.floor(r() * colors.length)], roughness: 0.7 });
+    const cover = covers.get(colors[Math.floor(r() * colors.length)])!;
     const book = new THREE.Group();
     for (const dy of [0.11, h - 0.11]) {
       const board = new THREE.Mesh(new THREE.BoxGeometry(w, 0.22, d), cover);
@@ -533,6 +586,7 @@ export class PaperStack {
     this.pile.visible = false;
     this.group.add(this.page, this.pile);
     shadowed(this.group);
+    mergeStatic(this.group, [this.page, this.pile]);
   }
 
   /** Zeigt `count` fertige Blätter; `latest` liegt obenauf, ohne Blätter wieder das Manuskript. */

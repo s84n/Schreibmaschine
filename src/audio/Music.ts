@@ -3,6 +3,9 @@ export const TRACKS = ['SchreibMaschine - Asia', 'SchreibMaschine - Middle East'
 
 export type TrackId = (typeof TRACKS)[number];
 
+/** Anzeigename: nur der Titel, damit man in der Liste sofort sieht, was man wählt. */
+export const trackTitle = (id: TrackId): string => id.replace(/^SchreibMaschine - /, '');
+
 /** Ausgangspegel: Die Songs liegen bei etwa -16 LUFS und sollen leise unter den Maschinengeräuschen bleiben. */
 const OUT_LEVEL = 0.75;
 const FADE = 0.4;

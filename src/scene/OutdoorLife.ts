@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { rng } from '../paper/InkCanvas';
 
 export type ParticleKind = 'birds' | 'snow' | 'leaves' | 'fireflies';
 
@@ -12,7 +13,19 @@ export interface ViewLife {
   particles?: ParticleKind;
 }
 
+/** Vorberechnetes Rauschen: Ein Texturzugriff kostet einen Bruchteil von vier Hash-Rechnungen je Pixel. */
+const NOISE_SIZE = 64;
+function noiseTexture(): THREE.DataTexture {
+  const r = rng(2024);
+  const tex = new THREE.DataTexture(new Uint8Array(NOISE_SIZE * NOISE_SIZE).map(() => r() * 256), NOISE_SIZE, NOISE_SIZE, THREE.RedFormat);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.magFilter = tex.minFilter = THREE.LinearFilter;
+  tex.needsUpdate = true;
+  return tex;
+}
+
 const uniforms = {
+  uLifeNoise: { value: noiseTexture() },
   uLifeTime: { value: 0 },
   uLifeOn: { value: 1 },
   uSkyFrom: { value: 2 },
@@ -24,6 +37,7 @@ const uniforms = {
 const LIFE_HEAD = /* glsl */ `
   uniform float uLifeTime, uLifeOn, uSkyFrom, uStars;
   uniform vec2 uWaterRange, uFoliageRange;
+  uniform sampler2D uLifeNoise;
   float lifeHash(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
     p += dot(p, p + 45.32);
@@ -32,7 +46,7 @@ const LIFE_HEAD = /* glsl */ `
   float lifeNoise(vec2 p) {
     vec2 i = floor(p), f = fract(p);
     f = f * f * (3.0 - 2.0 * f);
-    return mix(mix(lifeHash(i), lifeHash(i + vec2(1, 0)), f.x), mix(lifeHash(i + vec2(0, 1)), lifeHash(i + vec2(1, 1)), f.x), f.y);
+    return texture2D(uLifeNoise, (i + f + 0.5) / 64.0).r;
   }
   float lifeFbm(vec2 p) {
     return 0.55 * lifeNoise(p) + 0.3 * lifeNoise(p * 2.1 + 3.7) + 0.15 * lifeNoise(p * 4.3 + 9.1);
@@ -82,8 +96,8 @@ const LIFE_MAP = /* glsl */ `
       float sky = max(blue, pale) * smoothstep(uSkyFrom, uSkyFrom + 0.05, lifeUv.y);
       vec2 wind = vec2(t * 0.012, t * 0.002);
       vec2 s = vec2(p.x * 0.55, p.y * 1.3) + wind;
-      lifeOff += sky * (vec2(lifeFbm(s * 1.6), lifeFbm(s * 1.6 + 5.0)) - 0.5) * vec2(0.002, 0.004);
-      lifeCloud = sky * smoothstep(0.48, 0.74, lifeFbm(s + lifeFbm(s * 0.6 - wind) * 0.5)) * 0.42;
+      lifeOff += sky * (vec2(lifeNoise(s * 1.6), lifeNoise(s * 1.6 + 5.0)) - 0.5) * vec2(0.002, 0.004);
+      lifeCloud = sky * smoothstep(0.54, 0.8, lifeFbm(s + lifeNoise(s * 0.6 - wind) * 0.5)) * 0.36;
     }
 
     if (uStars > 0.5 && lifeUv.y > uSkyFrom + 0.04) {
@@ -93,7 +107,7 @@ const LIFE_MAP = /* glsl */ `
       lifeAdd += star * smoothstep(0.1, 0.2, lum) * (0.45 + 0.55 * sin(t * (1.0 + h * 2.0) + h * 90.0)) * vec3(0.9, 0.95, 1.0) * 0.7;
     }
   }
-  vec4 sampledDiffuseColor = texture2D(map, lifeUv + lifeOff);
+  vec4 sampledDiffuseColor = uLifeOn > 0.5 ? texture2D(map, lifeUv + lifeOff) : lifeBase;
   sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, vec3(0.96, 0.97, 1.0), lifeCloud) + lifeAdd;
   diffuseColor *= sampledDiffuseColor;
   #endif

@@ -1,4 +1,5 @@
 import * as THREE from 'three';
+import { mergeStatic } from '../../scene/merge';
 import { DIMS, keyboardDeckY } from '../dims';
 import { MODELS, type Materials, type ModelId } from '../materials';
 import { box, shadow, textTexture } from './util';
@@ -276,6 +277,7 @@ export function buildBody(m: Materials, model: ModelId): THREE.Group {
   badge.position.set(0, 5.2, DIMS.deckFrontZ + 0.01);
   g.add(badge);
 
+  mergeStatic(g);
   return g;
 }
 

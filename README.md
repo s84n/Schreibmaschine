@@ -67,7 +67,7 @@ und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 | 🪶 **Sanfter Anschlag** | Gedämpft wie auf Filz, dazu eigene Regler für Glocke und Wagenrücklauf. |
 | 👀 **Augen schonen** | Größere Schrift beim Lesen, warmes Creme-Papier und ruhige Bewegung ohne Flackern. |
 | 🔋 **Leiser Lüfter** | Im Stillstand sinkt die Bildrate von selbst. Dazu gibt es einen Akku-Modus. |
-| 🕯️ **Tag & Nacht** | Nachts brennt links eine Kerze mit flackerndem Licht, die Schreibtischlampe wirft warmes Leselicht aufs Papier, über dem Fenster leuchtet eine Lichterkette. |
+| 🕯️ **Tag & Nacht** | Nachts brennt rechts neben der Tasse eine Kerze mit flackerndem Licht, die grüne Bankerlampe wirft warmes Leselicht aufs Papier, über dem Fenster leuchtet eine Lichterkette. |
 | 🎀 **Farbband wechseln** | Schwarz, Rot, Königsblau, Tannengrün, Violett oder Sepia – Geschriebenes behält seine Farbe. |
 | 🏛️ **Modell wählen** | Reise (1950er), Kontor (1930er, Messing) oder Flach (1960er) – eigene Entwürfe mit derselben Mechanik. |
 | 🌧️ **Regenwetter** | Tropfen laufen die Scheibe hinab, dazu leises Prasseln und im Hintergrund Tropfen auf dem Dach – per Schalter an und aus, mit eigenem Lautstärkeregler. |

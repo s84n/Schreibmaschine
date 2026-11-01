@@ -1,15 +1,18 @@
 import * as THREE from 'three';
 import { animator, ease } from '../../animation/Tweens';
 import type { KeyDef, Layout } from '../../input/layouts';
+import { mergeStatic } from '../../scene/merge';
 import { keyboardDeckY } from '../dims';
 import type { Materials } from '../materials';
-import { shadow, textTexture } from './util';
+import { shadow } from './util';
 
 export type SpecialKey = 'space' | 'backspace' | 'shiftL' | 'shiftR' | 'shiftLock' | 'tab';
 
 export interface Key {
-  /** bewegliche Gruppe (Kappe + Stößel) */
-  obj: THREE.Group;
+  /** Lage der Taste; runde Tasten werden daraus in die Instanzen übertragen */
+  obj: THREE.Object3D;
+  /** Platz in den Instanzen; die Leertaste ist ein eigenes Objekt */
+  index?: number;
   restY: number;
   def?: KeyDef;
   special?: SpecialKey;
@@ -26,11 +29,20 @@ const TRAVEL = 0.55;
 const SPACE_ARMS = [-6.2, 6.2];
 const LEGEND_FONT = '"Futura", "Century Gothic", "Helvetica Neue", Arial, sans-serif';
 
+const STEM_LEN = 1.7;
+/** Beschriftungen teilen sich eine Textur, sonst wäre jede Taste ein eigener Draw-Call. */
+const ATLAS_CELLS = 8;
+const ATLAS_CELL_PX = 128;
+
 const capGeo = new THREE.CylinderGeometry(KEY_RADIUS * 0.95, KEY_RADIUS * 0.95, 0.16, 32);
 const ringGeo = new THREE.TorusGeometry(KEY_RADIUS, 0.085, 10, 36);
 ringGeo.rotateX(Math.PI / 2);
+ringGeo.translate(0, 0.02, 0);
+const stemGeo = new THREE.BoxGeometry(0.18, STEM_LEN, 0.3);
+stemGeo.translate(0, -STEM_LEN / 2, 0);
 const legendGeo = new THREE.CircleGeometry(KEY_RADIUS * 0.9, 32);
 legendGeo.rotateX(-Math.PI / 2);
+legendGeo.translate(0, 0.081, 0);
 
 /** Tastatur mit runden Glasrand-Tasten, Leertaste und Sondertasten. */
 export class Keyboard {
@@ -39,12 +51,20 @@ export class Keyboard {
   private readonly byChar = new Map<string, Key>();
   private readonly byCode = new Map<string, Key>();
   private readonly special = new Map<SpecialKey, Key>();
-  private readonly textures: THREE.Texture[] = [];
-  private readonly legendMats: THREE.Material[] = [];
+  private readonly roundKeys: { key: Key; legend: string[] }[] = [];
+  private readonly moved = new Set<Key>();
+  private instanced: THREE.InstancedMesh[] = [];
+  private readonly legendMat = new THREE.MeshPhysicalMaterial({ roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.05 });
   private readonly slotMat = new THREE.MeshStandardMaterial({ color: '#050505', roughness: 0.9 });
 
   constructor(private readonly m: Materials, layout: Layout) {
     this.group.name = 'keyboard';
+    // Jede Taste liest ihren Ausschnitt aus der gemeinsamen Beschriftungs-Textur
+    this.legendMat.onBeforeCompile = (shader) => {
+      shader.vertexShader = shader.vertexShader
+        .replace('#include <common>', 'attribute vec2 legendCell;\n#include <common>')
+        .replace('#include <uv_vertex>', `#include <uv_vertex>\nvMapUv = uv / ${ATLAS_CELLS}.0 + legendCell;`);
+    };
     this.build(layout);
   }
 
@@ -69,7 +89,10 @@ export class Keyboard {
     animator.add({
       duration: 0.035,
       ease: ease.outQuad,
-      onUpdate: (t) => (o.position.y = from + (down - from) * t),
+      onUpdate: (t) => {
+        o.position.y = from + (down - from) * t;
+        this.moved.add(key);
+      },
       onComplete: () => {
         if (hold || key.locked) return;
         this.release(key, 0.03);
@@ -85,7 +108,10 @@ export class Keyboard {
       delay,
       duration: 0.1,
       ease: ease.outBack,
-      onUpdate: (t) => (o.position.y = down + (target - down) * t),
+      onUpdate: (t) => {
+        o.position.y = down + (target - down) * t;
+        this.moved.add(key);
+      },
     });
   }
 
@@ -111,6 +137,77 @@ export class Keyboard {
     this.addSpecial('shiftL', lastX(3) - KEY_PITCH, ROW_Z[3], '⇧');
     this.addSpecial('shiftR', rowEnd(3) + KEY_PITCH, ROW_Z[3], '⇧');
     this.addSpaceBar();
+    this.buildInstances();
+    mergeStatic(this.group, [this.special.get('space')!.obj, ...this.instanced]);
+  }
+
+  /** Überträgt bewegte Tasten in die Instanzen; einmal pro Bild. */
+  sync(): void {
+    if (!this.moved.size) return;
+    for (const key of this.moved) {
+      if (key.index === undefined) continue;
+      key.obj.updateMatrix();
+      for (const mesh of this.instanced) mesh.setMatrixAt(key.index, key.obj.matrix);
+    }
+    for (const mesh of this.instanced) mesh.instanceMatrix.needsUpdate = true;
+    this.moved.clear();
+  }
+
+  private buildInstances(): void {
+    const n = this.roundKeys.length;
+    const c = document.createElement('canvas');
+    c.width = c.height = ATLAS_CELLS * ATLAS_CELL_PX;
+    const ctx = c.getContext('2d')!;
+    const cell = new Float32Array(n * 2);
+    this.roundKeys.forEach(({ key, legend }, i) => {
+      const col = i % ATLAS_CELLS;
+      const row = Math.floor(i / ATLAS_CELLS);
+      cell.set([col / ATLAS_CELLS, 1 - (row + 1) / ATLAS_CELLS], i * 2);
+      ctx.save();
+      ctx.translate(col * ATLAS_CELL_PX, row * ATLAS_CELL_PX);
+      this.drawLegend(ctx, legend, ATLAS_CELL_PX);
+      ctx.restore();
+      key.index = i;
+    });
+    const atlas = new THREE.CanvasTexture(c);
+    atlas.colorSpace = THREE.SRGBColorSpace;
+    atlas.anisotropy = 4;
+    this.legendMat.map?.dispose();
+    this.legendMat.map = atlas;
+    this.legendMat.needsUpdate = true;
+
+    const faces = legendGeo.clone();
+    faces.setAttribute('legendCell', new THREE.InstancedBufferAttribute(cell, 2));
+    this.instanced = [
+      shadow(new THREE.InstancedMesh(capGeo, this.m.bakelite, n)),
+      shadow(new THREE.InstancedMesh(ringGeo, this.m.chrome, n)),
+      shadow(new THREE.InstancedMesh(stemGeo, this.m.steel, n)),
+      shadow(new THREE.InstancedMesh(faces, this.legendMat, n), false, false),
+    ];
+    for (const mesh of this.instanced) {
+      this.roundKeys.forEach(({ key }, i) => {
+        key.obj.updateMatrix();
+        mesh.setMatrixAt(i, key.obj.matrix);
+      });
+      mesh.frustumCulled = false;
+      this.group.add(mesh);
+    }
+  }
+
+  private drawLegend(ctx: CanvasRenderingContext2D, legend: string[], size: number): void {
+    ctx.fillStyle = '#121110';
+    ctx.fillRect(0, 0, size, size);
+    ctx.fillStyle = '#efe9da';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    if (legend.length === 1) {
+      ctx.font = `bold ${legend[0].length > 1 ? 40 : 60}px ${LEGEND_FONT}`;
+      ctx.fillText(legend[0], size / 2, size / 2 + 2);
+    } else {
+      ctx.font = `bold 42px ${LEGEND_FONT}`;
+      ctx.fillText(legend[0], size / 2, size * 0.32);
+      ctx.fillText(legend[1], size / 2, size * 0.7);
+    }
   }
 
   private legendFor(def: KeyDef): string[] {
@@ -126,50 +223,14 @@ export class Keyboard {
 
   private makeRoundKey(x: number, z: number, legend: string[]): Key {
     const deckY = keyboardDeckY(z);
-    const stemLen = 1.7;
-    const restY = deckY + stemLen;
-    const obj = new THREE.Group();
+    const restY = deckY + STEM_LEN;
+    const obj = new THREE.Object3D();
     obj.position.set(x, restY, z);
-
-    const tex = textTexture(
-      (ctx, w, h) => {
-        ctx.fillStyle = '#121110';
-        ctx.fillRect(0, 0, w, h);
-        ctx.fillStyle = '#efe9da';
-        ctx.textAlign = 'center';
-        ctx.textBaseline = 'middle';
-        if (legend.length === 1) {
-          ctx.font = `bold ${legend[0].length > 1 ? 40 : 60}px ${LEGEND_FONT}`;
-          ctx.fillText(legend[0], w / 2, h / 2 + 2);
-        } else {
-          ctx.font = `bold 42px ${LEGEND_FONT}`;
-          ctx.fillText(legend[0], w / 2, h * 0.32);
-          ctx.fillText(legend[1], w / 2, h * 0.7);
-        }
-      },
-      128,
-      128,
-    );
-    this.textures.push(tex);
-    const legendMat = new THREE.MeshPhysicalMaterial({ map: tex, roughness: 0.25, clearcoat: 1, clearcoatRoughness: 0.05 });
-    this.legendMats.push(legendMat);
-
-    const cap = shadow(new THREE.Mesh(capGeo, this.m.bakelite));
-    obj.add(cap);
-    const face = new THREE.Mesh(legendGeo, legendMat);
-    face.position.y = 0.081;
-    obj.add(face);
-    const ring = shadow(new THREE.Mesh(ringGeo, this.m.chrome));
-    ring.position.y = 0.02;
-    obj.add(ring);
-    const stem = shadow(new THREE.Mesh(new THREE.BoxGeometry(0.18, stemLen, 0.3), this.m.steel));
-    stem.position.y = -stemLen / 2;
-    obj.add(stem);
     // leichte Neigung zum Betrachter
     obj.rotation.x = 0.12;
-
-    this.group.add(obj);
-    return { obj, restY, x };
+    const key: Key = { obj, restY, x };
+    this.roundKeys.push({ key, legend });
+    return key;
   }
 
   /**
@@ -200,21 +261,20 @@ export class Keyboard {
   }
 
   private dispose(): void {
+    this.instanced.forEach((mesh) => mesh.dispose());
+    this.instanced = [];
     this.group.traverse((o) => {
       const mesh = o as THREE.Mesh;
-      if (mesh.isMesh && mesh.geometry !== capGeo && mesh.geometry !== ringGeo && mesh.geometry !== legendGeo) {
-        mesh.geometry.dispose();
-      }
+      if (mesh.isMesh && ![capGeo, ringGeo, stemGeo].includes(mesh.geometry as never)) mesh.geometry.dispose();
     });
     this.group.clear();
-    this.textures.forEach((t) => t.dispose());
-    this.legendMats.forEach((mat) => mat.dispose());
-    this.textures.length = 0;
-    this.legendMats.length = 0;
+    // Noch laufende Animationen alter Tasten dürfen nichts mehr in die neuen Instanzen schreiben
+    this.roundKeys.forEach(({ key }) => (key.index = undefined));
+    this.roundKeys.length = 0;
+    this.moved.clear();
     this.charKeys.length = 0;
     this.byChar.clear();
     this.byCode.clear();
     this.special.clear();
   }
 }
-

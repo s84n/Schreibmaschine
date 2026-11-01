@@ -2,6 +2,28 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [0.23.0] – 2026-11-01
+
+### Geändert
+- **Schreibtischlampe:** Der moderne Schwingarm ist einer klassischen Bankerlampe gewichen, mit Messingfuß, geschwungenem Stab, grünem, innen weißem Glasschirm und Zugkette. Nachts glüht der Schirm.
+- **Kerze** steht jetzt rechts neben der Tasse zum Tischrand hin. Links bleiben Lampe und Stiftebecher.
+- **Songs** heißen in Liste und Einblendung nur noch nach ihrem Titel (Asia, Middle East, America).
+- **Werkzeugleiste mit Symbolen:** Jeder Knopf, jede Auswahl und jede Stimmung hat ein eigenes Icon. PDF, PNG und Text sitzen als Gruppe hinter einem Speichern-Symbol. Unter 1320 px Breite zeigt die Leiste für die Blatt-Werkzeuge nur noch Symbole, die Namen stehen im Tooltip.
+
+### Performance
+- **Rund 90 % weniger Draw-Calls** (Stillstand am Tag: 134 statt 1541 je Bild): Alles Unbewegliche wird je Material zusammengefügt, Tasten und Typenhebel werden instanziert, die Tastenbeschriftungen teilen sich eine Textur.
+- Schattenkarten werden nur noch erneuert, wenn sich etwas bewegt; nachts höchstens 8-mal pro Sekunde für das Kerzenflackern.
+- Kontaktschatten laufen in halber Auflösung und werden bei stehender Kamera wiederverwendet.
+- Ein Anschlag lädt nur noch seinen Ausschnitt des Blatts hoch statt der ganzen 4-Megapixel-Textur.
+- Ausgeschaltete oder kaum sichtbare Lichter sind wirklich aus und kosten keine Pixel mehr. Die nötigen Shader werden im Voraus übersetzt, damit der erste Wechsel zur Nacht nicht ruckelt.
+- Himmel, Wellen und Laub lesen vorberechnetes Rauschen, statt es je Pixel zu berechnen. Große Flächen werden zuletzt gezeichnet.
+- Keine doppelte Kantenglättung mehr, ab 1440p 2x statt 4x. Höchstens 5,8 Megapixel Renderauflösung; 4K wird hochskaliert.
+- Unschärfe hinter den Bedienfeldern entfernt: Sie wurde über der bewegten Szene in jedem Bild neu berechnet.
+- Die Auflösung passt sich früher an (unter etwa 48 statt 28 Bildern pro Sekunde) und steigt wieder, wenn Luft ist. Die Grafikstufe sinkt erst, wenn auch die kleinste Auflösung nicht reicht.
+
+### Behoben
+- Jede Mausbewegung hob die Bildratenbremse auf: Auf Monitoren mit 144 Hz und mehr rechnete die Szene dann mit voller Bildwiederholrate statt mit 60 Bildern pro Sekunde.
+
 ## [0.22.0] – 2026-11-01
 
 ### Hinzugefügt

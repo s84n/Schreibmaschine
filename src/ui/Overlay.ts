@@ -1,4 +1,4 @@
-import { TRACKS, type TrackId } from '../audio/Music';
+import { trackTitle, TRACKS, type TrackId } from '../audio/Music';
 import { DONATE_URL } from '../config';
 import { LAYOUTS, type LayoutId } from '../input/layouts';
 import { VIEWS, type ViewId } from '../scene/Room';
@@ -7,6 +7,7 @@ import { RIBBONS, type RibbonId } from '../state/Document';
 import { BODY_COLORS, MODELS, type BodyColorId, type ModelId } from '../typewriter/materials';
 import { APP_VERSION } from '../version';
 import { strings, type Lang } from './i18n';
+import { icon, type IconName } from './Icons';
 import { activeMood, MOODS, type MoodId } from './Moods';
 import type { Settings, TextSize } from './Settings';
 import type { PaperTone } from '../paper/InkCanvas';
@@ -41,6 +42,25 @@ const el = <K extends keyof HTMLElementTagNameMap>(tag: K, cls?: string, text?: 
   if (text) e.textContent = text;
   return e;
 };
+
+/** Knopf mit Symbol und Text; der Text bleibt als Tooltip, falls er aus Platzgründen ausgeblendet wird. */
+const toolBtn = (name: IconName, label: string, title = label, cls = ''): HTMLButtonElement => {
+  const b = el('button', `btn with-icon ${cls}`.trim());
+  b.append(icon(name), el('span', 'lbl', label));
+  b.title = title;
+  b.setAttribute('aria-label', title);
+  return b;
+};
+
+const iconBtn = (name: IconName, title: string, cls = ''): HTMLButtonElement => {
+  const b = el('button', `btn icon ${cls}`.trim());
+  b.append(icon(name));
+  b.title = title;
+  b.setAttribute('aria-label', title);
+  return b;
+};
+
+const MOOD_ICONS: Record<MoodId, IconName> = { rainnight: 'rain', sunday: 'coffee', kyoto: 'leaf', winter: 'snow', stars: 'stars', bosporus: 'waves' };
 
 /** HTML-Oberfläche über der 3D-Szene: Werkzeugleiste, Einstellungen, Startschirm, Hinweise. */
 export class Overlay {
@@ -183,13 +203,9 @@ export class Overlay {
     // Werkzeugleiste – auf kleinen Displays nur Tag/Nacht, Tastatur und Zahnrad
     const bar = el('nav', 'toolbar');
     const night = s.time === 'night';
-    const time = el('button', 'btn icon', night ? '☾\uFE0E' : '☀\uFE0E');
-    time.title = t.dayNight;
-    time.setAttribute('aria-label', t.dayNight);
+    const time = iconBtn(night ? 'moon' : 'sun', t.dayNight);
     time.onclick = () => this.update({ time: night ? 'day' : 'night' });
-    const gear = el('button', 'btn icon', '⚙\uFE0E');
-    gear.title = t.settings;
-    gear.setAttribute('aria-label', t.settings);
+    const gear = iconBtn('gear', t.settings);
     gear.onclick = () => {
       this.panelOpen = !this.panelOpen;
       this.render();
@@ -198,9 +214,7 @@ export class Overlay {
     if (!small.matches) tools.push(...this.actionButtons(), el('span', 'sep'));
     tools.push(time);
     if (touch.matches && !this.letter) {
-      const kb = el('button', `btn icon kb${this.keyboardOpen ? ' active' : ''}`, '⌨\uFE0E');
-      kb.title = t.keyboard;
-      kb.setAttribute('aria-label', t.keyboard);
+      const kb = iconBtn('keyboard', t.keyboard, `kb${this.keyboardOpen ? ' active' : ''}`);
       // Fokus nicht vorab verlieren, sonst klappt die Tastatur zu und sofort wieder auf
       kb.onpointerdown = (e) => e.preventDefault();
       kb.onmousedown = (e) => e.preventDefault();
@@ -239,55 +253,58 @@ export class Overlay {
   private actionButtons(): HTMLElement[] {
     const t = this.t;
     const s = this.settings;
-    const viewBtn = el('button', 'btn', this.view === 'machine' ? t.viewPaper : t.viewMachine);
-    viewBtn.title = this.view === 'machine' ? t.viewPaper : t.viewMachine;
+    const toPaper = this.view === 'machine';
+    const viewBtn = toolBtn(toPaper ? 'paper' : 'machine', toPaper ? t.viewPaper : t.viewMachine);
     viewBtn.onclick = () => {
       this.view = this.view === 'machine' ? 'paper' : 'machine';
       this.actions.onView(this.view);
       this.render();
     };
-    const sheetBtn = el('button', 'btn', t.newSheet);
-    sheetBtn.title = t.newSheetTitle;
+    const sheetBtn = toolBtn('sheet', t.newSheet, t.newSheetTitle);
     sheetBtn.onclick = () => this.actions.onNewSheet();
-    const share = el('button', 'btn', t.share);
+    const share = toolBtn('share', t.share, t.shareTitle);
     share.onclick = () => this.actions.onShare();
-    const readBtn = el('button', 'btn', t.read);
-    readBtn.title = t.roomLabels.stack;
+    const readBtn = toolBtn('read', t.read, t.roomLabels.stack);
     readBtn.onclick = () => this.actions.onRead();
-    const png = el('button', 'btn', t.exportPng);
-    png.onclick = () => this.actions.onExport('png');
-    const pdf = el('button', 'btn', t.exportPdf);
-    pdf.onclick = () => this.actions.onExport('pdf');
-    const txt = el('button', 'btn', t.exportTxt);
-    txt.onclick = () => this.actions.onExport('txt');
-    const outlook = el('select', 'btn select');
-    outlook.title = t.view;
-    outlook.setAttribute('aria-label', t.view);
-    for (const id of Object.keys(VIEWS) as ViewId[]) {
-      const o = el('option', '', t.views[id]);
-      o.value = id;
-      o.selected = id === s.view;
-      outlook.append(o);
+    const exportGroup = el('div', 'btn-group');
+    exportGroup.setAttribute('role', 'group');
+    exportGroup.setAttribute('aria-label', t.exportTitle);
+    exportGroup.title = t.exportTitle;
+    exportGroup.append(icon('download'));
+    for (const [kind, label] of [['pdf', t.exportPdf], ['png', t.exportPng], ['txt', t.exportTxt]] as const) {
+      const b = el('button', 'btn', label);
+      b.title = `${t.exportTitle} ${label}`;
+      b.onclick = () => this.actions.onExport(kind);
+      exportGroup.append(b);
     }
-    outlook.onchange = () => {
-      this.update({ view: outlook.value as ViewId });
-      outlook.blur();
+    // Auswahlfeld mit Symbol: Das Symbol sagt, worum es geht, das Feld zeigt nur noch den Wert
+    const picker = (name: IconName, title: string, cls: string, options: [string, string][], value: string, onChange: (v: string) => void) => {
+      const wrap = el('label', `btn select-wrap ${cls}`.trim());
+      wrap.title = title;
+      const sel = el('select');
+      sel.setAttribute('aria-label', title);
+      for (const [id, label] of options) {
+        const o = el('option', '', label);
+        o.value = id;
+        o.selected = id === value;
+        sel.append(o);
+      }
+      sel.onchange = () => {
+        onChange(sel.value);
+        sel.blur();
+      };
+      const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+      chevron.setAttribute('viewBox', '0 0 10 6');
+      chevron.setAttribute('class', 'chevron');
+      chevron.setAttribute('aria-hidden', 'true');
+      chevron.innerHTML = '<path d="M1 1l4 4 4-4"/>';
+      wrap.append(icon(name), sel, chevron);
+      return wrap;
     };
-    const music = el('select', `btn select music${s.track ? ' active' : ''}`);
-    music.title = t.music;
-    music.setAttribute('aria-label', t.music);
-    for (const [id, label] of [['', `♪ ${t.musicOff}`], ...TRACKS.map((id) => [id, `♪ ${id}`])]) {
-      const o = el('option', '', label);
-      o.value = id;
-      o.selected = id === s.track;
-      music.append(o);
-    }
-    music.onchange = () => {
-      this.update({ track: music.value as TrackId | '' });
-      music.blur();
-    };
-    if (this.letter) return [viewBtn, readBtn, el('span', 'sep'), png, pdf, txt, el('span', 'sep'), outlook, music];
-    return [viewBtn, readBtn, sheetBtn, el('span', 'sep'), png, pdf, txt, share, el('span', 'sep'), outlook, music];
+    const outlook = picker('window', t.view, '', (Object.keys(VIEWS) as ViewId[]).map((id) => [id, t.views[id]]), s.view, (v) => this.update({ view: v as ViewId }));
+    const music = picker('music', t.music, s.track ? 'active' : '', [['', t.musicOff], ...TRACKS.map((id): [string, string] => [id, trackTitle(id)])], s.track, (v) => this.update({ track: v as TrackId | '' }));
+    if (this.letter) return [viewBtn, readBtn, el('span', 'sep'), exportGroup, el('span', 'sep'), outlook, music];
+    return [viewBtn, readBtn, sheetBtn, el('span', 'sep'), exportGroup, share, el('span', 'sep'), outlook, music];
   }
 
   /** Stimmungen als kleine Schilder: ein Klick stellt alles passend ein. */
@@ -297,7 +314,7 @@ export class Overlay {
     const box = el('nav', 'moods');
     box.setAttribute('aria-label', t.moods);
     for (const id of Object.keys(MOODS) as MoodId[]) {
-      const b = el('button', `btn mood${id === active ? ' active' : ''}`, t.moodNames[id]);
+      const b = toolBtn(MOOD_ICONS[id], t.moodNames[id], t.moodNames[id], `mood${id === active ? ' active' : ''}`);
       b.onclick = () => {
         this.update(MOODS[id]);
         b.blur();
@@ -377,8 +394,7 @@ export class Overlay {
     }
     const extras = el('div', 'tools');
     if (!this.letter) {
-      const fresh = el('button', 'btn', `✦ ${t.newDocument}`);
-      fresh.title = t.newDocumentTitle;
+      const fresh = toolBtn('fresh', t.newDocument, t.newDocumentTitle);
       fresh.onclick = () => {
         this.panelOpen = false;
         this.render();
@@ -387,7 +403,7 @@ export class Overlay {
       extras.append(fresh);
     }
     if (document.documentElement.requestFullscreen) {
-      const fs = el('button', 'btn', `⛶ ${t.fullscreen}`);
+      const fs = toolBtn('fullscreen', t.fullscreen);
       fs.onclick = () => {
         if (document.fullscreenElement) void document.exitFullscreen();
         else void document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => undefined);

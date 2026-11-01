@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { rng } from '../paper/InkCanvas';
+import { mergeStatic } from './merge';
 
 /** Gemeinsame Materialien der Deko. */
 export interface DecorMaterials {
@@ -105,6 +106,8 @@ export function buildBooks(seed: number, count: number, maxHeight: number): THRE
   const r = rng(seed);
   const g = new THREE.Group();
   const colors = ['#7a2e2a', '#2d4a6b', '#c9b48a', '#355e3b', '#5b3a5e', '#a36a2c', '#1f1f24', '#8c8c80'];
+  // Gleiche Farbe, gleiches Material: Das lässt sich zusammenfügen
+  const covers = new Map(colors.map((color) => [color, new THREE.MeshStandardMaterial({ color, roughness: 0.75 })]));
   let x = 0;
   for (let i = 0; i < count; i++) {
     const w = 1.6 + r() * 2.2;
@@ -112,7 +115,7 @@ export function buildBooks(seed: number, count: number, maxHeight: number): THRE
     const d = 10 + r() * 3;
     const book = new THREE.Mesh(
       new THREE.BoxGeometry(w, h, d),
-      new THREE.MeshStandardMaterial({ color: colors[Math.floor(r() * colors.length)], roughness: 0.75 }),
+      covers.get(colors[Math.floor(r() * colors.length)])!,
     );
     book.position.set(x + w / 2, h / 2, -d / 2);
     g.add(book);
@@ -299,6 +302,7 @@ export class Radio {
       this.group.add(knob);
     }
     shadowed(this.group);
+    mergeStatic(this.group);
     this.setOn(false);
   }
 

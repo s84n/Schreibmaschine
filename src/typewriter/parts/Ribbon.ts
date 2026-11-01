@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { animator, ease } from '../../animation/Tweens';
+import { mergeStatic } from '../../scene/merge';
 import { DIMS, PRINT_POINT } from '../dims';
 import type { Materials } from '../materials';
 import { beam, orientBeam, shadow } from './util';
@@ -33,6 +34,7 @@ export class Ribbon {
       const hub = shadow(new THREE.Mesh(new THREE.CylinderGeometry(0.35, 0.35, 0.8, 6), m.steel));
       hub.position.y = 0.55;
       spool.add(hub);
+      mergeStatic(spool);
       this.spools.push(spool);
       this.group.add(spool);
 
@@ -53,6 +55,7 @@ export class Ribbon {
       fork.position.set(side * 0.9, -0.3, 0.06);
       this.vibrator.add(fork);
     }
+    mergeStatic(this.vibrator);
     this.group.add(this.vibrator);
     this.updateStrands();
   }

@@ -11,8 +11,9 @@ const STRIKE_DOWN = 0.13;
 const SHIFT_DROP = 0.35;
 
 interface Bar {
-  pivot: THREE.Group;
-  arm: THREE.Group;
+  /** Nur Rechengrößen: Gezeichnet wird alles gemeinsam in `bodies` und `slugs` */
+  pivot: THREE.Object3D;
+  arm: THREE.Object3D;
   busy: boolean;
 }
 
@@ -25,6 +26,10 @@ export class Typebars {
   private readonly barLength: number;
   private readonly barGeo: THREE.BufferGeometry;
   private readonly slugGeo: THREE.BufferGeometry;
+  private bodies?: THREE.InstancedMesh;
+  private slugs?: THREE.InstancedMesh;
+  private readonly moved = new Set<number>();
+  private readonly tmp = new THREE.Matrix4();
 
   constructor(private readonly m: Materials, count: number) {
     this.group.name = 'typebars';
@@ -56,22 +61,50 @@ export class Typebars {
   }
 
   setCount(count: number): void {
-    for (const bar of this.bars) this.basket.remove(bar.pivot);
+    for (const mesh of [this.bodies, this.slugs]) {
+      if (!mesh) continue;
+      this.basket.remove(mesh);
+      mesh.dispose();
+    }
     this.bars = [];
+    this.moved.clear();
+    const instanced = (geo: THREE.BufferGeometry, mat: THREE.Material) => {
+      const mesh = shadow(new THREE.InstancedMesh(geo, mat, Math.max(count, 1)));
+      // Die Hebel schwingen bis zum Druckpunkt; die Maschine steht ohnehin immer im Bild
+      mesh.frustumCulled = false;
+      this.basket.add(mesh);
+      return mesh;
+    };
+    this.bodies = instanced(this.barGeo, this.m.steel);
+    this.slugs = instanced(this.slugGeo, this.m.chrome);
     const spread = DIMS.segmentSpreadDeg * DEG;
     for (let i = 0; i < count; i++) {
       const a = count === 1 ? 0 : -spread + (2 * spread * i) / (count - 1);
-      const pivot = new THREE.Group();
+      const pivot = new THREE.Object3D();
       pivot.position.set(DIMS.segmentRadius * Math.sin(a), 0, DIMS.segmentRadius * Math.cos(a));
       pivot.rotation.y = a;
-      const arm = new THREE.Group();
+      pivot.updateMatrix();
+      const arm = new THREE.Object3D();
       arm.rotation.x = this.restAngle;
-      arm.add(shadow(new THREE.Mesh(this.barGeo, this.m.steel)));
-      arm.add(shadow(new THREE.Mesh(this.slugGeo, this.m.chrome)));
-      pivot.add(arm);
-      this.basket.add(pivot);
       this.bars.push({ pivot, arm, busy: false });
+      this.moved.add(i);
     }
+    this.sync();
+  }
+
+  /** Überträgt bewegte Hebel in die Instanzen; einmal pro Bild. */
+  sync(): void {
+    if (!this.moved.size || !this.bodies || !this.slugs) return;
+    for (const i of this.moved) {
+      const { pivot, arm } = this.bars[i];
+      arm.updateMatrix();
+      this.tmp.multiplyMatrices(pivot.matrix, arm.matrix);
+      this.bodies.setMatrixAt(i, this.tmp);
+      this.slugs.setMatrixAt(i, this.tmp);
+    }
+    this.bodies.instanceMatrix.needsUpdate = true;
+    this.slugs.instanceMatrix.needsUpdate = true;
+    this.moved.clear();
   }
 
   /** Umschaltung: der Korb senkt sich, damit die obere Type der Schreibwalze gegenübersteht. */
@@ -87,7 +120,8 @@ export class Typebars {
 
   /** Schlägt Hebel `index` an; `onImpact` wird im Moment des Aufschlags aufgerufen. */
   strike(index: number, onImpact: () => void): void {
-    const bar = this.bars[Math.max(0, Math.min(this.bars.length - 1, index))];
+    const i = Math.max(0, Math.min(this.bars.length - 1, index));
+    const bar = this.bars[i];
     const h = PRINT_POINT.y - (DIMS.segmentCenter.y + this.basket.position.y);
     const target = Math.atan2(-h, -DIMS.segmentRadius);
     const arm = bar.arm;
@@ -96,13 +130,19 @@ export class Typebars {
     animator.add({
       duration: STRIKE_UP,
       ease: ease.inQuad,
-      onUpdate: (t) => (arm.rotation.x = from + (target - from) * t),
+      onUpdate: (t) => {
+        arm.rotation.x = from + (target - from) * t;
+        this.moved.add(i);
+      },
       onComplete: () => {
         onImpact();
         animator.add({
           duration: STRIKE_DOWN,
           ease: ease.outCubic,
-          onUpdate: (t) => (arm.rotation.x = target + (this.restAngle - target) * t),
+          onUpdate: (t) => {
+            arm.rotation.x = target + (this.restAngle - target) * t;
+            this.moved.add(i);
+          },
           onComplete: () => (bar.busy = false),
         });
       },

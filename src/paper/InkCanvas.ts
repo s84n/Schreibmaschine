@@ -38,12 +38,16 @@ export class InkCanvas {
   private readonly glyph: HTMLCanvasElement;
   private readonly gctx: CanvasRenderingContext2D;
   private dirty = false;
+  /** Geänderter Bereich seit dem letzten Hochladen; undefined = das ganze Blatt */
+  private dirtyRect?: { x0: number; y0: number; x1: number; y1: number };
+  private renderer?: THREE.WebGLRenderer;
 
   constructor(private tone: PaperTone = 'classic') {
     this.canvas = document.createElement('canvas');
     this.canvas.width = W;
     this.canvas.height = H;
-    this.ctx = this.canvas.getContext('2d')!;
+    // Im Hauptspeicher: Anschläge werden gezielt ausgelesen und einzeln hochgeladen
+    this.ctx = this.canvas.getContext('2d', { willReadFrequently: true })!;
     this.paper = this.makePaper();
     this.glyph = document.createElement('canvas');
     this.glyph.width = this.glyph.height = GLYPH_BOX;
@@ -59,6 +63,25 @@ export class InkCanvas {
     this.ctx.globalAlpha = 1;
     this.ctx.drawImage(this.paper, 0, 0);
     this.dirty = true;
+    this.dirtyRect = undefined;
+  }
+
+  /** Mit Renderer lädt ein Anschlag nur seinen Ausschnitt hoch statt des ganzen Blatts. */
+  bindRenderer(renderer: THREE.WebGLRenderer): void {
+    this.renderer = renderer;
+  }
+
+  private mark(x: number, y: number, w: number, h: number): void {
+    const wasClean = !this.dirty;
+    this.dirty = true;
+    const r = this.dirtyRect;
+    if (wasClean) this.dirtyRect = { x0: x, y0: y, x1: x + w, y1: y + h };
+    else if (r) {
+      r.x0 = Math.min(r.x0, x);
+      r.y0 = Math.min(r.y0, y);
+      r.x1 = Math.max(r.x1, x + w);
+      r.y1 = Math.max(r.y1, y + h);
+    }
   }
 
   redraw(strikes: Strike[]): void {
@@ -96,7 +119,7 @@ export class InkCanvas {
       if (Math.abs(s.line - line) <= 1 && s.col >= col0 - 2 && s.col <= col1 + 2) this.draw(s);
     }
     ctx.restore();
-    this.dirty = true;
+    this.mark(x, y, w, h);
   }
 
   /** Zeichnet einen Anschlag: Glyphe mit Druckvariation, Farbbandstruktur und leichtem Versatz. */
@@ -148,14 +171,34 @@ export class InkCanvas {
     ctx.drawImage(this.glyph, x - B / 2, baseline - B * 0.68);
     ctx.globalAlpha = 1;
     ctx.globalCompositeOperation = 'source-over';
-    this.dirty = true;
+    this.mark(x - B / 2, baseline - B * 0.68, B, B);
   }
 
-  /** Lädt die Textur höchstens einmal pro Frame neu hoch. */
+  /** Lädt höchstens einmal pro Frame hoch, und möglichst nur den geänderten Ausschnitt. */
   flush(): void {
     if (!this.dirty) return;
-    this.texture.needsUpdate = true;
     this.dirty = false;
+    const rect = this.dirtyRect;
+    this.dirtyRect = undefined;
+    const props = this.renderer?.properties.get(this.texture) as { __webglTexture?: WebGLTexture; __version?: number } | undefined;
+    // Vor dem ersten Hochladen oder bei einem offenen Komplett-Upload gibt es nichts zu ergänzen
+    if (!rect || !this.renderer || !props?.__webglTexture || props.__version !== this.texture.version) {
+      this.texture.needsUpdate = true;
+      return;
+    }
+    const x = Math.max(0, Math.floor(rect.x0));
+    const y = Math.max(0, Math.floor(rect.y0));
+    const w = Math.min(W, Math.ceil(rect.x1)) - x;
+    const h = Math.min(H, Math.ceil(rect.y1)) - y;
+    if (w <= 0 || h <= 0) return;
+    const gl = this.renderer.getContext();
+    const state = this.renderer.state as unknown as { bindTexture(target: number, tex: WebGLTexture): void; pixelStorei(name: number, value: unknown): void };
+    state.bindTexture(gl.TEXTURE_2D, props.__webglTexture);
+    state.pixelStorei(gl.UNPACK_FLIP_Y_WEBGL, this.texture.flipY);
+    state.pixelStorei(gl.UNPACK_PREMULTIPLY_ALPHA_WEBGL, this.texture.premultiplyAlpha);
+    state.pixelStorei(gl.UNPACK_COLORSPACE_CONVERSION_WEBGL, gl.NONE);
+    gl.texSubImage2D(gl.TEXTURE_2D, 0, x, H - y - h, w, h, gl.RGBA, gl.UNSIGNED_BYTE, this.ctx.getImageData(x, y, w, h).data);
+    gl.generateMipmap(gl.TEXTURE_2D);
   }
 
   private makePaper(): HTMLCanvasElement {

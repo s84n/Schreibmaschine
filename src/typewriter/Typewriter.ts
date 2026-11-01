@@ -115,8 +115,10 @@ export class Typewriter {
     if (audible) this.audio.play('soft', 0, { gain: 0.6 });
   }
 
-  /** Pro Frame: Papiertextur bei Bedarf hochladen. */
+  /** Pro Frame: Bewegtes in die Instanzen übertragen und die Papiertextur bei Bedarf hochladen. */
   update(): void {
+    this.keyboard.sync();
+    this.typebars.sync();
     this.ink.flush();
   }
 

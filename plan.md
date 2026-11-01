@@ -165,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.17.0** (2026-11-01) – Nutzerwunsch → App v0.23.0: Bankerlampe statt Schwingarm, Kerze rechts neben der Tasse, Songs nur mit Titel, Icons in der Leiste, großes Performance-Paket. Messung im Software-Renderer: Draw-Calls im Stillstand 1541 → 134, die Bildrate dort kaum verändert, weil er an der Pixelarbeit hängt. Auf echter GPU noch zu prüfen. Neue feste Teile mit `mergeStatic` (`src/scene/merge.ts`) zusammenfügen, sonst kommen die Draw-Calls zurück.
 - **v0.16.0** (2026-11-01) – Nutzerwunsch → App v0.22.0: Komfort-Paket aus der Ideenliste. Schublade nur im nötigen Umfang (ablegen, lesen, wieder einspannen, löschen), weil „Neues Dokument“ nichts mehr löschen soll; sie liegt weiter im localStorage. Noch nicht umgesetzt aus der Liste: siehe Abschnitt 8.
 - **v0.15.0** (2026-11-01) – Nutzerwunsch → App v0.21.0: drei getrennte Regler für Maschine, Musik und Regen, Regen auf eigenem Audio-Bus.
 - **v0.14.0** (2026-11-01) – Nutzerwunsch → App v0.20.0: Fenster stark vergrößert, Bewegung per Shader und Partikeln statt Video (kein Download, läuft endlos). Mögliche Ausbaustufe: echte Video-Loops für einzelne Aussichten.
@@ -188,7 +189,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 - Konzeptideen (ungeprüft priorisiert): Schreibziele/Wortzähler, Kurz-Schreibimpulse, Tippen auf den 3D-Tasten, Schnee zum Regen, Papiersorten, Tintenauftrag nach Anschlagstärke, Farbband-Abnutzung.
 - Cozy-Ideen: Tag/Nacht nach Uhrzeit, Tippen auf den 3D-Tasten, verblassendes Farbband.
 - Test auf echten Geräten (Chrome, Firefox, Safari), Ton-Latenz, Performance auf schwächerer Hardware.
-- Ideen: Umgebungsgeräusche passend zur Aussicht (Wellen, Vögel, Grillen), weitere Aussichten, Musik-Varianten (Tonarten/Tempi), sichtbare Schreibtischlampe.
+- Ideen: Umgebungsgeräusche passend zur Aussicht (Wellen, Vögel, Grillen), weitere Aussichten, Musik-Varianten (Tonarten/Tempi).
 - Aus der Komfort-Liste noch offen: Tageszeit nach Uhrzeit und goldene Abendstunde, Kamera merken, Wiedergabeliste und Überblendung, Einschlaf-Timer, Geräusche passend zur Aussicht, Songs offline speichern, IndexedDB statt localStorage, Sichern und Öffnen als Datei, `pagehide`-Speichern, Wake Lock, Kerze als stille Uhr, Schreibimpuls, Feierabend-Geste.
 - Bundle-Größe (~720 kB JS, davon Three.js) – optional Code-Splitting.
 
@@ -196,5 +197,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v0.22.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
+1. v0.23.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

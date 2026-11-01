@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../../animation/Tweens';
 import { Paper } from '../../paper/Paper';
+import { mergeStatic } from '../../scene/merge';
 import { PAGE } from '../../state/Document';
 import { DIMS } from '../dims';
 import type { Materials } from '../materials';
@@ -107,6 +108,10 @@ export class Carriage {
     this.paper = new Paper(paperTexture, r);
     this.paper.mesh.position.copy(C);
     this.group.add(this.paper.mesh);
+
+    mergeStatic(this.platen);
+    mergeStatic(this.lever);
+    mergeStatic(this.group, [this.platen, this.lever, this.paper.mesh]);
   }
 
   /** Setzt Wagen und Papier ohne Animation. */

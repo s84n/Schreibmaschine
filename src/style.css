@@ -1,7 +1,7 @@
 :root {
   --ink: #f1eadb;
   --muted: #b9ad98;
-  --glass: rgba(24, 19, 15, 0.72);
+  --glass: rgba(24, 19, 15, 0.86);
   --line: rgba(241, 234, 219, 0.14);
   --accent: #d9a35b;
   font-family: 'Special Elite', 'Courier New', monospace;
@@ -72,7 +72,6 @@ body {
   background: var(--glass);
   border: 1px solid var(--line);
   border-radius: 10px;
-  backdrop-filter: blur(8px);
 }
 
 .sep {
@@ -102,18 +101,79 @@ body {
   outline: 2px solid var(--accent);
 }
 
-.btn.select {
+.ico {
+  flex: none;
+  width: 17px;
+  height: 17px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.7;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+
+.btn.with-icon,
+.select-wrap,
+.btn-group {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.select-wrap select {
   appearance: none;
-  padding-right: 10px;
-  max-width: 150px;
+  font: inherit;
+  color: inherit;
+  background: transparent;
+  border: 0;
+  padding: 0;
+  max-width: 124px;
+  cursor: pointer;
 }
 
-.btn.select.music {
-  max-width: 180px;
+.select-wrap select:focus-visible {
+  outline: none;
 }
 
-.btn.select option {
+.select-wrap:focus-within {
+  outline: 2px solid var(--accent);
+}
+
+.select-wrap select option {
   color: #1b1714;
+}
+
+.select-wrap .chevron {
+  width: 9px;
+  height: 6px;
+  flex: none;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  opacity: 0.65;
+}
+
+/* Export: ein Symbol, drei Formate */
+.btn-group {
+  gap: 0;
+  padding-left: 9px;
+  color: var(--muted);
+}
+
+.btn-group .btn {
+  padding: 6px 7px;
+  color: var(--ink);
+}
+
+/* Wird es eng, bleiben in der Leiste nur die Symbole; die Namen stehen im Tooltip */
+@media (max-width: 1320px) {
+  .toolbar .btn.with-icon .lbl {
+    display: none;
+  }
+
+  .toolbar .select-wrap select {
+    max-width: 108px;
+  }
 }
 
 .btn.active {
@@ -122,8 +182,14 @@ body {
 }
 
 .btn.icon {
-  font-size: 18px;
-  padding: 3px 9px;
+  display: inline-flex;
+  align-items: center;
+  padding: 7px 9px;
+}
+
+.btn.icon .ico {
+  width: 19px;
+  height: 19px;
 }
 
 .panel {
@@ -135,7 +201,6 @@ body {
   background: var(--glass);
   border: 1px solid var(--line);
   border-radius: 12px;
-  backdrop-filter: blur(10px);
   max-height: calc(100dvh - 84px);
   overflow-y: auto;
   overscroll-behavior: contain;
@@ -174,7 +239,6 @@ body {
   background: var(--glass);
   border: 1px solid var(--line);
   border-radius: 10px;
-  backdrop-filter: blur(8px);
 }
 
 .panel .moods {
@@ -187,12 +251,16 @@ body {
   border: 0;
   border-bottom: 1px solid var(--line);
   border-radius: 0;
-  backdrop-filter: none;
 }
 
 .btn.mood {
   font-size: 13px;
   padding: 4px 9px;
+}
+
+.btn.mood .ico {
+  width: 15px;
+  height: 15px;
 }
 
 /* Beim Tippen tritt die Oberfläche zurück: nur Maschine, Papier und Hinweise bleiben */
@@ -600,14 +668,14 @@ body.calm * {
 }
 
 #ui.compact .btn.icon {
+  justify-content: center;
   min-width: 42px;
   min-height: 38px;
-  font-size: 20px;
 }
 
-#ui.compact .btn.kb {
-  font-size: 28px;
-  line-height: 1;
+#ui.compact .btn.icon .ico {
+  width: 22px;
+  height: 22px;
 }
 
 #ui.compact .panel {

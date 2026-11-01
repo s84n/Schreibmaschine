@@ -3,7 +3,7 @@ import './style.css';
 import { registerSW } from 'virtual:pwa-register';
 import { AudioEngine } from './audio/AudioEngine';
 import { RainSound } from './audio/RainSound';
-import { Music, TRACKS, type TrackId } from './audio/Music';
+import { Music, trackTitle, TRACKS, type TrackId } from './audio/Music';
 import { DONATE_URL } from './config';
 import { exportPdf, exportPng, exportText } from './export/Export';
 import { bindKeyboard } from './input/Keyboard';
@@ -68,9 +68,9 @@ async function main(): Promise<void> {
   // Ein empfangener Brief wird gezeigt, wie er getippt wurde
   tw.correction = settings.correction && !letter;
 
-  const stage = new Stage(document.getElementById('app')!, () => tw.update());
+  const stage = new Stage(document.getElementById('app')!, () => tw.update(), settings.quality);
+  tw.ink.bindRenderer(stage.renderer);
   stage.scene.add(tw.group);
-  stage.setQuality(settings.quality);
   void stage.room.setView(settings.view);
   stage.setTime(settings.time, false);
   stage.room.setRain(settings.rain, false);
@@ -99,6 +99,7 @@ async function main(): Promise<void> {
   const syncStack = () => {
     const last = doc.pages[doc.pages.length - 1];
     stage.room.paper.setFinished(doc.pages.length, last && renderSheet(last));
+    stage.invalidate();
     overlay.setPages(doc.pages.length);
   };
 
@@ -154,6 +155,7 @@ async function main(): Promise<void> {
       if (sheets > 1) overlay.toast(overlay.t.exportedSheets(sheets));
     },
     onSettings: (next: Settings) => {
+      stage.invalidate();
       if (next.layout !== settings.layout) tw.setLayout(LAYOUTS[next.layout]);
       if (next.quality !== settings.quality) stage.setQuality(next.quality);
       if (next.color !== settings.color) tw.setBodyColor(next.color);
@@ -264,7 +266,7 @@ async function main(): Promise<void> {
       const order: (TrackId | '')[] = ['', ...TRACKS];
       const track = order[(order.indexOf(settings.track) + 1) % order.length];
       overlay.change({ track, hintsSeen: seen });
-      overlay.toast(track ? `♪ ${track}` : t.musicOff);
+      overlay.toast(track ? `♪ ${trackTitle(track)}` : t.musicOff);
     } else if (id === 'stack') {
       overlay.change({ hintsSeen: seen });
       reader.open();
