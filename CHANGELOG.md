@@ -2,6 +2,14 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.8.0] – 2026-11-01
+
+### Geändert
+- **Weiße Vorhänge:** Statt des braunen Stoffs hängen jetzt helle Leinenvorhänge in tiefen Falten an einer Eisenstange mit Messingringen. Tagsüber scheint etwas Licht durch den Stoff.
+- **Altes Fensterglas:** Die Scheibe hat einen leichten Grauschleier und Grünstich, Dreck an Rändern und Sprossen, Laufspuren, Kalkringe und Wischspuren. Nachts wird der Schmutz mit der Aussicht dunkel.
+- **Fensterarten je Aussicht:** Neben dem Panoramafenster gibt es Sprossenfenster, Rundbögen, Spitzbögen und ein Rundfenster. Sie wechseln mit der Aussicht und damit auch mit der Stimmung.
+- Die Fensterwand ist heller, weil sie jetzt zwischen den Fenstern zu sehen ist.
+
 ## [1.7.0] – 2026-11-01
 
 ### Geändert

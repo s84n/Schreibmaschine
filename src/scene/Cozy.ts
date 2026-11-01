@@ -425,23 +425,74 @@ export class FairyLights {
   }
 }
 
-/** Gefalteter Vorhang. Ursprung = obere Mitte, hängt nach unten. */
-export function buildCurtain(width: number, height: number, seed: number): THREE.Mesh {
+/** Feines Leinengewebe als Bump-Map für die Vorhänge. */
+function linenWeave(): THREE.CanvasTexture {
+  const r = rng(5);
+  const S = 256;
+  const c = document.createElement('canvas');
+  c.width = c.height = S;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#808080';
+  ctx.fillRect(0, 0, S, S);
+  // Kett- und Schussfäden mit leicht wechselnder Dicke; Slubs machen das Gewebe unregelmäßig
+  for (let i = 0; i < S; i += 2) {
+    const v = 95 + r() * 90;
+    ctx.fillStyle = `rgba(${v},${v},${v},0.55)`;
+    ctx.fillRect(i, 0, 1, S);
+    const u = 95 + r() * 90;
+    ctx.fillStyle = `rgba(${u},${u},${u},0.55)`;
+    ctx.fillRect(0, i, S, 1);
+  }
+  for (let i = 0; i < 60; i++) {
+    ctx.fillStyle = 'rgba(205,205,205,0.5)';
+    ctx.fillRect(r() * S, r() * S, 8 + r() * 26, 1);
+  }
+  const tex = new THREE.CanvasTexture(c);
+  tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/** Stoff der Vorhänge; Falten schattieren sich über Vertexfarben, weil der Stoff keine Schatten empfängt. */
+export function curtainMaterial(color: string): THREE.MeshStandardMaterial {
+  return new THREE.MeshStandardMaterial({
+    color,
+    roughness: 0.96,
+    side: THREE.DoubleSide,
+    vertexColors: true,
+    bumpMap: linenWeave(),
+    bumpScale: 0.25,
+  });
+}
+
+/** Schwerer Vorhang in tiefen, fast senkrechten Falten. Ursprung = obere Mitte, hängt nach unten. */
+export function buildCurtainGeometry(width: number, height: number, seed: number): THREE.BufferGeometry {
   const r = rng(seed);
-  const geo = new THREE.PlaneGeometry(width, height, 72, 10);
+  const geo = new THREE.PlaneGeometry(width, height, 128, 36);
   const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const uv = geo.getAttribute('uv') as THREE.BufferAttribute;
+  const colors = new Float32Array(pos.count * 3);
+  const PLEATS = 8;
   const ph = r() * 6;
+  const ph2 = r() * 6;
   for (let i = 0; i < pos.count; i++) {
     const x = pos.getX(i);
-    const v = (pos.getY(i) + height / 2) / height;
-    pos.setZ(i, Math.sin(x * 1.75 + ph) * (1 + (1 - v) * 0.5) + Math.sin(x * 0.7 + ph * 2) * 0.5);
+    const t = 1 - (pos.getY(i) + height / 2) / height;
+    const u = x / width + 0.5;
+    // Falten laufen nicht ganz parallel und werden nach unten tiefer
+    const theta = u * Math.PI * 2 * PLEATS + Math.sin(u * 7 + ph) * 0.8 + Math.sin(t * 2.2 + u * 9 + ph2) * 0.3;
+    const depth = 0.65 + t * 0.55;
+    const z = Math.sin(theta) * depth + Math.sin(theta * 2.3 + t * 2 + ph) * depth * 0.2 + Math.sin(u * 4 + ph2) * 0.4;
+    pos.setZ(i, z + depth);
+    const valley = 0.5 + 0.5 * Math.sin(theta);
+    const shade = 0.55 + 0.45 * valley ** 0.7;
+    colors[i * 3] = colors[i * 3 + 1] = colors[i * 3 + 2] = shade;
+    uv.setXY(i, u * (width / 5), t * (height / 5));
   }
+  geo.setAttribute('color', new THREE.BufferAttribute(colors, 3));
   geo.translate(0, -height / 2, 0);
   geo.computeVertexNormals();
-  const m = new THREE.Mesh(geo, new THREE.MeshStandardMaterial({ color: '#b98a5e', roughness: 0.95, side: THREE.DoubleSide }));
-  // Keine empfangenen Schatten: die Kerzen-Cubemap zeichnet sonst harte Streifen in die Falten
-  m.castShadow = true;
-  return m;
+  return geo;
 }
 
 /** Stapel liegender Bücher. Ursprung = Tischplatte. */

@@ -165,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.25.0** (2026-11-01) – Nutzerwunsch → App v1.8.0: weiße Vorhänge, verschmutztes Glas, fünf Fensterarten (`src/scene/WindowStyles.ts`). Die Fensterart hängt an der Aussicht (`window` in `VIEWS`), nicht an der Stimmung, und ist keine eigene Einstellung. Rundfenster ohne Vorhänge. Vorhänge enden auf dem Tisch, weil die Platte bis an die Wand reicht. Schmutzschleier nicht aus vielen fast durchsichtigen Verläufen zeichnen: Das rundet in 8 Bit zu sichtbaren Gitterlinien.
 - **v0.24.0** (2026-11-01) – Nutzerwunsch → App v1.7.0: rustikalere, metallischere Maschine. Gebrauchsspuren als Shader-Schicht in `src/typewriter/patina.ts`, dreiseitig über Objektkoordinaten projiziert, weil `mergeStatic` nur Position, Normale und UV erhält. Stärken je Material in `src/typewriter/materials.ts`. Kosten auf echter GPU noch zu prüfen.
 - **v0.23.0** (2026-11-01) – Nutzerwunsch → App v1.6.0: Smartphones (Touch, kürzere Seite unter 600 px) tippen nur noch eingefügte Texte ab, kein Menü. Tablets wie bisher. Textsatz vorab in `src/state/TextLayout.ts`, Abspielen über dieselbe Mechanik wie beim Brief. Auf echten Smartphones noch zu testen (Einfügen, Ton, Bildrate, Wake Lock).
 - **v0.22.0** (2026-11-01) – Nutzerwunsch → App v1.5.0: Überblendung am Songende mit zwei Spielern. Laut Nutzer gelten für alle 14 Songs dieselben Bedingungen, er besitzt volle, auch kommerzielle Nutzungsrechte.
@@ -205,5 +206,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v1.7.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
+1. v1.8.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.
