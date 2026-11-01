@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.7.0] – 2026-11-01
+
+### Geändert
+- **Die Maschine sieht benutzt aus:** Der Lack ist stumpfer und metallischer, trägt feine Kratzer und Anlaufflecken und ist an wenigen Stellen bis aufs Blech abgerieben. Chrom läuft milchig an, Stahl zeigt Rostpunkte, Messing wird fleckig. Das gilt für alle Modelle und Gehäusefarben.
+
 ## [1.6.0] – 2026-11-01
 
 ### Geändert

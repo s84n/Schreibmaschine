@@ -165,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.24.0** (2026-11-01) – Nutzerwunsch → App v1.7.0: rustikalere, metallischere Maschine. Gebrauchsspuren als Shader-Schicht in `src/typewriter/patina.ts`, dreiseitig über Objektkoordinaten projiziert, weil `mergeStatic` nur Position, Normale und UV erhält. Stärken je Material in `src/typewriter/materials.ts`. Kosten auf echter GPU noch zu prüfen.
 - **v0.23.0** (2026-11-01) – Nutzerwunsch → App v1.6.0: Smartphones (Touch, kürzere Seite unter 600 px) tippen nur noch eingefügte Texte ab, kein Menü. Tablets wie bisher. Textsatz vorab in `src/state/TextLayout.ts`, Abspielen über dieselbe Mechanik wie beim Brief. Auf echten Smartphones noch zu testen (Einfügen, Ton, Bildrate, Wake Lock).
 - **v0.22.0** (2026-11-01) – Nutzerwunsch → App v1.5.0: Überblendung am Songende mit zwei Spielern. Laut Nutzer gelten für alle 14 Songs dieselben Bedingungen, er besitzt volle, auch kommerzielle Nutzungsrechte.
 - **v0.21.0** (2026-11-01) – Nutzer-Songs eingebaut → App v1.4.0: 14 Songs, 16 Stimmungen, Stimmungen als Klappmenü. Songs nicht nachgeregelt, alle liegen bei etwa −16 LUFS.
@@ -204,5 +205,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v1.6.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
+1. v1.7.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.
