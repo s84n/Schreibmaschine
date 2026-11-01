@@ -11,9 +11,10 @@ export type Quality = 'high' | 'low';
 export type CameraView = 'machine' | 'paper';
 export type TimeOfDay = 'day' | 'night';
 
-const LAMP = 2600;
-const RIM = 0.6;
-const HEMI = 0.25;
+/** Tageslicht im Zimmer: gedämpft, hell ist vor allem die Aussicht selbst. */
+const LAMP = 1150;
+const RIM = 0.4;
+const HEMI = 0.16;
 
 /** Bildraten: voll, solange etwas passiert, sonst reicht weniger für Kerze und Regen. */
 const FPS = { active: 60, idle: 30, longIdle: 20, background: 15, covered: 5 };
@@ -169,8 +170,6 @@ export class Stage {
     ];
     for (const lit of [true, false]) {
       for (const p of phases) {
-        // Am hellen Tag ist das Licht der Schreibtischlampe aus, sie glüht nur
-        if (lit && !p.candle) continue;
         const post = this.post;
         if (!post || this.quality !== 'high') return;
         main.visible = rim.visible = p.main;
@@ -234,7 +233,7 @@ export class Stage {
     if (q === 'high' && this.quality === 'low') this.adaptive = false;
     this.quality = q;
     this.syncShadows();
-    this.room.setShaftStrength(q === 'high' ? 1 : 0.45);
+    this.room.setShaftStrength(q === 'high' ? 0.5 : 0.25);
     this.lamp.shadow.mapSize.setScalar(q === 'high' ? 2048 : 512);
     this.lamp.shadow.map?.dispose();
     this.lamp.shadow.map = null;

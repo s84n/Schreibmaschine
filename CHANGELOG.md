@@ -2,6 +2,12 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.2.0] – 2026-11-01
+
+### Geändert
+- **Gedämpftes Tageslicht:** Tisch und Wände sind am Tag deutlich dunkler, am hellsten bleibt die Aussicht. Die Lichtstrahlen vom Fenster sind schwächer.
+- **Schreibtischlampe mit sichtbarer Wirkung:** Sie wirft auch am Tag einen warmen Lichtkegel auf den Tisch vor der Maschine, und dieser Kegel ist kräftiger und klarer begrenzt.
+
 ## [1.1.0] – 2026-11-01
 
 ### Geändert

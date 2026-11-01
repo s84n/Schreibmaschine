@@ -26,14 +26,14 @@ export interface OutdoorView {
 }
 
 export const VIEWS: Record<ViewId, OutdoorView> = {
-  alps: { file: 'alps_field.jpg', u: 0.75, drop: 11, light: '#fff3e0', lightIntensity: 2.2, ambient: 0.55, life: { sky: 0.5, particles: 'birds' } },
-  winterlake: { file: 'lago_disola.jpg', u: 0.8, drop: 16, light: '#e8f0ff', lightIntensity: 2.0, ambient: 0.55, life: { sky: 0.55, foliage: [0.45, 1], particles: 'snow' } },
-  nordiclake: { file: 'lakeside.jpg', u: 0.68, drop: 3, light: '#fff6e8', lightIntensity: 2.3, ambient: 0.55, life: { sky: 0.47, water: [0, 0.42], foliage: [0.5, 1], particles: 'birds' } },
-  mediterranean: { file: 'spiaggia_di_mondello.jpg', u: 0.53, drop: 4, light: '#ffe9c4', lightIntensity: 2.6, ambient: 0.6, life: { sky: 0.45, foliage: [0.46, 0.8], particles: 'birds' } },
-  chinavillage: { file: 'china_village.jpg', u: 0.5, drop: 2, light: '#fff1dc', lightIntensity: 2.2, ambient: 0.55, life: { sky: 0.55, foliage: [0.3, 0.72], particles: 'birds' } },
-  japanforest: { file: 'japan_maple.jpg', u: 0.5, drop: 2, light: '#ffe2c8', lightIntensity: 2.1, ambient: 0.55, life: { foliage: [0, 1], particles: 'leaves' } },
-  istanbul: { file: 'istanbul.jpg', u: 0.5, drop: 3, light: '#fff1dc', lightIntensity: 2.4, ambient: 0.58, life: { sky: 0.55, water: [0.28, 0.42], particles: 'birds' } },
-  newyork: { file: 'newyork.jpg', u: 0.5, drop: 2, light: '#f4f6ff', lightIntensity: 2.2, ambient: 0.58, life: { sky: 0.55 } },
+  alps: { file: 'alps_field.jpg', u: 0.75, drop: 11, light: '#fff3e0', lightIntensity: 1.21, ambient: 0.34, life: { sky: 0.5, particles: 'birds' } },
+  winterlake: { file: 'lago_disola.jpg', u: 0.8, drop: 16, light: '#e8f0ff', lightIntensity: 1.1, ambient: 0.34, life: { sky: 0.55, foliage: [0.45, 1], particles: 'snow' } },
+  nordiclake: { file: 'lakeside.jpg', u: 0.68, drop: 3, light: '#fff6e8', lightIntensity: 1.26, ambient: 0.34, life: { sky: 0.47, water: [0, 0.42], foliage: [0.5, 1], particles: 'birds' } },
+  mediterranean: { file: 'spiaggia_di_mondello.jpg', u: 0.53, drop: 4, light: '#ffe9c4', lightIntensity: 1.43, ambient: 0.37, life: { sky: 0.45, foliage: [0.46, 0.8], particles: 'birds' } },
+  chinavillage: { file: 'china_village.jpg', u: 0.5, drop: 2, light: '#fff1dc', lightIntensity: 1.21, ambient: 0.34, life: { sky: 0.55, foliage: [0.3, 0.72], particles: 'birds' } },
+  japanforest: { file: 'japan_maple.jpg', u: 0.5, drop: 2, light: '#ffe2c8', lightIntensity: 1.16, ambient: 0.34, life: { foliage: [0, 1], particles: 'leaves' } },
+  istanbul: { file: 'istanbul.jpg', u: 0.5, drop: 3, light: '#fff1dc', lightIntensity: 1.32, ambient: 0.36, life: { sky: 0.55, water: [0.28, 0.42], particles: 'birds' } },
+  newyork: { file: 'newyork.jpg', u: 0.5, drop: 2, light: '#f4f6ff', lightIntensity: 1.21, ambient: 0.36, life: { sky: 0.55 } },
   dubai: { file: 'dubai.jpg', u: 0.5, drop: 10, light: '#ff9fb0', lightIntensity: 0.6, ambient: 0.28, dusk: true },
   starnight: { file: 'lakeside_night.jpg', u: 0.4, drop: 5, light: '#ffb070', lightIntensity: 0.35, ambient: 0.18, dusk: true, life: { sky: 0.5, water: [0.14, 0.42], stars: true, particles: 'fireflies' } },
 };
@@ -51,10 +51,10 @@ const MUG_POS = { x: 25, z: 1 };
 const CANDLE_POS = { x: 40, z: -5 };
 const STACK_POS = { x: 29, z: 21 };
 const BOOKS_POS = { x: 38, z: -24 };
-const LAMP_POS = new THREE.Vector3(-41, DESK_Y, -14);
+const LAMP_POS = new THREE.Vector3(-36, DESK_Y, -15);
 const PENCILS_POS = { x: -30, z: -26 };
-/** Dorthin zeigt die Schreibtischlampe: auf den Druckpunkt */
-const LAMP_AIM = new THREE.Vector3(0, 13, -4);
+/** Dorthin zeigt die Schreibtischlampe: auf den Tisch vor der Maschine, das Papier liegt noch im Kegel */
+const LAMP_AIM = new THREE.Vector3(-9, 0, 8);
 /** Bewegung bei „Ruhige Bewegung“ */
 const CALM_SPEED = 0.3;
 /** Elevationsbereich des Panorama-Bands (aus dem Zuschnitt) */
@@ -409,7 +409,7 @@ export class Room {
       normalScale: new THREE.Vector2(0.6, 0.6),
     });
     // Die Putztextur ist mittelgrau – Farbe über 1 hellt sie zu gebrochenem Weiß auf
-    mat.color.set(WALL_COLOR).multiplyScalar(1.45);
+    mat.color.set(WALL_COLOR).multiplyScalar(1.15);
     const R = ROOM;
     const H = R.ceil - R.floor;
     const D = R.z1 - R.z0;

@@ -311,7 +311,7 @@ export class DeskLamp {
     this.group.add(body);
 
     const lightAt = this.head.clone().setY(this.head.y - 1);
-    this.light = new THREE.SpotLight('#ffbe80', 0, 150, Math.PI / 3.6, 0.85, 1.6);
+    this.light = new THREE.SpotLight('#ffb878', 0, 150, Math.PI / 4.2, 0.6, 1.6);
     this.light.position.copy(lightAt);
     this.light.target.position.copy(aim);
     this.group.add(this.light, this.light.target);
@@ -339,10 +339,9 @@ export class DeskLamp {
 
   private apply(p: number): void {
     this.power = p;
-    // Tagsüber kaum mehr als ein warmer Hauch, nachts das Leselicht
-    this.light.intensity = p * (60 + 520 * this.night);
-    // Tagsüber wäre ihr Lichtkegel kaum zu sehen, kostete aber in jedem Pixel: Dann glüht sie nur
-    this.light.visible = p > 0.005 && this.night > 0.02;
+    // Auch am Tag ein deutlicher warmer Kegel auf dem Tisch, nachts das Leselicht
+    this.light.intensity = p * (1150 + 150 * this.night);
+    this.light.visible = p > 0.005;
     this.glass.emissiveIntensity = p * (0.12 + 0.5 * this.night);
     this.opal.emissiveIntensity = p * (0.25 + 1 * this.night);
     this.bulb.color.set('#6d6357').lerp(new THREE.Color(3, 2.1, 1.2), p);
