@@ -1,11 +1,13 @@
 import { trackTitle, TRACKS, type TrackId } from '../audio/Music';
 import { DONATE_URL } from '../config';
 import { LAYOUTS, type LayoutId } from '../input/layouts';
+import { layoutText } from '../state/TextLayout';
 import { VIEWS, type ViewId } from '../scene/Room';
 import type { CameraView, Quality } from '../scene/Scene';
 import { RIBBONS, type RibbonId } from '../state/Document';
 import { BODY_COLORS, MODELS, type BodyColorId, type ModelId } from '../typewriter/materials';
 import { APP_VERSION } from '../version';
+import { isPhone } from './Device';
 import { strings, type Lang } from './i18n';
 import { icon, type IconName } from './Icons';
 import { activeMood, MOODS, type MoodId } from './Moods';
@@ -26,9 +28,18 @@ export interface OverlayActions {
   onLetterPlay(): void;
   onLetterSkip(): void;
   onLetterWrite(): void;
+  /** Smartphone: Text abtippen lassen, Tempo, Überspringen und von vorn. */
+  onPhoneStart(text: string): void;
+  onPhoneSpeed(fast: boolean): void;
+  onPhoneSkip(): void;
+  onPhoneNew(): void;
 }
 
 export type LetterState = 'ready' | 'playing' | 'done';
+export type PhoneState = 'input' | 'playing' | 'done';
+
+/** Längere Texte tippt auch die geduldigste Maschine nicht mehr in vertretbarer Zeit. */
+const PHONE_MAX_CHARS = 30000;
 
 const touch = matchMedia('(pointer: coarse)');
 /** Wenig Platz (Smartphone): Werkzeugleiste verschwindet ins Zahnrad-Menü. */
@@ -80,6 +91,9 @@ export class Overlay {
   private started = false;
   private panelOpen = false;
   private moodsOpen = false;
+  private phone?: PhoneState;
+  private phoneText = '';
+  private phoneFast = false;
   private coffeeOpen = false;
   private typed = 0;
   private uiHidden = false;
@@ -114,6 +128,7 @@ export class Overlay {
 
   /** Jeder Anschlag: Nach den ersten Buchstaben tritt alles zurück, nur das Schreiben bleibt. */
   noteTyping(): void {
+    if (isPhone) return;
     if (this.letter || this.panelOpen || this.coffeeOpen || this.uiHidden) return;
     if (++this.typed >= TYPING_HIDE_AFTER) this.setUiHidden(true);
   }
@@ -191,6 +206,12 @@ export class Overlay {
     this.root.querySelector('.kb')?.classList.toggle('active', open);
   }
 
+  /** Smartphone: Eingabefeld, laufende Simulation oder fertig. */
+  setPhone(state: PhoneState): void {
+    this.phone = state;
+    this.render();
+  }
+
   openCoffee(): void {
     this.coffeeOpen = true;
     this.render();
@@ -221,6 +242,11 @@ export class Overlay {
     this.root.replaceChildren();
     this.root.classList.toggle('compact', small.matches);
     document.documentElement.lang = s.lang;
+    if (isPhone) {
+      this.renderPhone();
+      this.root.append(el('div', 'toast'));
+      return;
+    }
 
     // Werkzeugleiste – auf kleinen Displays nur Tag/Nacht, Tastatur und Zahnrad
     const bar = el('nav', 'toolbar');
@@ -268,7 +294,7 @@ export class Overlay {
     const footer = el('footer', 'footer', `Schreibmaschine v${APP_VERSION} · ${sheet}${t.saved}`);
     footer.title = t.credits;
     this.root.append(hint, footer);
-    this.root.append(el('div', 'toast'), this.renderRotate());
+    this.root.append(el('div', 'toast'));
   }
 
   /** Werkzeuge, die je nach Platz in der Leiste oder im Menü sitzen. */
@@ -355,23 +381,82 @@ export class Overlay {
     return box;
   }
 
-  /** Hinweis im Hochformat auf Smartphones; sichtbar nur per CSS-Media-Query. */
-  private renderRotate(): HTMLElement {
-    const t = this.t;
-    const box = el('div', 'rotate');
-    box.append(el('div', 'rotate-icon', '📱'), el('h2', '', t.rotateTitle), el('p', '', t.rotateText));
-    const orientation = screen.orientation as ScreenOrientation & { lock?: (o: string) => Promise<void> };
-    if (orientation?.lock && document.documentElement.requestFullscreen) {
-      // Nur im Vollbild erlaubt, und iOS Safari kann es gar nicht – dort bleibt der Hinweis
-      const force = el('button', 'btn primary', t.rotateButton);
-      force.onclick = () => {
-        void document.documentElement
-          .requestFullscreen({ navigationUI: 'hide' })
-          .then(() => orientation.lock!('landscape'))
-          .catch(() => this.toast(t.rotateText));
-      };
-      box.append(force);
+  /** Smartphone: kein Menü, nur Eingabefeld und danach eine kleine Leiste. */
+  private renderPhone(): void {
+    if (this.letter) {
+      this.root.append(this.renderLetter());
+      return;
     }
+    if (this.phone === 'input') this.root.append(this.renderPhoneInput());
+    else if (this.phone) this.root.append(this.renderPhoneBar());
+  }
+
+  private renderPhoneInput(): HTMLElement {
+    const t = this.t;
+    const box = el('section', 'phone-input');
+    const area = el('textarea');
+    area.placeholder = t.phonePlaceholder;
+    area.maxLength = PHONE_MAX_CHARS;
+    area.value = this.phoneText;
+    area.setAttribute('aria-label', t.phonePlaceholder);
+    const count = el('span', 'phone-count');
+    const start = toolBtn('play', t.phoneStart, t.phoneStart, 'primary phone-start');
+    const sync = () => {
+      this.phoneText = area.value;
+      const sheets = layoutText(area.value).length;
+      start.disabled = !sheets;
+      count.textContent = sheets ? t.phoneSheets(area.value.trim().length, sheets) : '';
+    };
+    area.oninput = sync;
+    start.onclick = () => this.actions.onPhoneStart(this.phoneText);
+    const row = el('div', 'phone-row');
+    if (navigator.clipboard?.readText) {
+      const paste = toolBtn('paste', t.phonePaste);
+      paste.onclick = () => {
+        navigator.clipboard
+          .readText()
+          .then((text) => {
+            area.value = text.slice(0, PHONE_MAX_CHARS);
+            sync();
+          })
+          .catch(() => this.toast(t.phonePasteFailed));
+      };
+      row.append(paste);
+    }
+    row.append(count);
+    box.append(el('h1', '', t.phoneTitle), el('p', 'phone-lead', t.phoneText), area, row, start, el('p', 'credits', t.phoneRoom), el('p', 'credits', `Schreibmaschine v${APP_VERSION} · ${t.credits}`));
+    sync();
+    return box;
+  }
+
+  private renderPhoneBar(): HTMLElement {
+    const t = this.t;
+    const box = el('nav', 'phone-bar');
+    const muted = this.settings.muted;
+    const sound = iconBtn(muted ? 'mute' : 'sound', t.phoneSound);
+    sound.onclick = () => this.update({ muted: !muted });
+    if (this.phone === 'playing') {
+      box.append(el('p', 'phone-hint', t.phoneCamera));
+      const speed = toolBtn('fast', `${t.phoneSpeed} ${this.phoneFast ? '×4' : '×1'}`, t.phoneSpeed, this.phoneFast ? 'active' : '');
+      speed.onclick = () => {
+        this.phoneFast = !this.phoneFast;
+        this.actions.onPhoneSpeed(this.phoneFast);
+        this.render();
+      };
+      const skip = toolBtn('skip', t.letterSkip);
+      skip.onclick = () => this.actions.onPhoneSkip();
+      box.append(speed, skip, sound);
+      return box;
+    }
+    const read = toolBtn('read', t.read);
+    read.onclick = () => this.actions.onRead();
+    const pdf = toolBtn('download', t.exportPdf, `${t.exportTitle} ${t.exportPdf}`);
+    pdf.onclick = () => this.actions.onExport('pdf');
+    const share = toolBtn('share', t.share, t.shareTitle);
+    share.onclick = () => this.actions.onShare();
+    const fresh = toolBtn('paper', t.phoneNew, t.phoneNew, 'primary');
+    fresh.onclick = () => this.actions.onPhoneNew();
+    box.append(read, pdf, share, sound, fresh);
     return box;
   }
 

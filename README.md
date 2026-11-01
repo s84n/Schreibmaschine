@@ -73,7 +73,7 @@ und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 | 🌧️ **Regenwetter** | Tropfen laufen die Scheibe hinab, dazu leises Prasseln und im Hintergrund Tropfen auf dem Dach – per Schalter an und aus, mit eigenem Lautstärkeregler. |
 | ✨ **Grafik-Effekte** | Staub im Licht, Lichtstrahlen und Kontaktschatten – jeweils per Schalter. Fünf Aussichten sowie Dorf und Ahornwald liegen in hoher Auflösung bis 8K vor. |
 | 🎨 **Anpassen** | Gehäusefarbe (Salbeigrün, Bordeaux, Schwarz, Creme), QWERTZ oder QWERTY, Deutsch oder Englisch, zwei Grafikstufen. |
-| 📲 **Am Smartphone** | Im Querformat; ⌨ öffnet die Tastatur, alles Weitere liegt im Zahnrad-Menü. |
+| 📲 **Am Smartphone** | Text einfügen, und die Maschine tippt ihn für dich ab. Du schaust mit freier Kamera zu und speicherst oder teilst das Ergebnis. Auf dem Tablet schreibst du wie am Rechner selbst. |
 | 📱 **Als App installieren** | Die Seite lässt sich wie eine App installieren und funktioniert danach auch **offline**. Nur Songs brauchen Internet, und Aussichten stehen offline bereit, sobald du sie einmal geöffnet hast. |
 
 ### Tasten

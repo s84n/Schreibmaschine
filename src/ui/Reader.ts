@@ -8,6 +8,8 @@ export interface ReaderDeps {
   pages(): Strike[][];
   render(strikes: Strike[]): HTMLCanvasElement;
   drawer(): DrawerEntry[];
+  /** Am Smartphone gibt es keine eigenen Manuskripte und damit keine Schublade. */
+  hasDrawer: boolean;
   onTake(id: string): void;
   onDelete(id: string): void;
   /** Leseansicht geht auf oder zu. */
@@ -106,7 +108,8 @@ export class Reader {
       };
       return b;
     };
-    head.append(tab('pages', t.readerPages), tab('drawer', `${t.readerDrawer} (${this.deps.drawer().length})`));
+    head.append(tab('pages', t.readerPages));
+    if (this.deps.hasDrawer) head.append(tab('drawer', `${t.readerDrawer} (${this.deps.drawer().length})`));
     if (this.reading) head.append(el('span', 'reader-title', this.reading.title || t.readerUntitled));
     const close = el('button', 'btn reader-close', t.readerClose);
     close.onclick = () => this.close();

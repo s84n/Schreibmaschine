@@ -38,7 +38,8 @@ body {
 #ui > .toolbar,
 #ui > .moods,
 #ui > .panel,
-#ui > .rotate {
+#ui > .phone-input,
+#ui > .phone-bar {
   pointer-events: auto;
 }
 
@@ -225,6 +226,10 @@ body {
   color: #1b1714;
   background: var(--accent);
   text-decoration: none;
+}
+
+.btn.primary.with-icon {
+  display: inline-flex;
 }
 
 .moods {
@@ -481,10 +486,6 @@ body.calm .start .sub {
   animation: none;
 }
 
-body.calm .rotate-icon {
-  animation: none;
-}
-
 body.calm * {
   transition-duration: 0.01s !important;
 }
@@ -516,55 +517,6 @@ body.calm * {
 .coffee p {
   font-size: 14px;
   line-height: 1.5;
-}
-
-.rotate {
-  display: none;
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  padding: 32px;
-  text-align: center;
-  background: #15110e;
-}
-
-.rotate h2 {
-  margin: 0;
-  font-size: 22px;
-  font-weight: normal;
-}
-
-.rotate p {
-  margin: 0 0 12px;
-  color: var(--muted);
-  line-height: 1.5;
-}
-
-.rotate-icon {
-  font-size: 54px;
-  animation: tilt 2.4s ease-in-out infinite;
-}
-
-@keyframes tilt {
-  0%,
-  25% {
-    transform: rotate(0);
-  }
-  60%,
-  100% {
-    transform: rotate(-90deg);
-  }
-}
-
-/* Nur Smartphones im Hochformat; Tablets bleiben frei */
-@media (pointer: coarse) and (orientation: portrait) and (max-width: 600px) {
-  .rotate {
-    display: flex;
-  }
 }
 
 .panel h2 {
@@ -723,4 +675,172 @@ body.calm * {
 
 #ui.compact .start .lead {
   font-size: 16px;
+}
+
+/* Smartphone: Text einfügen, danach nur noch zuschauen */
+.phone-input {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: max(16px, env(safe-area-inset-top)) max(16px, env(safe-area-inset-right)) max(14px, env(safe-area-inset-bottom)) max(16px, env(safe-area-inset-left));
+  overflow-y: auto;
+  background: #1a1511;
+}
+
+.phone-input h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: normal;
+}
+
+.phone-lead {
+  margin: 0;
+  color: var(--muted);
+  font-size: 14px;
+  line-height: 1.45;
+}
+
+.phone-input textarea {
+  flex: 1;
+  min-height: 120px;
+  width: 100%;
+  padding: 14px;
+  resize: none;
+  font: inherit;
+  /* Unter 16 px zoomt iOS beim Fokussieren in die Seite */
+  font-size: 16px;
+  line-height: 1.45;
+  color: #17171d;
+  background: #efe9da;
+  border: 0;
+  border-radius: 8px;
+}
+
+.phone-input textarea:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+.phone-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  min-height: 38px;
+}
+
+.phone-row .btn {
+  border-color: var(--line);
+}
+
+.phone-count {
+  margin-left: auto;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.btn.phone-start {
+  justify-content: center;
+  margin: 0;
+  min-height: 50px;
+  font-size: 18px;
+}
+
+.btn.phone-start:disabled {
+  opacity: 0.4;
+}
+
+.phone-input .credits {
+  margin: 0;
+}
+
+.phone-bar {
+  position: absolute;
+  left: 50%;
+  bottom: max(10px, env(safe-area-inset-bottom));
+  transform: translateX(-50%);
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+  gap: 4px;
+  width: max-content;
+  max-width: calc(100vw - 16px);
+  padding: 5px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.phone-bar .btn {
+  min-height: 40px;
+}
+
+.phone-bar .btn.primary {
+  margin: 0;
+}
+
+.phone-hint {
+  flex-basis: 100%;
+  margin: 2px 0;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-align: center;
+  animation: phone-hint-out 0.6s ease 7s forwards;
+}
+
+/* Der Hinweis macht nach ein paar Sekunden den Blick frei */
+@keyframes phone-hint-out {
+  to {
+    max-height: 0;
+    margin: 0;
+    opacity: 0;
+  }
+}
+
+body.calm .phone-hint {
+  animation-duration: 0.01s;
+}
+
+/* Im Querformat ist die Höhe knapp: kein Hinweis, die Leiste rückt zur Seite */
+@media (max-height: 520px) {
+  .phone-hint {
+    display: none;
+  }
+
+  .phone-bar {
+    left: auto;
+    right: max(8px, env(safe-area-inset-right));
+    top: max(8px, env(safe-area-inset-top));
+    bottom: auto;
+    transform: none;
+  }
+
+  .phone-input h1 {
+    font-size: 20px;
+  }
+
+  .phone-input .credits {
+    display: none;
+  }
+}
+
+/* Hochformat: Das Blatt richtet sich nach der Breite, sonst läuft es aus dem Bild */
+@media (max-aspect-ratio: 3/4) {
+  .reader-page canvas {
+    width: 100%;
+    height: auto;
+  }
+
+  .reader-page.size-large canvas {
+    width: 135%;
+    height: auto;
+  }
+
+  .reader-page.size-xlarge canvas {
+    width: 175%;
+    height: auto;
+  }
 }

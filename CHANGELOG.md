@@ -2,6 +2,16 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.6.0] – 2026-11-01
+
+### Geändert
+- **Smartphone: Die Maschine tippt für dich.** Statt Bildschirmtastatur und Menü gibt es ein großes Feld für einen eingefügten Text. Die Maschine schreibt ihn über beliebig viele Blätter ab, mit freier Kamera, wählbarem Tempo und Überspringen. Danach lässt er sich nachlesen, als PDF speichern und teilen. Kerze, Lampe, Fenster und Radio bleiben in der Szene antippbar.
+- Smartphones müssen nicht mehr ins Querformat gedreht werden; Hochformat wird mit weiter entfernter Kamera unterstützt.
+- Tablets bleiben unverändert: selbst tippen, volle Oberfläche.
+
+### Hinweis
+- Am Smartphone sind eigene gespeicherte Blätter und die Schublade nicht mehr erreichbar. Sie bleiben im Browser gespeichert und werden nicht verändert.
+
 ## [1.5.0] – 2026-11-01
 
 ### Geändert

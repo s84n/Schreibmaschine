@@ -344,6 +344,16 @@ export class Stage {
     this.setHovered(this.canInteract() ? this.targetAt(e) : undefined, e.clientX, e.clientY);
   }
 
+  /** Smartphone: im Hochformat weiter zurück, damit die ganze Maschine samt Wagenweg ins Bild passt. */
+  frameForPhone(): void {
+    const { pos, target } = CAMERAS.machine;
+    const back = this.camera.aspect < 0.8 ? 1.25 : 1;
+    this.controls.maxDistance = 85 * back;
+    this.camera.position.copy(target).add(pos.clone().sub(target).multiplyScalar(back));
+    this.controls.target.copy(target);
+    this.poke();
+  }
+
   /** Fliegt die Kamera sanft zu einer Ansicht. */
   flyTo(view: CameraView): void {
     const { target } = CAMERAS[view];

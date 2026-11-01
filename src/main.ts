@@ -15,7 +15,9 @@ import { Stage, type CameraView } from './scene/Scene';
 import type { RoomTargetId } from './scene/Targets';
 import { MAX_COLS, TypedDocument, type Strike } from './state/Document';
 import { letterUrl, readLetter } from './state/Letter';
+import { layoutText } from './state/TextLayout';
 import { Typewriter } from './typewriter/Typewriter';
+import { isPhone } from './ui/Device';
 import { Overlay } from './ui/Overlay';
 import { Reader } from './ui/Reader';
 import { loadSettings, saveSettings, type Settings, type TextSize } from './ui/Settings';
@@ -56,7 +58,8 @@ async function main(): Promise<void> {
     letterBroken = true;
   }
   const doc = new TypedDocument();
-  if (letter) doc.persist = false;
+  // Am Smartphone wird nur abgetippt: Das eigene Manuskript bleibt unberührt im Speicher
+  if (letter || isPhone) doc.persist = false;
   else doc.load();
 
   const tw = new Typewriter(LAYOUTS[settings.layout], audio, doc, settings.model);
@@ -127,7 +130,7 @@ async function main(): Promise<void> {
       view = v;
       stage.flyTo(v);
     },
-    onKeyboard: () => softKeyboard.toggle(),
+    onKeyboard: () => softKeyboard?.toggle(),
     onUiVisible: (on) => stage.room.targets.setUiVisible(on),
     onRead: () => reader.open(),
     onShare: () => void share(),
@@ -138,8 +141,33 @@ async function main(): Promise<void> {
       newDocumentPending = true;
       tw.newSheet(true);
     },
-    onLetterPlay: () => void playLetter(),
+    onLetterPlay: () => {
+      overlay.setLetter('playing');
+      void play(letter!).then(() => overlay.setLetter('done'));
+    },
     onLetterSkip: () => (letterSkipped = true),
+    onPhoneStart: (text) => {
+      const pages = layoutText(text);
+      if (!pages.length) return;
+      stage.covered = false;
+      stage.poke();
+      overlay.setPhone('playing');
+      void holdScreen(true);
+      void play(pages).then(() => {
+        void holdScreen(false);
+        overlay.setPhone('done');
+      });
+    },
+    onPhoneSpeed: (fast) => (typingSpeed = fast ? 4 : 1),
+    onPhoneSkip: () => (letterSkipped = true),
+    onPhoneNew: () => {
+      letterSkipped = false;
+      doc.discardAll();
+      tw.restore();
+      syncStack();
+      stage.covered = true;
+      overlay.setPhone('input');
+    },
     onLetterWrite: () => location.replace(location.pathname),
     onNewSheet: () => {
       if (doc.strikes.length) newSheetPending = true;
@@ -206,7 +234,7 @@ async function main(): Promise<void> {
 
   // Bei offener Bildschirmtastatur bleibt nur ein Streifen: dort das Papier zeigen
   let viewBeforeKeyboard: CameraView | undefined;
-  const softKeyboard = new SoftKeyboard(
+  const softKeyboard = isPhone ? undefined : new SoftKeyboard(
     tw,
     stage.renderer.domElement,
     (open) => {
@@ -231,6 +259,7 @@ async function main(): Promise<void> {
     pages: () => doc.allPages(),
     render: renderSheet,
     drawer: () => doc.drawer,
+    hasDrawer: !isPhone,
     onTake: (id) => {
       if (!doc.takeFromDrawer(id)) return overlay.toast(overlay.t.drawerFull);
       tw.restore();
@@ -247,7 +276,7 @@ async function main(): Promise<void> {
 
   // Dinge im Zimmer
   const targetEnabled = (id: RoomTargetId) => id !== 'mug' || !!DONATE_URL;
-  const syncHints = () => stage.room.targets.setShown((id) => settings.hints && targetEnabled(id) && !settings.hintsSeen.includes(id));
+  const syncHints = () => stage.room.targets.setShown((id) => !isPhone && settings.hints && targetEnabled(id) && !settings.hintsSeen.includes(id));
   syncHints();
   stage.targetEnabled = targetEnabled;
   stage.canInteract = () => overlay.isStarted && !overlay.isUiHidden;
@@ -315,14 +344,24 @@ async function main(): Promise<void> {
 
   // Brief abspielen: dieselbe Mechanik wie beim Tippen, nur die Hände fehlen
   let letterSkipped = false;
+  let typingSpeed = 1;
   const sleep = (ms: number) => new Promise((r) => window.setTimeout(r, ms));
   const settle = async (gap = 0) => {
-    await sleep(tw.busyFor * 1000 + gap);
+    await sleep(tw.busyFor * 1000 + gap / typingSpeed);
   };
-  const playLetter = async () => {
-    overlay.setLetter('playing');
+  // Während die Maschine tippt, soll das Smartphone nicht in den Ruhezustand gehen
+  let wakeLock: WakeLockSentinel | undefined;
+  const holdScreen = async (on: boolean) => {
+    if (!on) {
+      void wakeLock?.release();
+      wakeLock = undefined;
+      return;
+    }
+    wakeLock = await navigator.wakeLock?.request('screen').catch(() => undefined);
+  };
+  const play = async (pages: Strike[][]) => {
+    letterSkipped = false;
     begin();
-    const pages = letter!;
     for (let p = 0; p < pages.length && !letterSkipped; p++) {
       if (p > 0) {
         tw.newSheet();
@@ -358,7 +397,6 @@ async function main(): Promise<void> {
       tw.restore();
       syncStack();
     }
-    overlay.setLetter('done');
   };
 
   const begin = () => {
@@ -370,10 +408,17 @@ async function main(): Promise<void> {
     }
   };
   window.addEventListener('pointerdown', begin);
-  bindKeyboard(tw, begin, () => !letter && !reader.isOpen);
+  bindKeyboard(tw, begin, () => !isPhone && !letter && !reader.isOpen);
   if (letter) {
     overlay.start();
     overlay.setLetter('ready');
+  } else if (isPhone) {
+    // Unter dem Eingabefeld muss die Szene nicht laufen
+    stage.covered = true;
+    stage.frameForPhone();
+    // Nach dem Drehen des Geräts stimmen die neuen Maße erst kurz darauf
+    screen.orientation?.addEventListener('change', () => window.setTimeout(() => stage.frameForPhone(), 300));
+    overlay.setPhone('input');
   }
   if (letterBroken) overlay.toast(overlay.t.letterBroken);
   window.addEventListener('beforeunload', () => doc.saveNow());
