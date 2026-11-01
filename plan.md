@@ -165,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.18.0** (2026-11-01) – Nutzerwunsch → App v1.1.0: Mahagoni statt des alten Tischholzes, Boden bleibt. Holzteile mit `woodBox` bauen, damit Maßstab und Maserung stimmen.
 - **v1.0.0** (2026-11-01) – Nutzerwunsch: Die App zählt ab jetzt als Version 1 (App v1.0.0, inhaltlich gleich v0.23.0).
 - **v0.17.0** (2026-11-01) – Nutzerwunsch → App v0.23.0: Bankerlampe statt Schwingarm, Kerze rechts neben der Tasse, Songs nur mit Titel, Icons in der Leiste, großes Performance-Paket. Messung im Software-Renderer: Draw-Calls im Stillstand 1541 → 134, die Bildrate dort kaum verändert, weil er an der Pixelarbeit hängt. Auf echter GPU noch zu prüfen. Neue feste Teile mit `mergeStatic` (`src/scene/merge.ts`) zusammenfügen, sonst kommen die Draw-Calls zurück.
 - **v0.16.0** (2026-11-01) – Nutzerwunsch → App v0.22.0: Komfort-Paket aus der Ideenliste. Schublade nur im nötigen Umfang (ablegen, lesen, wieder einspannen, löschen), weil „Neues Dokument“ nichts mehr löschen soll; sie liegt weiter im localStorage. Noch nicht umgesetzt aus der Liste: siehe Abschnitt 8.
@@ -198,5 +199,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v1.0.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
+1. v1.1.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

@@ -127,7 +127,8 @@ export class Stage {
     this.controls.screenSpacePanning = true;
 
     ({ lamp: this.lamp, rim: this.rim, hemi: this.hemi } = buildEnvironment(this.scene, this.renderer));
-    this.room = new Room(this.scene, this.renderer.capabilities.getMaxAnisotropy());
+    // Die 4K-Maserung nur dort, wo auch die Grafikstufe „hoch“ läuft
+    this.room = new Room(this.scene, this.renderer.capabilities.getMaxAnisotropy(), initialQuality === 'high' && this.renderer.capabilities.maxTextureSize >= 4096);
     this.scene.add(this.room.group);
     this.setQuality(initialQuality);
 

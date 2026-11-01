@@ -18,10 +18,10 @@ export default defineConfig({
       workbox: {
         globPatterns: ['**/*.{js,css,html,woff,woff2,wav,png,svg,jpg}'],
         // Die 8K-Aussichten nicht alle vorab laden: gespeichert wird, was einmal angesehen wurde
-        globIgnores: ['views/**'],
+        globIgnores: ['views/**', 'textures/desk_diff_4k.jpg'],
         runtimeCaching: [
           {
-            urlPattern: /\/views\/.*\.jpg$/,
+            urlPattern: /\/(views\/.*|textures\/desk_diff_4k)\.jpg$/,
             handler: 'CacheFirst',
             options: { cacheName: 'views', cacheableResponse: { statuses: [200] } },
           },

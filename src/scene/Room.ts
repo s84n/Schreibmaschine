@@ -1,7 +1,7 @@
 import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../animation/Tweens';
 import { buildBookStack, buildCurtain, buildPencilCup, buildRainGlass, Candle, DeskLamp, Dust, FairyLights, LightShafts, PaperStack, Steam } from './Cozy';
-import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, Radio, type DecorMaterials } from './Decor';
+import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, Radio, woodBox, type DecorMaterials } from './Decor';
 import { mergeStatic } from './merge';
 import { RoomTargets } from './Targets';
 import { animatePanorama, OutdoorParticles, setPanoramaLife, setPanoramaMotion, tickPanorama, type ViewLife } from './OutdoorLife';
@@ -103,7 +103,7 @@ export class Room {
   readonly targets = new RoomTargets();
   private calm = false;
 
-  constructor(private readonly scene: THREE.Scene, private readonly anisotropy: number) {
+  constructor(private readonly scene: THREE.Scene, private readonly anisotropy: number, private readonly hiRes: boolean) {
     this.group.name = 'room';
     const deskMat = this.deskMaterial();
     // Große Flächen zuletzt: Was davorsteht, ist dann schon in der Tiefe und spart ihre teuren Pixel
@@ -350,14 +350,17 @@ export class Room {
   }
 
   private deskMaterial(): THREE.MeshStandardMaterial {
-    const repeat: [number, number] = [2.2, 1.3];
+    // Maßstab und Richtung der Maserung legt woodBox fest
+    const repeat: [number, number] = [1, 1];
     return new THREE.MeshStandardMaterial({
       // Nur auf der flach betrachteten Tischplatte lohnt sich die Mehrarbeit, und nur bei der Farbe
-      map: this.tex('desk_diff.jpg', repeat, true, 8),
+      map: this.tex(this.hiRes ? 'desk_diff_4k.jpg' : 'desk_diff.jpg', repeat, true, 8),
       normalMap: this.tex('desk_nor.jpg', repeat, false),
       roughnessMap: this.tex('desk_rough.jpg', repeat, false),
-      roughness: 0.85,
-      normalScale: new THREE.Vector2(0.8, 0.8),
+      // Dunkler und matter als der Scan: Sonst spiegelt das Holz das Fensterlicht milchig
+      color: '#c9b3a2',
+      roughness: 1,
+      normalScale: new THREE.Vector2(0.5, 0.5),
     });
   }
 
@@ -365,18 +368,18 @@ export class Room {
     const g = new THREE.Group();
     const depth = 110;
     const cz = WALL_Z + depth / 2 - 2;
-    const top = new THREE.Mesh(new THREE.BoxGeometry(180, 3, depth), mat);
+    const top = woodBox(180, 3, depth, mat, 1);
     top.position.set(0, DESK_Y - 1.5, cz);
     top.castShadow = top.receiveShadow = true;
     g.add(top);
     // Zarge und Beine
-    const apron = new THREE.Mesh(new THREE.BoxGeometry(170, 9, depth - 10), mat);
+    const apron = woodBox(170, 9, depth - 10, mat, 2);
     apron.position.set(0, DESK_Y - 7.5, cz);
     g.add(apron);
     const legH = 76 - 3;
     for (const x of [-82, 82]) {
       for (const z of [cz - depth / 2 + 6, cz + depth / 2 - 6]) {
-        const leg = new THREE.Mesh(new THREE.BoxGeometry(6, legH, 6), mat);
+        const leg = woodBox(6, legH, 6, mat, x + z);
         leg.position.set(x, DESK_Y - 3 - legH / 2, z);
         leg.castShadow = true;
         g.add(leg);

@@ -14,6 +14,30 @@ const shadowed = <T extends THREE.Object3D>(o: T): T => {
   return o;
 };
 
+/** So viele cm zeigt die Holztextur je Kachel (Scan einer 2 × 2 m großen Fläche). */
+const WOOD_TILE_CM = 200;
+
+/**
+ * Quader aus Holz im echten Maßstab: Die Maserung läuft auf jeder Fläche entlang der längeren
+ * Kante, wie bei einem zugeschnittenen Brett. `seed` wählt eine andere Stelle des Stamms.
+ */
+export function woodBox(w: number, h: number, d: number, mat: THREE.Material, seed = 0): THREE.Mesh {
+  const geo = new THREE.BoxGeometry(w, h, d);
+  const pos = geo.getAttribute('position') as THREE.BufferAttribute;
+  const normal = geo.getAttribute('normal') as THREE.BufferAttribute;
+  const uv = geo.getAttribute('uv') as THREE.BufferAttribute;
+  const size = [w, h, d];
+  const r = rng(seed + 1);
+  const shift = [r(), r()];
+  for (let i = 0; i < pos.count; i++) {
+    const n = [normal.getX(i), normal.getY(i), normal.getZ(i)].map(Math.abs);
+    const [a, b] = [0, 1, 2].filter((axis) => n[axis] < 0.5);
+    const [along, across] = size[a] >= size[b] ? [a, b] : [b, a];
+    uv.setXY(i, pos.getComponent(i, along) / WOOD_TILE_CM + shift[0], pos.getComponent(i, across) / WOOD_TILE_CM + shift[1]);
+  }
+  return new THREE.Mesh(geo, mat);
+}
+
 /** Herzförmiges Blatt (Efeutute), Spitze zeigt entlang +y, Basis im Ursprung. */
 function leafGeometry(): THREE.BufferGeometry {
   const s = new THREE.Shape();
@@ -131,7 +155,7 @@ export function buildBooks(seed: number, count: number, maxHeight: number): THRE
 /** Wandregal: Brett mit zwei schwarzen Konsolen. Ursprung = Wandmitte unter dem Brett, Tiefe nach +z. */
 export function buildShelf(m: DecorMaterials, width: number, depth: number): THREE.Group {
   const g = new THREE.Group();
-  const board = new THREE.Mesh(new THREE.BoxGeometry(width, 2, depth), m.wood);
+  const board = woodBox(width, 2, depth, m.wood, 3);
   board.position.set(0, 1, depth / 2);
   g.add(board);
   const metal = new THREE.MeshStandardMaterial({ color: '#1c1c1c', metalness: 0.6, roughness: 0.45 });
@@ -248,7 +272,7 @@ export function buildPicture(m: DecorMaterials, w: number, h: number, seed: numb
   g.add(canvas, mat);
   const F = 2;
   const frame = (fw: number, fh: number, x: number, y: number) => {
-    const b = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, 2), m.wood);
+    const b = woodBox(fw, fh, 2, m.wood, x * 3 + y);
     b.position.set(x, y, 0.9);
     g.add(b);
   };

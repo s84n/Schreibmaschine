@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.1.0] – 2026-11-01
+
+### Geändert
+- **Neues Holz für Tisch, Regal und Bilderrahmen:** poliertes Mahagoni (Poly Haven „Dark Wood“, CC0) in 4K statt der abgenutzten Tischplatte. Die Maserung läuft auf jedem Teil entlang der längeren Kante und ist im echten Maßstab, die Tischplatte zeigt keine Wiederholung mehr. Bei Grafik „niedrig“ wird die 2K-Fassung geladen, die 4K-Datei nicht vorab für den Offline-Betrieb gespeichert.
+
 ## [1.0.0] – 2026-11-01
 
 Erste Hauptversion: inhaltlich derselbe Stand wie 0.23.0.
