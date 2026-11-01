@@ -60,7 +60,17 @@ const iconBtn = (name: IconName, title: string, cls = ''): HTMLButtonElement => 
   return b;
 };
 
-const MOOD_ICONS: Record<MoodId, IconName> = { rainnight: 'rain', sunday: 'coffee', kyoto: 'leaf', winter: 'snow', stars: 'stars', bosporus: 'waves' };
+const MOOD_ICONS: Record<MoodId, IconName> = { rainnight: 'rain', sunday: 'coffee', kyoto: 'leaf', winter: 'snow', stars: 'stars', bosporus: 'waves', rio: 'waves', paris: 'coffee', udaipur: 'sun', elmina: 'waves', granada: 'sun', laboca: 'rain', andes: 'mountain', serengeti: 'sun', alps: 'mountain', nordic: 'snow' };
+
+/** Kleiner Pfeil für alles, was aufklappt. */
+const chevronIcon = (): SVGSVGElement => {
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.setAttribute('viewBox', '0 0 10 6');
+  svg.setAttribute('class', 'chevron');
+  svg.setAttribute('aria-hidden', 'true');
+  svg.innerHTML = '<path d="M1 1l4 4 4-4"/>';
+  return svg;
+};
 
 /** HTML-Oberfläche über der 3D-Szene: Werkzeugleiste, Einstellungen, Startschirm, Hinweise. */
 export class Overlay {
@@ -69,6 +79,7 @@ export class Overlay {
   private view: CameraView = 'machine';
   private started = false;
   private panelOpen = false;
+  private moodsOpen = false;
   private coffeeOpen = false;
   private typed = 0;
   private uiHidden = false;
@@ -85,6 +96,12 @@ export class Overlay {
     document.body.append(this.label);
     this.render();
     small.addEventListener('change', () => this.render());
+    // Ein Klick daneben schließt die Stimmungen wieder
+    window.addEventListener('pointerdown', (e) => {
+      if (!this.moodsOpen || (e.target as Element).closest?.('.moods')) return;
+      this.moodsOpen = false;
+      this.render();
+    });
   }
 
   get isStarted(): boolean {
@@ -109,6 +126,10 @@ export class Overlay {
 
   private setUiHidden(on: boolean): void {
     this.uiHidden = on;
+    if (on && this.moodsOpen) {
+      this.moodsOpen = false;
+      this.render();
+    }
     document.body.classList.toggle('typing', on);
     if (on) this.label.hidden = true;
     this.actions.onUiVisible(!on);
@@ -124,8 +145,9 @@ export class Overlay {
 
   /** Esc: das oberste Fenster schließen. Liefert false, wenn keines offen war. */
   closeTop(): boolean {
-    if (!this.coffeeOpen && !this.panelOpen) return false;
-    if (this.coffeeOpen) this.coffeeOpen = false;
+    if (!this.coffeeOpen && !this.panelOpen && !this.moodsOpen) return false;
+    if (this.moodsOpen) this.moodsOpen = false;
+    else if (this.coffeeOpen) this.coffeeOpen = false;
     else this.panelOpen = false;
     this.render();
     return true;
@@ -293,12 +315,7 @@ export class Overlay {
         onChange(sel.value);
         sel.blur();
       };
-      const chevron = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-      chevron.setAttribute('viewBox', '0 0 10 6');
-      chevron.setAttribute('class', 'chevron');
-      chevron.setAttribute('aria-hidden', 'true');
-      chevron.innerHTML = '<path d="M1 1l4 4 4-4"/>';
-      wrap.append(icon(name), sel, chevron);
+      wrap.append(icon(name), sel, chevronIcon());
       return wrap;
     };
     const outlook = picker('window', t.view, '', (Object.keys(VIEWS) as ViewId[]).map((id) => [id, t.views[id]]), s.view, (v) => this.update({ view: v as ViewId }));
@@ -307,20 +324,34 @@ export class Overlay {
     return [viewBtn, readBtn, sheetBtn, el('span', 'sep'), exportGroup, share, el('span', 'sep'), outlook, music];
   }
 
-  /** Stimmungen als kleine Schilder: ein Klick stellt alles passend ein. */
-  private renderMoods(): HTMLElement {
+  /** Stimmungen: ein Klick stellt alles passend ein. In der Leiste klappt die Liste erst auf Wunsch auf. */
+  private renderMoods(foldable = true): HTMLElement {
     const t = this.t;
     const active = activeMood(this.settings);
     const box = el('nav', 'moods');
     box.setAttribute('aria-label', t.moods);
+    if (foldable) {
+      const label = active ? t.moodNames[active] : t.moods;
+      const toggle = toolBtn(active ? MOOD_ICONS[active] : 'stars', label, t.moods, `mood-toggle${active ? ' active' : ''}`);
+      toggle.setAttribute('aria-expanded', String(this.moodsOpen));
+      toggle.append(chevronIcon());
+      toggle.onclick = () => {
+        this.moodsOpen = !this.moodsOpen;
+        this.render();
+      };
+      box.append(toggle);
+      if (!this.moodsOpen) return box;
+    }
+    const list = el('div', 'mood-list');
     for (const id of Object.keys(MOODS) as MoodId[]) {
       const b = toolBtn(MOOD_ICONS[id], t.moodNames[id], t.moodNames[id], `mood${id === active ? ' active' : ''}`);
       b.onclick = () => {
+        this.moodsOpen = false;
         this.update(MOODS[id]);
-        b.blur();
       };
-      box.append(b);
+      list.append(b);
     }
+    box.append(list);
     return box;
   }
 
@@ -387,7 +418,7 @@ export class Overlay {
     panel.append(el('h2', '', t.settings));
 
     if (small.matches) {
-      if (!this.letter) panel.append(this.renderMoods());
+      if (!this.letter) panel.append(this.renderMoods(false));
       const tools = el('div', 'tools');
       tools.append(...this.actionButtons().filter((b) => !b.classList.contains('sep')));
       panel.append(tools);

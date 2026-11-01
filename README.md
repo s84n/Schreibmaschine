@@ -50,14 +50,14 @@ und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 | ✍️ **Schreiben** | Einfach lostippen. Rücktaste setzt den Wagen zurück – Überschreiben wie früher inklusive. |
 | 🏔️ **Aussicht wählen** | Alpen, Bergsee im Winter, nordischer See, Mittelmeer, ein chinesisches Dorf, ein japanischer Ahornwald, Rio de Janeiro, Paris, Udaipur, Elmina, Granada, Buenos Aires, Machu Picchu, die Serengeti, Istanbul, ein Büro hoch über Manhattan, Dubai in der Dämmerung oder eine Sternennacht am See. |
 | 🌿 **Lebendige Aussicht** | Hinter dem großen Panoramafenster ziehen Wolken, das Wasser kräuselt sich, Wind geht durchs Laub, und je nach Ort fliegen Vögel, fällt Schnee, segeln Ahornblätter oder tanzen Glühwürmchen – per Schalter an und aus. |
-| 🎷 **Musik wählen** | Drei eigene Songs laufen in Dauerschleife: Asia, Middle East und America. |
+| 🎷 **Musik wählen** | 14 eigene Songs aus aller Welt laufen in Dauerschleife, von Bossa Nova über Raga und Kora bis Tango und Nordic Folk. |
 | 🎚️ **Alles einzeln regeln** | Geräusche der Maschine, Musik und Regen haben je einen eigenen Lautstärkeregler. |
 | 💾 **Nichts verlieren** | Dein Blatt wird automatisch im Browser gespeichert und ist beim nächsten Besuch wieder da. |
 | 📄 **Exportieren** | Die fertige Seite als **PNG**, als **PDF** (A4) oder als reinen **Text** herunterladen. |
 | 📚 **Manuskript** | Fertige Blätter landen auf dem Stapel; PDF und Text enthalten alle Seiten. |
 | 🆕 **Neues Dokument** | Im Zahnrad-Menü: legt alle Blätter in die Schublade und beginnt von vorn, damit im nächsten Export nichts Altes auftaucht. |
 | 💌 **Brief als Link** | Der Empfänger sieht deinen Text Anschlag für Anschlag entstehen. Er steckt nur im Link, auf keinem Server. |
-| 🌦️ **Stimmungen** | Ein Klick auf Regennacht, Sonntagmorgen, Herbst in Kyoto, Winterabend, Sternennacht oder Am Bosporus stellt Aussicht, Licht, Wetter, Musik und Anschlag zusammen. |
+| 🌦️ **Stimmungen** | Ein Klick auf eine von 16 Stimmungen, etwa Regennacht, Herbst in Kyoto, Morgen in Rio oder Café in Paris, stellt Aussicht, Licht, Wetter, Musik und Anschlag zusammen. |
 | 🕹️ **Das Zimmer bedienen** | Kerze, Lampe, Fenster, Radio und Papierstapel lassen sich direkt anklicken. Ein Punkt zeigt, was geht, bis du es einmal benutzt hast; unter der Maus leuchtet es auf und sagt, was es tut. |
 | 🎯 **Nur noch schreiben** | Nach drei Anschlägen verschwinden Leisten und Mauszeiger, bei Mausbewegung oder Esc sind sie wieder da. |
 | 📖 **Nachlesen** | Alle Blätter flach und in Ruhe lesen, mit den Pfeiltasten umblättern. |

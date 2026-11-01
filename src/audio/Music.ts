@@ -1,10 +1,36 @@
-/** Eigene Songs aus `public/music`: angezeigt wird der Dateiname ohne Endung. */
-export const TRACKS = ['SchreibMaschine - Asia', 'SchreibMaschine - Middle East', 'SchreibMaschine - America'] as const;
+/** Eigene Songs aus `public/music`; die Einträge sind die Dateinamen ohne Endung. */
+export const TRACKS = [
+  'SchreibMaschine - Asia',
+  'SchreibMaschine - Middle East',
+  'SchreibMaschine - America',
+  'Schreibmaschine - Bossa Nova',
+  'Schreibmaschine - Musette',
+  'Schreibmaschine - India',
+  'Schreibmaschine - Kora Westafrica',
+  'Schreibmaschine - Flamenco',
+  'Schreibmaschine - Tango Argentinia',
+  'Schreibmaschine - Andes',
+  'Schreibmaschine - Ethio Jazz Eastafrica',
+  'Schreibmaschine - Koto Japan',
+  'Schreibmaschine - Nocturne MiddleEurope',
+  'Schreibmaschine - Northeurope Folk',
+] as const;
 
 export type TrackId = (typeof TRACKS)[number];
 
 /** Anzeigename: nur der Titel, damit man in der Liste sofort sieht, was man wählt. */
-export const trackTitle = (id: TrackId): string => id.replace(/^SchreibMaschine - /, '');
+export const trackTitle = (id: TrackId): string => SHORT_TITLES[id] ?? id.replace(/^Schreibmaschine - /i, '');
+
+/** Wo der Dateiname mehr sagt, als in die Liste gehört. */
+const SHORT_TITLES: Partial<Record<TrackId, string>> = {
+  'Schreibmaschine - India': 'Raga',
+  'Schreibmaschine - Kora Westafrica': 'Kora',
+  'Schreibmaschine - Tango Argentinia': 'Tango',
+  'Schreibmaschine - Ethio Jazz Eastafrica': 'Ethio Jazz',
+  'Schreibmaschine - Koto Japan': 'Koto',
+  'Schreibmaschine - Nocturne MiddleEurope': 'Nocturne',
+  'Schreibmaschine - Northeurope Folk': 'Nordic Folk',
+};
 
 /** Ausgangspegel: Die Songs liegen bei etwa -16 LUFS und sollen leise unter den Maschinengeräuschen bleiben. */
 const OUT_LEVEL = 0.75;

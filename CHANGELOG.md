@@ -2,6 +2,16 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.4.0] – 2026-11-01
+
+### Hinzugefügt
+- **Elf neue Songs:** Bossa Nova, Musette, Raga, Kora, Flamenco, Tango, Andes, Ethio Jazz, Koto, Nocturne und Nordic Folk.
+- **Zehn neue Stimmungen**, die Song, Aussicht und Licht verbinden, etwa Morgen in Rio, Café in Paris oder Regen in La Boca.
+
+### Geändert
+- Die Stimmungen klappen jetzt aus einem Knopf links oben auf, der die aktive Stimmung zeigt: 16 Einträge hätten die Szene sonst dauerhaft verdeckt.
+- „Herbst in Kyoto“ spielt jetzt Koto statt Asia.
+
 ## [1.3.0] – 2026-11-01
 
 ### Hinzugefügt

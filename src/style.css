@@ -143,7 +143,7 @@ body {
   color: #1b1714;
 }
 
-.select-wrap .chevron {
+.chevron {
   width: 9px;
   height: 6px;
   flex: none;
@@ -233,7 +233,7 @@ body {
   left: 14px;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: stretch;
   gap: 4px;
   padding: 6px;
   background: var(--glass);
@@ -241,10 +241,31 @@ body {
   border-radius: 10px;
 }
 
-.panel .moods {
-  position: static;
+.mood-list {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  max-height: calc(100dvh - 90px);
+  overflow-y: auto;
+}
+
+.moods .btn.with-icon {
+  white-space: nowrap;
+}
+
+.mood-toggle .chevron {
+  margin-left: auto;
+}
+
+.panel .moods .mood-list {
   flex-direction: row;
   flex-wrap: wrap;
+  max-height: none;
+}
+
+.panel .moods {
+  position: static;
   padding: 0 0 10px;
   margin-bottom: 10px;
   background: none;

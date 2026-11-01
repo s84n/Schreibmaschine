@@ -165,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.21.0** (2026-11-01) – Nutzer-Songs eingebaut → App v1.4.0: 14 Songs, 16 Stimmungen, Stimmungen als Klappmenü. Songs nicht nachgeregelt, alle liegen bei etwa −16 LUFS.
 - **v0.20.0** (2026-11-01) – Nutzerwunsch → App v1.3.0: acht Aussichten für neue Musikregionen vorbereitet (Liste in Abschnitt 8). Motive liegen neben dem Blatt, weil das Fenster nur rund 70° des Bands zeigt.
 - **v0.19.0** (2026-11-01) – Nutzer-Feedback → App v1.2.0: Tageslicht gedämpft, Lampe am Tag wirksam. Ihr Lichtkegel läuft dafür auch tagsüber in jedem Pixel mit; die Einsparung aus v1.0.0 an dieser Stelle ist bewusst zurückgenommen.
 - **v0.18.0** (2026-11-01) – Nutzerwunsch → App v1.1.0: Mahagoni statt des alten Tischholzes, Boden bleibt. Holzteile mit `woodBox` bauen, damit Maßstab und Maserung stimmen.
@@ -188,7 +189,6 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## 8. Offene Punkte
 
-- **Songs je Region (kommen vom Nutzer):** Datei nach `public/music`, Titel in `TRACKS`. Bossa Nova → `rio`, Musette/Gypsy Jazz → `paris`, Raga → `udaipur`, Kora → `elmina`, Koto/Shakuhachi → `japanforest`, Kammermusik → `alps`, Nordischer Folk → `nordiclake`, Flamenco-Gitarre → `granada`, Tango-Walzer → `buenosaires`, Panflöte/Charango → `machupicchu`, Äthio-Jazz → `serengeti` (Äthiopien hat kein eigenes Motiv in passender Qualität). Danach je Paar eine Stimmung anlegen.
 - **Kaffee-Link eintragen** (`src/config.ts`), vorher Anbieter wählen und Steuer-/Impressumsfrage klären.
 - **Echte Smartphones testen:** Bildschirmtastatur (Android/Gboard, iOS), Vollbild + Lock, Bildrate nachts.
 - Konzeptideen (ungeprüft priorisiert): Schreibziele/Wortzähler, Kurz-Schreibimpulse, Tippen auf den 3D-Tasten, Schnee zum Regen, Papiersorten, Tintenauftrag nach Anschlagstärke, Farbband-Abnutzung.
@@ -202,5 +202,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v1.3.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
+1. v1.4.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.
