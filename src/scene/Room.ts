@@ -7,7 +7,7 @@ import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js
 import { mergeStatic } from './merge';
 import { buildGlassDirt, buildWindowStyle, WIN, WINDOW_STYLES, type WindowStyleId } from './WindowStyles';
 import { RoomTargets } from './Targets';
-import { animatePanorama, OutdoorParticles, setPanoramaLife, setPanoramaMotion, tickPanorama, type ViewLife } from './OutdoorLife';
+import { animatePanorama, OutdoorParticles, setPanoramaDepth, setPanoramaLife, setPanoramaMotion, setPanoramaParallax, tickPanorama, type ViewDepth, type ViewLife } from './OutdoorLife';
 
 export type ViewId = 'alps' | 'winterlake' | 'nordiclake' | 'mediterranean' | 'chinavillage' | 'japanforest' | 'starnight' | 'istanbul' | 'newyork' | 'dubai' | 'rio' | 'paris' | 'udaipur' | 'elmina' | 'granada' | 'buenosaires' | 'machupicchu' | 'serengeti';
 
@@ -26,29 +26,31 @@ export interface OutdoorView {
   dusk?: boolean;
   /** Was sich in dieser Aussicht bewegt */
   life?: ViewLife;
+  /** Tiefenkarte vorhanden: Die Aussicht bekommt Parallaxe und Dunst */
+  depth?: ViewDepth;
   /** Fensterart, die zur Gegend passt; ohne Angabe das Panoramafenster */
   window?: WindowStyleId;
 }
 
 export const VIEWS: Record<ViewId, OutdoorView> = {
-  alps: { file: 'alps_field.jpg', u: 0.75, drop: 11, light: '#fff3e0', lightIntensity: 1.21, ambient: 0.34, life: { sky: 0.5, particles: 'birds' }, window: 'sprossen' },
-  winterlake: { file: 'lago_disola.jpg', u: 0.8, drop: 16, light: '#e8f0ff', lightIntensity: 1.1, ambient: 0.34, life: { sky: 0.55, foliage: [0.45, 1], particles: 'snow' }, window: 'sprossen' },
-  nordiclake: { file: 'lakeside.jpg', u: 0.68, drop: 3, light: '#fff6e8', lightIntensity: 1.26, ambient: 0.34, life: { sky: 0.47, water: [0, 0.42], foliage: [0.5, 1], particles: 'birds' }, window: 'sprossen' },
-  mediterranean: { file: 'spiaggia_di_mondello.jpg', u: 0.53, drop: 4, light: '#ffe9c4', lightIntensity: 1.43, ambient: 0.37, life: { sky: 0.45, foliage: [0.46, 0.8], particles: 'birds' }, window: 'rundbogen' },
-  chinavillage: { file: 'china_village.jpg', u: 0.5, drop: 2, light: '#fff1dc', lightIntensity: 1.21, ambient: 0.34, life: { sky: 0.55, foliage: [0.3, 0.72], particles: 'birds' }, window: 'rund' },
-  japanforest: { file: 'japan_maple.jpg', u: 0.5, drop: 2, light: '#ffe2c8', lightIntensity: 1.16, ambient: 0.34, life: { foliage: [0, 1], particles: 'leaves' }, window: 'rund' },
-  istanbul: { file: 'istanbul.jpg', u: 0.5, drop: 3, light: '#fff1dc', lightIntensity: 1.32, ambient: 0.36, life: { sky: 0.55, water: [0.28, 0.42], particles: 'birds' }, window: 'spitzbogen' },
-  newyork: { file: 'newyork.jpg', u: 0.5, drop: 2, light: '#f4f6ff', lightIntensity: 1.21, ambient: 0.36, life: { sky: 0.55 } },
-  dubai: { file: 'dubai.jpg', u: 0.5, drop: 10, light: '#ff9fb0', lightIntensity: 0.6, ambient: 0.28, dusk: true },
-  rio: { file: 'rio.jpg', u: 0.5, drop: 3, light: '#fff3dc', lightIntensity: 1.3, ambient: 0.36, life: { sky: 0.52, particles: 'birds' } },
-  paris: { file: 'paris.jpg', u: 0.5, drop: 3, light: '#fff4e4', lightIntensity: 1.2, ambient: 0.35, life: { sky: 0.44, particles: 'birds' }, window: 'sprossen' },
-  udaipur: { file: 'udaipur.jpg', u: 0.5, drop: 3, light: '#ffeed6', lightIntensity: 1.25, ambient: 0.35, life: { sky: 0.63, water: [0.2, 0.41], particles: 'birds' }, window: 'spitzbogen' },
-  elmina: { file: 'elmina.jpg', u: 0.5, drop: 3, light: '#fff2dc', lightIntensity: 1.35, ambient: 0.36, life: { sky: 0.45, particles: 'birds' }, window: 'rundbogen' },
-  granada: { file: 'granada.jpg', u: 0.5, drop: 3, light: '#ffd9a8', lightIntensity: 1.1, ambient: 0.32, life: { sky: 0.56, particles: 'birds' }, window: 'spitzbogen' },
-  buenosaires: { file: 'buenosaires.jpg', u: 0.5, drop: 3, light: '#f4f2ec', lightIntensity: 1.1, ambient: 0.34, life: { sky: 0.72, water: [0.32, 0.41] }, window: 'sprossen' },
-  machupicchu: { file: 'machupicchu.jpg', u: 0.5, drop: 3, light: '#fff4e0', lightIntensity: 1.25, ambient: 0.35, life: { sky: 0.6, particles: 'birds' } },
-  serengeti: { file: 'serengeti.jpg', u: 0.5, drop: 3, light: '#ffd7ae', lightIntensity: 1.05, ambient: 0.3, life: { sky: 0.49, foliage: [0.2, 0.41], particles: 'birds' } },
-  starnight: { file: 'lakeside_night.jpg', u: 0.4, drop: 5, light: '#ffb070', lightIntensity: 0.35, ambient: 0.18, dusk: true, life: { sky: 0.5, water: [0.14, 0.42], stars: true, particles: 'fireflies' }, window: 'sprossen' },
+  alps: { file: 'alps_field.jpg', u: 0.75, drop: 11, light: '#fff3e0', lightIntensity: 1.21, ambient: 0.34, life: { sky: 0.5, particles: 'birds' }, depth: { near: 220, haze: 0.18, hazeColor: '#b4c8e0' }, window: 'sprossen' },
+  winterlake: { file: 'lago_disola.jpg', u: 0.8, drop: 16, light: '#e8f0ff', lightIntensity: 1.1, ambient: 0.34, life: { sky: 0.55, foliage: [0.45, 1], particles: 'snow' }, depth: { near: 220, haze: 0.18, hazeColor: '#c4d2e4' }, window: 'sprossen' },
+  nordiclake: { file: 'lakeside.jpg', u: 0.68, drop: 3, light: '#fff6e8', lightIntensity: 1.26, ambient: 0.34, life: { sky: 0.47, water: [0, 0.42], foliage: [0.5, 1], particles: 'birds' }, depth: { near: 220, haze: 0.18, hazeColor: '#b4c8e0' }, window: 'sprossen' },
+  mediterranean: { file: 'spiaggia_di_mondello.jpg', u: 0.53, drop: 4, light: '#ffe9c4', lightIntensity: 1.43, ambient: 0.37, life: { sky: 0.45, foliage: [0.46, 0.8], particles: 'birds' }, depth: { near: 220, haze: 0.18, hazeColor: '#c0d4e6' }, window: 'rundbogen' },
+  chinavillage: { file: 'china_village.jpg', u: 0.5, drop: 2, light: '#fff1dc', lightIntensity: 1.21, ambient: 0.34, life: { sky: 0.55, foliage: [0.3, 0.72], particles: 'birds' }, depth: { near: 1100, haze: 0.07, hazeColor: '#c8d2de' }, window: 'rund' },
+  japanforest: { file: 'japan_maple.jpg', u: 0.5, drop: 2, light: '#ffe2c8', lightIntensity: 1.16, ambient: 0.34, life: { foliage: [0, 1], particles: 'leaves' }, depth: { near: 600, haze: 0.1, hazeColor: '#d8c4b0' }, window: 'rund' },
+  istanbul: { file: 'istanbul.jpg', u: 0.5, drop: 3, light: '#fff1dc', lightIntensity: 1.32, ambient: 0.36, life: { sky: 0.55, water: [0.28, 0.42], particles: 'birds' }, depth: { near: 1100, haze: 0.07, hazeColor: '#c8d2de' }, window: 'spitzbogen' },
+  newyork: { file: 'newyork.jpg', u: 0.5, drop: 2, light: '#f4f6ff', lightIntensity: 1.21, ambient: 0.36, life: { sky: 0.55 }, depth: { near: 650, haze: 0.14, hazeColor: '#bccde0' } },
+  dubai: { file: 'dubai.jpg', u: 0.5, drop: 10, light: '#ff9fb0', lightIntensity: 0.6, ambient: 0.28, dusk: true, depth: { near: 1100, haze: 0.04, hazeColor: '#7a6a80' } },
+  rio: { file: 'rio.jpg', u: 0.5, drop: 3, light: '#fff3dc', lightIntensity: 1.3, ambient: 0.36, life: { sky: 0.52, particles: 'birds' }, depth: { near: 1100, haze: 0.07, hazeColor: '#c8d2de' } },
+  paris: { file: 'paris.jpg', u: 0.5, drop: 3, light: '#fff4e4', lightIntensity: 1.2, ambient: 0.35, life: { sky: 0.44, particles: 'birds' }, depth: { near: 1100, haze: 0.07, hazeColor: '#c8d2de' }, window: 'sprossen' },
+  udaipur: { file: 'udaipur.jpg', u: 0.5, drop: 3, light: '#ffeed6', lightIntensity: 1.25, ambient: 0.35, life: { sky: 0.63, water: [0.2, 0.41], particles: 'birds' }, depth: { near: 1100, haze: 0.07, hazeColor: '#c8d2de' }, window: 'spitzbogen' },
+  elmina: { file: 'elmina.jpg', u: 0.5, drop: 3, light: '#fff2dc', lightIntensity: 1.35, ambient: 0.36, life: { sky: 0.45, particles: 'birds' }, depth: { near: 1100, haze: 0.07, hazeColor: '#c8d2de' }, window: 'rundbogen' },
+  granada: { file: 'granada.jpg', u: 0.5, drop: 3, light: '#ffd9a8', lightIntensity: 1.1, ambient: 0.32, life: { sky: 0.56, particles: 'birds' }, depth: { near: 1100, haze: 0.07, hazeColor: '#e0cfb8' }, window: 'spitzbogen' },
+  buenosaires: { file: 'buenosaires.jpg', u: 0.5, drop: 3, light: '#f4f2ec', lightIntensity: 1.1, ambient: 0.34, life: { sky: 0.72, water: [0.32, 0.41] }, depth: { near: 1100, haze: 0.07, hazeColor: '#c8d2de' }, window: 'sprossen' },
+  machupicchu: { file: 'machupicchu.jpg', u: 0.5, drop: 3, light: '#fff4e0', lightIntensity: 1.25, ambient: 0.35, life: { sky: 0.6, particles: 'birds' }, depth: { near: 220, haze: 0.18, hazeColor: '#c0d0e2' } },
+  serengeti: { file: 'serengeti.jpg', u: 0.5, drop: 3, light: '#ffd7ae', lightIntensity: 1.05, ambient: 0.3, life: { sky: 0.49, foliage: [0.2, 0.41], particles: 'birds' }, depth: { near: 220, haze: 0.18, hazeColor: '#e0cdb0' } },
+  starnight: { file: 'lakeside_night.jpg', u: 0.4, drop: 5, light: '#ffb070', lightIntensity: 0.35, ambient: 0.18, dusk: true, life: { sky: 0.5, water: [0.14, 0.42], stars: true, particles: 'fireflies' }, depth: { near: 220, haze: 0.05, hazeColor: '#1c2a44' }, window: 'sprossen' },
 };
 
 const DESK_Y = -0.45;
@@ -66,6 +68,10 @@ const LAMP_POS = new THREE.Vector3(-36, DESK_Y, -15);
 const PENCILS_POS = { x: -30, z: -26 };
 /** Dorthin zeigt die Schreibtischlampe: auf den Tisch vor der Maschine, das Papier liegt noch im Kegel */
 const LAMP_AIM = new THREE.Vector3(-9, 0, 8);
+/** Grundstellung der Kamera: Von hier sieht die Aussicht aus wie das Foto. Muss zu `CAMERAS.machine` passen. */
+const REST_CAMERA = new THREE.Vector3(0, 27, 62);
+/** Weiter verschiebt sich die Aussicht nicht, sonst reißt sie beim starken Drehen an den Kanten auf. */
+const MAX_PARALLAX = 30;
 /** Bewegung bei „Ruhige Bewegung“ */
 const CALM_SPEED = 0.3;
 /** Elevationsbereich des Panorama-Bands (aus dem Zuschnitt) */
@@ -94,6 +100,11 @@ export class Room {
   private readonly outsideMat: THREE.MeshBasicMaterial;
   private readonly loader = new THREE.TextureLoader();
   private readonly cache = new Map<ViewId, Promise<THREE.Texture>>();
+  private readonly depthCache = new Map<ViewId, Promise<THREE.Texture>>();
+  private depthOn = true;
+  private depthMap?: THREE.Texture;
+  private readonly camLocal = new THREE.Vector3();
+  private readonly restLocal = new THREE.Vector3();
   private current?: ViewId;
   /** Tagwerte der aktuellen Aussicht; der Nachtfaktor wird in applyLight() daraufgerechnet */
   private readonly dayLight = { color: new THREE.Color('#fff3e0'), intensity: 2, ambient: 0.55 };
@@ -266,6 +277,13 @@ export class Room {
     this.shafts.update(slow);
     this.rainGlass.uniforms.uTime.value += slow;
     tickPanorama(dt);
+    if (this.depthMap && this.depthOn) {
+      this.outside.updateWorldMatrix(true, false);
+      this.camLocal.copy(camera.position);
+      this.outside.worldToLocal(this.camLocal);
+      this.outside.worldToLocal(this.restLocal.copy(REST_CAMERA));
+      setPanoramaParallax(this.camLocal.sub(this.restLocal).clampLength(0, MAX_PARALLAX));
+    }
     this.outdoorParticles.update(dt, window.innerHeight);
     this.targets.update(dt);
   }
@@ -301,7 +319,7 @@ export class Room {
     if (this.current === id) return;
     this.current = id;
     const view = VIEWS[id];
-    const tex = await this.load(id);
+    const [tex, depth] = await Promise.all([this.load(id), this.loadDepth(id)]);
     if (this.current !== id) return;
 
     const mat = this.outsideMat;
@@ -324,6 +342,8 @@ export class Room {
         this.tilt.rotation.x = -THREE.MathUtils.degToRad(view.drop);
         this.dusk = !!view.dusk;
         setPanoramaLife(view.life);
+        this.depthMap = depth;
+        setPanoramaDepth(this.depthOn ? depth : undefined, view.depth);
         this.outdoorParticles.setKind(view.life?.particles);
         this.outdoorParticles.points.visible &&= this.lifeOn && !this.calm;
         animator.add({
@@ -381,6 +401,27 @@ export class Room {
     // Textur ist gespiegelt (Innenansicht): sichtbares u = 1 - phi / 2π
     const phiLocal = Math.PI * 2 * (1 - u);
     this.outside.rotation.y = phiWorld - phiLocal;
+  }
+
+  private loadDepth(id: ViewId): Promise<THREE.Texture | undefined> {
+    const view = VIEWS[id];
+    if (!view.depth) return Promise.resolve(undefined);
+    let p = this.depthCache.get(id);
+    if (!p) {
+      p = this.loader.loadAsync(`${import.meta.env.BASE_URL}views/${view.file.replace('.jpg', '_depth.jpg')}`).then((tex) => {
+        tex.wrapS = THREE.RepeatWrapping;
+        return tex;
+      });
+      this.depthCache.set(id, p);
+    }
+    // Ohne Karte bleibt die Aussicht einfach flach: Das ist kein Grund, sie gar nicht zu zeigen
+    return p.catch(() => undefined);
+  }
+
+  /** Tiefe der Aussicht an- oder abschalten. */
+  setDepth(on: boolean): void {
+    this.depthOn = on;
+    setPanoramaDepth(on ? this.depthMap : undefined, this.current ? VIEWS[this.current].depth : undefined);
   }
 
   private load(id: ViewId): Promise<THREE.Texture> {

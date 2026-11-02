@@ -691,6 +691,7 @@ export class Overlay {
     group(t.groupGraphics);
     select<Quality>(t.quality, s.quality, [['high', t.qualityHigh], ['low', t.qualityLow]], (quality) => this.update({ quality }));
     toggle(t.saver, s.saver, (saver) => this.update({ saver }));
+    toggle(t.viewDepth, s.viewDepth, (viewDepth) => this.update({ viewDepth }));
     toggle(t.dust, s.dust, (dust) => this.update({ dust }));
     toggle(t.shafts, s.shafts, (shafts) => this.update({ shafts }));
     toggle(t.ao, s.ao, (ao) => this.update({ ao }));

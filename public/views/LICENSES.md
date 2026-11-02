@@ -40,3 +40,7 @@ Ausschnitte aus den tonemapped-Versionen der HDRIs von [Poly Haven](https://poly
 **Änderungen an diesen Fotos:** verkleinert, in ein Panoramaband eingesetzt, an den Seiten
 gespiegelt fortgesetzt, Himmel und Vordergrund mit Durchschnittsfarben oder gespiegeltem Bild aufgefüllt, Helligkeit und Sättigung angepasst. `paris.jpg` und `buenosaires.jpg` sind ebenso bearbeitet; `buenosaires.jpg` ist unten beschnitten, `udaipur.jpg` im Kontrast angehoben.
 Die bearbeiteten Dateien stehen wie ihre Originale unter derselben Lizenz: `dubai.jpg`, `udaipur.jpg`, `granada.jpg` und `machupicchu.jpg` unter **CC BY-SA 3.0**, `china_village.jpg`, `elmina.jpg` und `serengeti.jpg` unter **CC BY-SA 4.0**.
+
+## Tiefenkarten
+
+Die Dateien `*_depth.jpg` sind aus den Panoramen oben abgeleitet, berechnet mit Depth Anything V2 Small (Apache-2.0) über `tools/depth_maps.py`. Für sie gilt die Lizenz des jeweiligen Panoramas.

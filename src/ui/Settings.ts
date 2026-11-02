@@ -25,6 +25,8 @@ export interface Settings {
   model: ModelId;
   rain: boolean;
   dust: boolean;
+  /** Parallaxe und Dunst in der Aussicht */
+  viewDepth: boolean;
   shafts: boolean;
   life: boolean;
   ao: boolean;
@@ -73,6 +75,7 @@ function defaults(): Settings {
     model: 'reise',
     rain: false,
     dust: true,
+    viewDepth: true,
     shafts: true,
     life: true,
     ao: true,

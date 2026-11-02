@@ -1,6 +1,15 @@
 import * as THREE from 'three';
 import { rng } from '../paper/InkCanvas';
 
+/** Tiefe einer Aussicht; die Karte liegt als `<name>_depth.jpg` neben dem Panorama. */
+export interface ViewDepth {
+  /** Abstand des nächsten Bildteils: kleiner heißt stärkere Verschiebung */
+  near: number;
+  /** Stärke und Farbe des Dunsts über der Ferne */
+  haze: number;
+  hazeColor: string;
+}
+
 export type ParticleKind = 'birds' | 'snow' | 'leaves' | 'fireflies';
 
 /** Was sich in einer Aussicht bewegt; Bereiche in v der Panoramatextur (0 unten, 1 oben). */
@@ -32,12 +41,22 @@ const uniforms = {
   uWaterRange: { value: new THREE.Vector2(2, 2) },
   uFoliageRange: { value: new THREE.Vector2(2, 2) },
   uStars: { value: 0 },
+  uDepthOn: { value: 0 },
+  uDepthMap: { value: null as THREE.Texture | null },
+  uDepthNear: { value: 0 },
+  uHaze: { value: 0 },
+  uHazeColor: { value: new THREE.Color() },
+  uParallax: { value: new THREE.Vector3() },
 };
 
 const LIFE_HEAD = /* glsl */ `
   uniform float uLifeTime, uLifeOn, uSkyFrom, uStars;
   uniform vec2 uWaterRange, uFoliageRange;
   uniform sampler2D uLifeNoise;
+  uniform float uDepthOn, uDepthNear, uHaze;
+  uniform sampler2D uDepthMap;
+  uniform vec3 uHazeColor, uParallax;
+  varying vec3 vLifeDir;
   float lifeHash(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
     p += dot(p, p + 45.32);
@@ -60,7 +79,28 @@ const LIFE_HEAD = /* glsl */ `
 const LIFE_MAP = /* glsl */ `
   #ifdef USE_MAP
   vec2 lifeUv = vMapUv;
-  vec4 lifeBase = texture2D(map, lifeUv);
+  float depthHaze = 0.0;
+  if (uDepthOn > 0.5) {
+    // Ein Punkt im Abstand D erscheint um Kameraversatz / D verschoben; die Kugel liefert schon
+    // Versatz / Radius. Der Rest kommt hier dazu: Fernes steht still, Nahes wandert.
+    vec3 depthDir = normalize(vLifeDir);
+    vec3 depthOff = uParallax - depthDir * dot(depthDir, uParallax);
+    float depthRing = max(length(depthDir.xz), 0.2);
+    vec2 depthPerDist = vec2(
+      -dot(depthOff, vec3(depthDir.z, 0.0, -depthDir.x) / depthRing) / (depthRing * 6.28318),
+      dot(depthOff, normalize(vec3(0.0, 1.0, 0.0) - depthDir * depthDir.y)) / 1.0482
+    );
+    // Karte ist mit Gamma 0,5 gespeichert. Zweimal lesen, damit Kanten am richtigen Ort landen.
+    float depth = textureLod(uDepthMap, lifeUv, 0.0).r;
+    lifeUv = vMapUv + depthPerDist * (depth * depth / uDepthNear - 1.0 / 300.0);
+    depth = textureLod(uDepthMap, lifeUv, 0.0).r;
+    lifeUv = vMapUv + depthPerDist * (depth * depth / uDepthNear - 1.0 / 300.0);
+    // Dunst nur auf der Landschaft: Der Himmel ist tiefste Ferne, soll aber nicht verblassen
+    depthHaze = uHaze * smoothstep(0.01, 0.06, depth) * (1.0 - smoothstep(0.12, 0.62, depth));
+  }
+  // Ableitungen vom unverschobenen Blick: An Tiefenkanten gäbe es sonst unscharfe Säume
+  vec2 lifeDx = dFdx(vMapUv), lifeDy = dFdy(vMapUv);
+  vec4 lifeBase = textureGrad(map, lifeUv, lifeDx, lifeDy);
   vec2 lifeOff = vec2(0.0);
   vec3 lifeAdd = vec3(0.0);
   float lifeCloud = 0.0;
@@ -107,7 +147,8 @@ const LIFE_MAP = /* glsl */ `
       lifeAdd += star * smoothstep(0.1, 0.2, lum) * (0.45 + 0.55 * sin(t * (1.0 + h * 2.0) + h * 90.0)) * vec3(0.9, 0.95, 1.0) * 0.7;
     }
   }
-  vec4 sampledDiffuseColor = uLifeOn > 0.5 ? texture2D(map, lifeUv + lifeOff) : lifeBase;
+  vec4 sampledDiffuseColor = uLifeOn > 0.5 ? textureGrad(map, lifeUv + lifeOff, lifeDx, lifeDy) : lifeBase;
+  sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, uHazeColor, depthHaze);
   sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, vec3(0.96, 0.97, 1.0), lifeCloud) + lifeAdd;
   diffuseColor *= sampledDiffuseColor;
   #endif
@@ -120,8 +161,26 @@ const LIFE_MAP = /* glsl */ `
 export function animatePanorama(mat: THREE.MeshBasicMaterial): void {
   mat.onBeforeCompile = (shader) => {
     Object.assign(shader.uniforms, uniforms);
+    shader.vertexShader = shader.vertexShader
+      .replace('#include <common>', '#include <common>\nvarying vec3 vLifeDir;')
+      .replace('#include <begin_vertex>', '#include <begin_vertex>\nvLifeDir = position;');
     shader.fragmentShader = LIFE_HEAD + shader.fragmentShader.replace('#include <map_fragment>', LIFE_MAP);
   };
+}
+
+/** Tiefenkarte der aktuellen Aussicht; ohne Karte bleibt das Panorama flach wie bisher. */
+export function setPanoramaDepth(map: THREE.Texture | undefined, depth: ViewDepth | undefined): void {
+  uniforms.uDepthOn.value = map && depth ? 1 : 0;
+  uniforms.uDepthMap.value = map ?? null;
+  if (!depth) return;
+  uniforms.uDepthNear.value = depth.near;
+  uniforms.uHaze.value = depth.haze;
+  uniforms.uHazeColor.value.set(depth.hazeColor);
+}
+
+/** Kameraversatz gegenüber der Grundstellung, in den Koordinaten der Panoramakugel. */
+export function setPanoramaParallax(offset: THREE.Vector3): void {
+  uniforms.uParallax.value.copy(offset);
 }
 
 const PARTICLE_VERT = /* glsl */ `

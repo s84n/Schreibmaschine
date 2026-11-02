@@ -79,6 +79,7 @@ async function main(): Promise<void> {
   stage.room.setRain(settings.rain, false);
   stage.room.setLife(settings.life);
   stage.room.setDust(settings.dust);
+  stage.room.setDepth(settings.viewDepth);
   stage.room.setShafts(settings.shafts);
   stage.setAO(settings.ao);
   stage.setSaver(settings.saver);
@@ -193,6 +194,7 @@ async function main(): Promise<void> {
       if (next.rain !== settings.rain) stage.room.setRain(next.rain);
       if (next.life !== settings.life) stage.room.setLife(next.life);
       if (next.dust !== settings.dust) stage.room.setDust(next.dust);
+      if (next.viewDepth !== settings.viewDepth) stage.room.setDepth(next.viewDepth);
       if (next.shafts !== settings.shafts) stage.room.setShafts(next.shafts);
       if (next.ao !== settings.ao) stage.setAO(next.ao);
       if (next.saver !== settings.saver) stage.setSaver(next.saver);

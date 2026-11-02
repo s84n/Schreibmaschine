@@ -165,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.28.0** (2026-11-02) – Nutzerwunsch → App v1.11.0: Tiefenkarten einmalig mit `tools/depth_maps.py` (Depth Anything V2 Small, Apache-2.0), Parallaxe und Dunst im Himmel-Shader. Nutzer fand Paris gut, deshalb dezent: Städte und harte Kanten `near` 1100, Dunst 0,07; Landschaften `near` 220, Dunst 0,18; New York 650; Ahornwald 600. `near` 120 verzieht in Machu Picchu den Kamm, 170 zerreißt New York. Neue Aussicht: Skript laufen lassen und `depth` in `VIEWS` eintragen.
 - **v0.27.0** (2026-11-02) – Nutzerwunsch → App v1.10.0: Bildrate unten rechts. Weil die Szene in Ruhe drosselt, steht das Ziel daneben; beide werden über ein Fenster von 500 ms gemittelt. Sie zeigt nur gerenderte Bilder der Schleife, keine GPU-Auslastung.
 - **v0.26.0** (2026-11-02) – Nutzer-Feedback → App v1.9.0: Lichtschein unter der Maus entfernt, stattdessen HTML-Beschriftung mit Symbol. `pointermove` zählt nicht mehr als Aktivität für die Bildrate, die Kamera meldet sich selbst. Menü neu: Leiste nur für Häufiges, Klappmenü „Dokument“, Einstellungen in vier Reitern nach Thema (vollständig, die Leiste ist nur Abkürzung), auf kleinen Displays zusätzlich „Start“. Radio und Bücher mit Texturen (`src/scene/Books.ts`); das Radio nutzt das Tischholz, deshalb baut `Room` es im Konstruktor. Kratzer der Patina fallen auf kleinen Dingen groß aus, weil die Kachel 14 cm abdeckt: dort schwach dosieren.
 - **v0.25.0** (2026-11-01) – Nutzerwunsch → App v1.8.0: weiße Vorhänge, verschmutztes Glas, fünf Fensterarten (`src/scene/WindowStyles.ts`). Die Fensterart hängt an der Aussicht (`window` in `VIEWS`), nicht an der Stimmung, und ist keine eigene Einstellung. Rundfenster ohne Vorhänge. Vorhänge enden auf dem Tisch, weil die Platte bis an die Wand reicht. Schmutzschleier nicht aus vielen fast durchsichtigen Verläufen zeichnen: Das rundet in 8 Bit zu sichtbaren Gitterlinien.
@@ -195,6 +196,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## 8. Offene Punkte
 
+- **Tiefe in der Aussicht:** Noch offen: Bildrate auf echter GPU, Nachtansicht und Verhalten in Bewegung nicht vollständig geprüft (Nutzer verzichtete vor v1.11.0 auf weitere Tests), 3D-Vordergrund.
 - **Kaffee-Link eintragen** (`src/config.ts`), vorher Anbieter wählen und Steuer-/Impressumsfrage klären.
 - **Echte Smartphones testen:** Bildschirmtastatur (Android/Gboard, iOS), Vollbild + Lock, Bildrate nachts.
 - Konzeptideen (ungeprüft priorisiert): Schreibziele/Wortzähler, Kurz-Schreibimpulse, Tippen auf den 3D-Tasten, Schnee zum Regen, Papiersorten, Tintenauftrag nach Anschlagstärke, Farbband-Abnutzung.
@@ -208,5 +210,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v1.10.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
+1. v1.11.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

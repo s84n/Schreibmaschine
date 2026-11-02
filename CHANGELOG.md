@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.11.0] – 2026-11-02
+
+### Hinzugefügt
+- **Tiefe in der Aussicht:** Alle 18 Aussichten haben eine Tiefenkarte. Beim Drehen der Kamera wandert Nahes gegen die Ferne, und über der Ferne liegt leichter Dunst. Abschaltbar unter Zimmer → Grafik.
+
 ## [1.10.0] – 2026-11-02
 
 ### Hinzugefügt
