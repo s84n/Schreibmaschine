@@ -495,38 +495,6 @@ export function buildCurtainGeometry(width: number, height: number, seed: number
   return geo;
 }
 
-/** Stapel liegender Bücher. Ursprung = Tischplatte. */
-export function buildBookStack(seed: number): THREE.Group {
-  const r = rng(seed);
-  const g = new THREE.Group();
-  const colors = ['#6a2a26', '#27415e', '#3e5a3f', '#8a6a3a'];
-  const pages = new THREE.MeshStandardMaterial({ color: '#e8dfca', roughness: 0.95 });
-  const covers = new Map(colors.map((color) => [color, new THREE.MeshStandardMaterial({ color, roughness: 0.7 })]));
-  let y = 0;
-  for (let i = 0; i < 3; i++) {
-    const h = 1.8 + r() * 1.2;
-    const w = 19 - i * 2 + r();
-    const d = 13 - i + r();
-    const cover = covers.get(colors[Math.floor(r() * colors.length)])!;
-    const book = new THREE.Group();
-    for (const dy of [0.11, h - 0.11]) {
-      const board = new THREE.Mesh(new THREE.BoxGeometry(w, 0.22, d), cover);
-      board.position.y = dy;
-      book.add(board);
-    }
-    const spine = new THREE.Mesh(new THREE.BoxGeometry(0.3, h, d), cover);
-    spine.position.set(-w / 2, h / 2, 0);
-    const block = new THREE.Mesh(new THREE.BoxGeometry(w - 0.5, h - 0.44, d - 0.4), pages);
-    block.position.y = h / 2;
-    book.add(spine, block);
-    book.position.y = y;
-    book.rotation.y = (r() - 0.5) * 0.35;
-    g.add(book);
-    y += h;
-  }
-  return shadowed(g);
-}
-
 /** Becher mit Bleistiften. Ursprung = Tischplatte. */
 export function buildPencilCup(seed: number): THREE.Group {
   const r = rng(seed);

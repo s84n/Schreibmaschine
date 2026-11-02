@@ -114,8 +114,7 @@ body {
 }
 
 .btn.with-icon,
-.select-wrap,
-.btn-group {
+.select-wrap {
   display: inline-flex;
   align-items: center;
   gap: 6px;
@@ -154,21 +153,35 @@ body {
   opacity: 0.65;
 }
 
-/* Export: ein Symbol, drei Formate */
-.btn-group {
-  gap: 0;
-  padding-left: 9px;
-  color: var(--muted);
+/* Dokument-Menü klappt aus der Leiste nach unten */
+.menu-wrap {
+  position: relative;
 }
 
-.btn-group .btn {
-  padding: 6px 7px;
-  color: var(--ink);
+.doc-menu {
+  position: absolute;
+  top: calc(100% + 10px);
+  left: 0;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 2px;
+  min-width: 170px;
+  padding: 6px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 10px;
+}
+
+.doc-menu .btn {
+  white-space: nowrap;
 }
 
 /* Wird es eng, bleiben in der Leiste nur die Symbole; die Namen stehen im Tooltip */
 @media (max-width: 1320px) {
-  .toolbar .btn.with-icon .lbl {
+  .toolbar > .btn.with-icon .lbl,
+  .toolbar > .menu-wrap > .btn .lbl {
     display: none;
   }
 
@@ -205,6 +218,88 @@ body {
   max-height: calc(100dvh - 84px);
   overflow-y: auto;
   overscroll-behavior: contain;
+}
+
+/* Einstellungen: Kopf und Reiter bleiben stehen, nur der Inhalt rollt */
+.panel.settings {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding-bottom: 0;
+}
+
+.panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.panel-head h2 {
+  margin: 0;
+}
+
+.tabs {
+  flex: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+  border-bottom: 1px solid var(--line);
+}
+
+.tab {
+  font: inherit;
+  font-size: 13px;
+  color: var(--muted);
+  background: none;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  margin-bottom: -1px;
+  padding: 6px 1px;
+  cursor: pointer;
+}
+
+.tab:hover {
+  color: var(--ink);
+}
+
+.tab:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+.tab.active {
+  color: var(--accent);
+  border-bottom-color: var(--accent);
+}
+
+.panel-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  padding: 12px 0 16px;
+}
+
+.panel-body > :first-child {
+  margin-top: 0;
+}
+
+.panel-body .tools:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: 0;
+}
+
+.panel-body h3:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.panel-body .row + .tools {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+  border-bottom: 0;
 }
 
 .tools {
@@ -314,6 +409,9 @@ body.typing canvas {
   top: 0;
   left: 0;
   z-index: 5;
+  display: flex;
+  align-items: center;
+  gap: 7px;
   max-width: 290px;
   padding: 5px 10px;
   font-size: 13px;
@@ -323,6 +421,12 @@ body.typing canvas {
   border-radius: 7px;
   pointer-events: none;
   white-space: nowrap;
+}
+
+.room-label .ico {
+  width: 15px;
+  height: 15px;
+  color: var(--accent);
 }
 
 .room-label[hidden] {

@@ -280,7 +280,7 @@ async function main(): Promise<void> {
   syncHints();
   stage.targetEnabled = targetEnabled;
   stage.canInteract = () => overlay.isStarted && !overlay.isUiHidden;
-  stage.onHover = (id, x, y) => overlay.setRoomLabel(id && overlay.t.roomLabels[id], x, y);
+  stage.onHover = (id, x, y) => overlay.setRoomLabel(id, x, y);
   stage.onTarget = (id) => {
     const t = overlay.t;
     const seen = settings.hintsSeen.includes(id) ? settings.hintsSeen : [...settings.hintsSeen, id];

@@ -1,7 +1,8 @@
 import * as THREE from 'three';
 import { animator, ease, type TweenHandle } from '../animation/Tweens';
-import { buildBookStack, buildCurtainGeometry, buildPencilCup, curtainMaterial, buildRainGlass, Candle, DeskLamp, Dust, FairyLights, LightShafts, PaperStack, Steam } from './Cozy';
-import { buildBooks, buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, Radio, woodBox, type DecorMaterials } from './Decor';
+import { buildBookStack, buildBooks } from './Books';
+import { buildCurtainGeometry, buildPencilCup, curtainMaterial, buildRainGlass, Candle, DeskLamp, Dust, FairyLights, LightShafts, PaperStack, Steam } from './Cozy';
+import { buildMug, buildPicture, buildShelf, buildTrailingPlant, MUG_TURN, Radio, woodBox, type DecorMaterials } from './Decor';
 import { mergeGeometries } from 'three/examples/jsm/utils/BufferGeometryUtils.js';
 import { mergeStatic } from './merge';
 import { buildGlassDirt, buildWindowStyle, WIN, WINDOW_STYLES, type WindowStyleId } from './WindowStyles';
@@ -113,7 +114,7 @@ export class Room {
   private shaftStrength = 1;
   readonly fairy = new FairyLights(WIN.x0 - 10, WIN.x1 + 10, WIN.y1 + 7, WALL_Z + 2.2);
   readonly lamp = new DeskLamp(LAMP_AIM.clone().sub(LAMP_POS));
-  readonly radio = new Radio();
+  readonly radio: Radio;
   readonly targets = new RoomTargets();
   private calm = false;
   private readonly windowGroups = new Map<WindowStyleId, THREE.Group>();
@@ -130,6 +131,7 @@ export class Room {
   constructor(private readonly scene: THREE.Scene, private readonly anisotropy: number, private readonly hiRes: boolean) {
     this.group.name = 'room';
     const deskMat = this.deskMaterial();
+    this.radio = new Radio(deskMat);
     // Große Flächen zuletzt: Was davorsteht, ist dann schon in der Tiefe und spart ihre teuren Pixel
     for (const part of [this.buildDesk(deskMat), this.buildShell(), this.buildReveal(), this.buildGlass()]) {
       mergeStatic(part);
@@ -193,18 +195,18 @@ export class Room {
     };
     const t = this.targets;
     const { x: cx, z: cz } = CANDLE_POS;
-    t.add('candle', box(11, 19, 11, cx, DESK_Y + 9, cz), new THREE.Vector3(cx, DESK_Y + 15, cz), 26);
+    t.add('candle', box(11, 19, 11, cx, DESK_Y + 9, cz), new THREE.Vector3(cx, DESK_Y + 15, cz));
     const head = this.lamp.head.clone().add(LAMP_POS);
     // Fuß, Stab und Schirm: Die ganze Lampe ist anklickbar
-    t.add('lamp', box(19, head.y - DESK_Y + 6, 16, LAMP_POS.x + 2, (head.y + DESK_Y + 6) / 2, LAMP_POS.z), head.clone().add(new THREE.Vector3(0, 6, 0)), 34);
+    t.add('lamp', box(19, head.y - DESK_Y + 6, 16, LAMP_POS.x + 2, (head.y + DESK_Y + 6) / 2, LAMP_POS.z), head.clone().add(new THREE.Vector3(0, 6, 0)));
     const r = this.radio;
     const radioPos = r.group.position;
-    t.add('radio', box(r.size.w + 3, r.size.h + 3, r.size.d + 4, radioPos.x, radioPos.y + r.size.h / 2, radioPos.z), radioPos.clone().add(new THREE.Vector3(r.size.w / 2 - 1, r.size.h + 2, 3)), 34);
-    t.add('stack', box(24, 6, 32, STACK_POS.x, DESK_Y + 3, STACK_POS.z), new THREE.Vector3(STACK_POS.x + 2, DESK_Y + 3, STACK_POS.z - 11), 42);
-    t.add('mug', box(14, 14, 14, MUG_POS.x, DESK_Y + 6, MUG_POS.z), new THREE.Vector3(MUG_POS.x + 6, DESK_Y + 12, MUG_POS.z), 24);
-    // Das Fenster zuletzt: Es liegt hinter allem und leuchtet nur schwach auf
+    t.add('radio', box(r.size.w + 3, r.size.h + 3, r.size.d + 4, radioPos.x, radioPos.y + r.size.h / 2, radioPos.z), radioPos.clone().add(new THREE.Vector3(r.size.w / 2 - 1, r.size.h + 2, 3)));
+    t.add('stack', box(24, 6, 32, STACK_POS.x, DESK_Y + 3, STACK_POS.z), new THREE.Vector3(STACK_POS.x + 2, DESK_Y + 3, STACK_POS.z - 11));
+    t.add('mug', box(14, 14, 14, MUG_POS.x, DESK_Y + 6, MUG_POS.z), new THREE.Vector3(MUG_POS.x + 6, DESK_Y + 12, MUG_POS.z));
+    // Das Fenster zuletzt: Es liegt hinter allem
     const pane = box(WIN.x1 - WIN.x0, WIN.y1 - WIN.y0, 0.2, (WIN.x0 + WIN.x1) / 2, (WIN.y0 + WIN.y1) / 2, WALL_Z - 3);
-    t.add('window', pane, new THREE.Vector3(WIN.x1 - 36, WIN.y0 + 28, WALL_Z - 2), 150, false);
+    t.add('window', pane, new THREE.Vector3(WIN.x1 - 36, WIN.y0 + 28, WALL_Z - 2));
   }
 
   /** Ruhige Bewegung: Flamme, Staub, Regen und Lichtstrahlen werden langsam, die Aussicht steht still. */

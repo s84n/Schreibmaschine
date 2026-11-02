@@ -3,6 +3,7 @@ import { DONATE_URL } from '../config';
 import { LAYOUTS, type LayoutId } from '../input/layouts';
 import { layoutText } from '../state/TextLayout';
 import { VIEWS, type ViewId } from '../scene/Room';
+import type { RoomTargetId } from '../scene/Targets';
 import type { CameraView, Quality } from '../scene/Scene';
 import { RIBBONS, type RibbonId } from '../state/Document';
 import { BODY_COLORS, MODELS, type BodyColorId, type ModelId } from '../typewriter/materials';
@@ -37,6 +38,8 @@ export interface OverlayActions {
 
 export type LetterState = 'ready' | 'playing' | 'done';
 export type PhoneState = 'input' | 'playing' | 'done';
+/** Reiter der Einstellungen; „Start“ gibt es nur, wenn die Werkzeugleiste aus Platzgründen fehlt. */
+type PanelTab = 'start' | 'writing' | 'room' | 'sound' | 'general';
 
 /** Längere Texte tippt auch die geduldigste Maschine nicht mehr in vertretbarer Zeit. */
 const PHONE_MAX_CHARS = 30000;
@@ -73,6 +76,9 @@ const iconBtn = (name: IconName, title: string, cls = ''): HTMLButtonElement => 
 
 const MOOD_ICONS: Record<MoodId, IconName> = { rainnight: 'rain', sunday: 'coffee', kyoto: 'leaf', winter: 'snow', stars: 'stars', bosporus: 'waves', rio: 'waves', paris: 'coffee', udaipur: 'sun', elmina: 'waves', granada: 'sun', laboca: 'rain', andes: 'mountain', serengeti: 'sun', alps: 'mountain', nordic: 'snow' };
 
+/** Symbol in der Beschriftung am Mauszeiger. */
+const ROOM_ICONS: Record<RoomTargetId, IconName> = { candle: 'flame', lamp: 'lamp', window: 'window', stack: 'read', radio: 'music', mug: 'coffee' };
+
 /** Kleiner Pfeil für alles, was aufklappt. */
 const chevronIcon = (): SVGSVGElement => {
   const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -91,6 +97,9 @@ export class Overlay {
   private started = false;
   private panelOpen = false;
   private moodsOpen = false;
+  private docOpen = false;
+  private panelTab: PanelTab = small.matches ? 'start' : 'writing';
+  private labelFor?: RoomTargetId;
   private phone?: PhoneState;
   private phoneText = '';
   private phoneFast = false;
@@ -110,10 +119,15 @@ export class Overlay {
     document.body.append(this.label);
     this.render();
     small.addEventListener('change', () => this.render());
-    // Ein Klick daneben schließt die Stimmungen wieder
-    window.addEventListener('pointerdown', (e) => {
-      if (!this.moodsOpen || (e.target as Element).closest?.('.moods')) return;
-      this.moodsOpen = false;
+    // Ein Klick daneben schließt die Klappmenüs wieder. Erst beim Klick, nicht schon beim Drücken:
+    // Sonst baut das Neuzeichnen den Knopf unter dem Zeiger ab und der Klick auf ihn geht verloren.
+    window.addEventListener('click', (e) => {
+      const target = e.target as Element;
+      const closeMoods = this.moodsOpen && !target.closest?.('.moods');
+      const closeDoc = this.docOpen && !target.closest?.('.menu-wrap');
+      if (!closeMoods && !closeDoc) return;
+      if (closeMoods) this.moodsOpen = false;
+      if (closeDoc) this.docOpen = false;
       this.render();
     });
   }
@@ -141,27 +155,31 @@ export class Overlay {
 
   private setUiHidden(on: boolean): void {
     this.uiHidden = on;
-    if (on && this.moodsOpen) {
-      this.moodsOpen = false;
+    if (on && (this.moodsOpen || this.docOpen)) {
+      this.moodsOpen = this.docOpen = false;
       this.render();
     }
     document.body.classList.toggle('typing', on);
-    if (on) this.label.hidden = true;
+    if (on) this.setRoomLabel(undefined, 0, 0);
     this.actions.onUiVisible(!on);
   }
 
   /** Beschriftung am Mauszeiger über einem Ding im Zimmer. */
-  setRoomLabel(text: string | undefined, x: number, y: number): void {
-    this.label.hidden = !text;
-    if (!text) return;
-    this.label.textContent = text;
+  setRoomLabel(id: RoomTargetId | undefined, x: number, y: number): void {
+    this.label.hidden = !id;
+    if (id !== this.labelFor) {
+      this.labelFor = id;
+      if (id) this.label.replaceChildren(icon(ROOM_ICONS[id]), this.t.roomLabels[id]);
+    }
+    if (!id) return;
     this.label.style.transform = `translate(${Math.min(x + 16, innerWidth - 300)}px, ${Math.max(y - 34, 6)}px)`;
   }
 
   /** Esc: das oberste Fenster schließen. Liefert false, wenn keines offen war. */
   closeTop(): boolean {
-    if (!this.coffeeOpen && !this.panelOpen && !this.moodsOpen) return false;
+    if (!this.coffeeOpen && !this.panelOpen && !this.moodsOpen && !this.docOpen) return false;
     if (this.moodsOpen) this.moodsOpen = false;
+    else if (this.docOpen) this.docOpen = false;
     else if (this.coffeeOpen) this.coffeeOpen = false;
     else this.panelOpen = false;
     this.render();
@@ -238,7 +256,7 @@ export class Overlay {
   private render(): void {
     const t = this.t;
     const s = this.settings;
-    const scroll = this.root.querySelector('.panel')?.scrollTop ?? 0;
+    const scroll = this.root.querySelector('.panel-body')?.scrollTop ?? 0;
     this.root.replaceChildren();
     this.root.classList.toggle('compact', small.matches);
     document.documentElement.lang = s.lang;
@@ -253,13 +271,19 @@ export class Overlay {
     const night = s.time === 'night';
     const time = iconBtn(night ? 'moon' : 'sun', t.dayNight);
     time.onclick = () => this.update({ time: night ? 'day' : 'night' });
-    const gear = iconBtn('gear', t.settings);
+    const gear = iconBtn('gear', t.settings, this.panelOpen ? 'active' : '');
     gear.onclick = () => {
       this.panelOpen = !this.panelOpen;
       this.render();
     };
     const tools: HTMLElement[] = [];
-    if (!small.matches) tools.push(...this.actionButtons(), el('span', 'sep'));
+    if (!small.matches) {
+      const lamp = iconBtn('lamp', t.lamp, s.lamp ? 'active' : '');
+      lamp.onclick = () => this.update({ lamp: !s.lamp });
+      const mute = iconBtn(s.muted ? 'mute' : 'sound', t.mute, s.muted ? 'active' : '');
+      mute.onclick = () => this.update({ muted: !s.muted });
+      tools.push(...this.writingButtons(), el('span', 'sep'), this.documentMenu(), el('span', 'sep'), ...this.pickers(), el('span', 'sep'), lamp, mute);
+    }
     tools.push(time);
     if (touch.matches && !this.letter) {
       const kb = iconBtn('keyboard', t.keyboard, `kb${this.keyboardOpen ? ' active' : ''}`);
@@ -279,7 +303,7 @@ export class Overlay {
     if (this.panelOpen) {
       const panel = this.renderPanel();
       this.root.append(panel);
-      panel.scrollTop = scroll;
+      panel.querySelector('.panel-body')!.scrollTop = scroll;
     }
     if (this.coffeeOpen) this.root.append(this.renderCoffee());
     if (this.letter) this.root.append(this.renderLetter());
@@ -297,10 +321,9 @@ export class Overlay {
     this.root.append(el('div', 'toast'));
   }
 
-  /** Werkzeuge, die je nach Platz in der Leiste oder im Menü sitzen. */
-  private actionButtons(): HTMLElement[] {
+  /** Was man beim Schreiben ständig braucht. */
+  private writingButtons(): HTMLElement[] {
     const t = this.t;
-    const s = this.settings;
     const toPaper = this.view === 'machine';
     const viewBtn = toolBtn(toPaper ? 'paper' : 'machine', toPaper ? t.viewPaper : t.viewMachine);
     viewBtn.onclick = () => {
@@ -308,23 +331,75 @@ export class Overlay {
       this.actions.onView(this.view);
       this.render();
     };
-    const sheetBtn = toolBtn('sheet', t.newSheet, t.newSheetTitle);
-    sheetBtn.onclick = () => this.actions.onNewSheet();
-    const share = toolBtn('share', t.share, t.shareTitle);
-    share.onclick = () => this.actions.onShare();
     const readBtn = toolBtn('read', t.read, t.roomLabels.stack);
     readBtn.onclick = () => this.actions.onRead();
-    const exportGroup = el('div', 'btn-group');
-    exportGroup.setAttribute('role', 'group');
-    exportGroup.setAttribute('aria-label', t.exportTitle);
-    exportGroup.title = t.exportTitle;
-    exportGroup.append(icon('download'));
+    if (this.letter) return [viewBtn, readBtn];
+    const sheetBtn = toolBtn('sheet', t.newSheet, t.newSheetTitle);
+    sheetBtn.onclick = () => this.actions.onNewSheet();
+    return [viewBtn, readBtn, sheetBtn];
+  }
+
+  /** Was aus dem Manuskript hinausführt: speichern, teilen, neu anfangen. */
+  private documentButtons(after: () => void = () => undefined): HTMLElement[] {
+    const t = this.t;
+    const items: HTMLElement[] = [];
     for (const [kind, label] of [['pdf', t.exportPdf], ['png', t.exportPng], ['txt', t.exportTxt]] as const) {
-      const b = el('button', 'btn', label);
-      b.title = `${t.exportTitle} ${label}`;
-      b.onclick = () => this.actions.onExport(kind);
-      exportGroup.append(b);
+      const title = `${t.exportTitle} ${label}`;
+      const b = toolBtn('download', label, title);
+      b.onclick = () => {
+        after();
+        this.actions.onExport(kind);
+      };
+      items.push(b);
     }
+    const share = toolBtn('share', t.share, t.shareTitle);
+    share.onclick = () => {
+      after();
+      this.actions.onShare();
+    };
+    items.push(share);
+    if (!this.letter) {
+      const fresh = toolBtn('fresh', t.newDocument, t.newDocumentTitle);
+      fresh.onclick = () => {
+        this.panelOpen = false;
+        after();
+        this.render();
+        this.actions.onNewDocument();
+      };
+      items.push(fresh);
+    }
+    return items;
+  }
+
+  /** Klappmenü in der Leiste, damit die Formate dort nicht dauerhaft Platz belegen. */
+  private documentMenu(): HTMLElement {
+    const t = this.t;
+    const wrap = el('div', 'menu-wrap');
+    const toggle = toolBtn('download', t.document, t.documentTitle, this.docOpen ? 'active' : '');
+    toggle.setAttribute('aria-expanded', String(this.docOpen));
+    toggle.append(chevronIcon());
+    toggle.onclick = () => {
+      this.docOpen = !this.docOpen;
+      this.render();
+    };
+    wrap.append(toggle);
+    if (this.docOpen) {
+      const menu = el('div', 'doc-menu');
+      menu.append(
+        ...this.documentButtons(() => {
+          this.docOpen = false;
+          this.render();
+        }),
+      );
+      wrap.append(menu);
+    }
+    return wrap;
+  }
+
+  /** Aussicht und Musik wechselt man oft: Sie bleiben in der Leiste direkt erreichbar. */
+  private pickers(): HTMLElement[] {
+    const t = this.t;
+    const s = this.settings;
     // Auswahlfeld mit Symbol: Das Symbol sagt, worum es geht, das Feld zeigt nur noch den Wert
     const picker = (name: IconName, title: string, cls: string, options: [string, string][], value: string, onChange: (v: string) => void) => {
       const wrap = el('label', `btn select-wrap ${cls}`.trim());
@@ -344,10 +419,10 @@ export class Overlay {
       wrap.append(icon(name), sel, chevronIcon());
       return wrap;
     };
-    const outlook = picker('window', t.view, '', (Object.keys(VIEWS) as ViewId[]).map((id) => [id, t.views[id]]), s.view, (v) => this.update({ view: v as ViewId }));
-    const music = picker('music', t.music, s.track ? 'active' : '', [['', t.musicOff], ...TRACKS.map((id): [string, string] => [id, trackTitle(id)])], s.track, (v) => this.update({ track: v as TrackId | '' }));
-    if (this.letter) return [viewBtn, readBtn, el('span', 'sep'), exportGroup, el('span', 'sep'), outlook, music];
-    return [viewBtn, readBtn, sheetBtn, el('span', 'sep'), exportGroup, share, el('span', 'sep'), outlook, music];
+    return [
+      picker('window', t.view, '', (Object.keys(VIEWS) as ViewId[]).map((id) => [id, t.views[id]]), s.view, (v) => this.update({ view: v as ViewId })),
+      picker('music', t.music, s.track ? 'active' : '', [['', t.musicOff], ...TRACKS.map((id): [string, string] => [id, trackTitle(id)])], s.track, (v) => this.update({ track: v as TrackId | '' })),
+    ];
   }
 
   /** Stimmungen: ein Klick stellt alles passend ein. In der Leiste klappt die Liste erst auf Wunsch auf. */
@@ -496,99 +571,126 @@ export class Overlay {
     return box;
   }
 
+  /** Einstellungen nach Themen in Reitern; die Leiste ist nur die Abkürzung für das Häufigste. */
   private renderPanel(): HTMLElement {
     const t = this.t;
-    const s = this.settings;
-    const panel = el('section', 'panel');
-    panel.append(el('h2', '', t.settings));
+    const panel = el('section', 'panel settings');
 
-    if (small.matches) {
-      if (!this.letter) panel.append(this.renderMoods(false));
-      const tools = el('div', 'tools');
-      tools.append(...this.actionButtons().filter((b) => !b.classList.contains('sep')));
-      panel.append(tools);
-    }
-    const extras = el('div', 'tools');
-    if (!this.letter) {
-      const fresh = toolBtn('fresh', t.newDocument, t.newDocumentTitle);
-      fresh.onclick = () => {
-        this.panelOpen = false;
+    const head = el('header', 'panel-head');
+    const close = iconBtn('close', t.close);
+    close.onclick = () => {
+      this.panelOpen = false;
+      this.render();
+    };
+    head.append(el('h2', '', t.settings), close);
+
+    // Auf großen Fenstern steckt „Start“ in der Leiste; beim Umschalten zurück auf den ersten Reiter
+    const tab = !small.matches && this.panelTab === 'start' ? 'writing' : this.panelTab;
+    const tabs = el('div', 'tabs');
+    tabs.setAttribute('role', 'tablist');
+    const entries: [PanelTab, string][] = [['writing', t.groupWriting], ['room', t.groupRoom], ['sound', t.groupSound], ['general', t.tabGeneral]];
+    if (small.matches) entries.unshift(['start', t.tabStart]);
+    for (const [id, label] of entries) {
+      const b = el('button', `tab${id === tab ? ' active' : ''}`, label);
+      b.setAttribute('role', 'tab');
+      b.setAttribute('aria-selected', String(id === tab));
+      b.onclick = () => {
+        this.panelTab = id;
         this.render();
-        this.actions.onNewDocument();
+        this.root.querySelector('.panel-body')!.scrollTop = 0;
       };
-      extras.append(fresh);
+      tabs.append(b);
     }
-    if (document.documentElement.requestFullscreen) {
-      const fs = toolBtn('fullscreen', t.fullscreen);
-      fs.onclick = () => {
-        if (document.fullscreenElement) void document.exitFullscreen();
-        else void document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => undefined);
-      };
-      extras.append(fs);
-    }
-    if (DONATE_URL) {
-      const coffee = el('button', 'btn', t.coffee);
-      coffee.onclick = () => this.openCoffee();
-      extras.append(coffee);
-    }
-    if (extras.childElementCount) panel.append(extras);
 
+    const body = el('div', 'panel-body');
+    if (tab === 'start') this.fillStartTab(body);
+    else if (tab === 'writing') this.fillWritingTab(body);
+    else if (tab === 'room') this.fillRoomTab(body);
+    else if (tab === 'sound') this.fillSoundTab(body);
+    else this.fillGeneralTab(body);
+    panel.append(head, tabs, body);
+    return panel;
+  }
+
+  /** Bausteine für die Zeilen eines Reiters. */
+  private rows(body: HTMLElement) {
     const row = (label: string, control: HTMLElement) => {
       const r = el('label', 'row');
       r.append(el('span', '', label), control);
-      panel.append(r);
+      body.append(r);
     };
-    const select = <T extends string>(value: T, options: [T, string][], onChange: (v: T) => void) => {
-      const sel = el('select');
-      for (const [v, label] of options) {
-        const o = el('option', '', label);
-        o.value = v;
-        o.selected = v === value;
-        sel.append(o);
-      }
-      sel.onchange = () => onChange(sel.value as T);
-      return sel;
+    return {
+      row,
+      group: (label: string) => body.append(el('h3', '', label)),
+      select: <T extends string>(label: string, value: T, options: [T, string][], onChange: (v: T) => void) => {
+        const sel = el('select');
+        for (const [v, text] of options) {
+          const o = el('option', '', text);
+          o.value = v;
+          o.selected = v === value;
+          sel.append(o);
+        }
+        sel.onchange = () => onChange(sel.value as T);
+        row(label, sel);
+      },
+      toggle: (label: string, checked: boolean, onChange: (v: boolean) => void) => {
+        const c = el('input');
+        c.type = 'checkbox';
+        c.checked = checked;
+        c.onchange = () => onChange(c.checked);
+        row(label, c);
+      },
     };
+  }
 
-    const group = (label: string) => panel.append(el('h3', '', label));
+  /** Nur auf kleinen Displays: alles, was sonst in der Leiste sitzt. */
+  private fillStartTab(body: HTMLElement): void {
+    if (!this.letter) body.append(this.renderMoods(false));
+    const tools = el('div', 'tools');
+    tools.append(...this.writingButtons(), ...this.documentButtons());
+    body.append(tools);
+  }
 
-    group(t.groupWriting);
-    row(t.model, select<ModelId>(s.model, (Object.keys(MODELS) as ModelId[]).map((id) => [id, t.models[id]]), (model) => this.update({ model, color: MODELS[model].color })));
-    row(t.ribbon, select<RibbonId>(s.ribbon, (Object.keys(RIBBONS) as RibbonId[]).map((id) => [id, t.ribbons[id]]), (ribbon) => this.update({ ribbon })));
-    const toggle = (label: string, checked: boolean, onChange: (v: boolean) => void) => {
-      const c = el('input');
-      c.type = 'checkbox';
-      c.checked = checked;
-      c.onchange = () => onChange(c.checked);
-      row(label, c);
-    };
+  private fillWritingTab(body: HTMLElement): void {
+    const t = this.t;
+    const s = this.settings;
+    const { group, select, toggle } = this.rows(body);
+    group(t.groupMachine);
+    select<ModelId>(t.model, s.model, (Object.keys(MODELS) as ModelId[]).map((id) => [id, t.models[id]]), (model) => this.update({ model, color: MODELS[model].color }));
+    select<BodyColorId>(t.color, s.color, (Object.keys(BODY_COLORS) as BodyColorId[]).map((id) => [id, t.colors[id]]), (color) => this.update({ color }));
+    select<RibbonId>(t.ribbon, s.ribbon, (Object.keys(RIBBONS) as RibbonId[]).map((id) => [id, t.ribbons[id]]), (ribbon) => this.update({ ribbon }));
+    select<LayoutId>(t.layout, s.layout, (Object.keys(LAYOUTS) as LayoutId[]).map((id) => [id, LAYOUTS[id].label]), (layout) => this.update({ layout }));
+    group(t.groupPaper);
+    select<PaperTone>(t.paperTone, s.paperTone, [['classic', t.paperTones.classic], ['cream', t.paperTones.cream]], (paperTone) => this.update({ paperTone }));
+    select<TextSize>(t.textSize, s.textSize, [['normal', t.textSizes.normal], ['large', t.textSizes.large], ['xlarge', t.textSizes.xlarge]], (textSize) => this.update({ textSize }));
     toggle(t.softWrap, s.softWrap, (softWrap) => this.update({ softWrap }));
     toggle(t.correction, s.correction, (correction) => this.update({ correction }));
-    panel.append(el('p', 'credits', t.correctionHint));
-    row(t.paperTone, select<PaperTone>(s.paperTone, [['classic', t.paperTones.classic], ['cream', t.paperTones.cream]], (paperTone) => this.update({ paperTone })));
-    row(t.textSize, select<TextSize>(s.textSize, [['normal', t.textSizes.normal], ['large', t.textSizes.large], ['xlarge', t.textSizes.xlarge]], (textSize) => this.update({ textSize })));
-    row(t.layout, select<LayoutId>(s.layout, (Object.keys(LAYOUTS) as LayoutId[]).map((id) => [id, LAYOUTS[id].label]), (layout) => this.update({ layout })));
-    row(t.language, select<Lang>(s.lang, [['de', 'Deutsch'], ['en', 'English']], (lang) => this.update({ lang })));
-    row(t.color, select<BodyColorId>(s.color, (Object.keys(BODY_COLORS) as BodyColorId[]).map((id) => [id, t.colors[id]]), (color) => this.update({ color })));
+    body.append(el('p', 'credits', t.correctionHint));
+  }
 
-    group(t.groupRoom);
+  private fillRoomTab(body: HTMLElement): void {
+    const t = this.t;
+    const s = this.settings;
+    const { group, select, toggle } = this.rows(body);
+    group(t.groupOutlook);
+    select<ViewId>(t.view, s.view, (Object.keys(VIEWS) as ViewId[]).map((id) => [id, t.views[id]]), (view) => this.update({ view }));
+    toggle(t.night, s.time === 'night', (night) => this.update({ time: night ? 'night' : 'day' }));
     toggle(t.lamp, s.lamp, (lamp) => this.update({ lamp }));
     toggle(t.rain, s.rain, (rain) => this.update({ rain }));
     toggle(t.life, s.life, (life) => this.update({ life }));
     toggle(t.hints, s.hints, (hints) => this.update({ hints, hintsSeen: hints ? [] : s.hintsSeen }));
-
-    group(t.groupComfort);
-    toggle(t.calm, s.calm, (calm) => this.update({ calm }));
-    toggle(t.saver, s.saver, (saver) => this.update({ saver }));
-
     group(t.groupGraphics);
-    row(t.quality, select<Quality>(s.quality, [['high', t.qualityHigh], ['low', t.qualityLow]], (quality) => this.update({ quality })));
+    select<Quality>(t.quality, s.quality, [['high', t.qualityHigh], ['low', t.qualityLow]], (quality) => this.update({ quality }));
+    toggle(t.saver, s.saver, (saver) => this.update({ saver }));
     toggle(t.dust, s.dust, (dust) => this.update({ dust }));
     toggle(t.shafts, s.shafts, (shafts) => this.update({ shafts }));
     toggle(t.ao, s.ao, (ao) => this.update({ ao }));
+  }
 
-    group(t.groupSound);
-    toggle(t.softStrike, s.softStrike, (softStrike) => this.update({ softStrike }));
+  private fillSoundTab(body: HTMLElement): void {
+    const t = this.t;
+    const s = this.settings;
+    const { row, group, select, toggle } = this.rows(body);
     const slider = (label: string, key: 'volume' | 'musicVolume' | 'rainVolume' | 'bellVolume' | 'returnVolume') => {
       const r = el('input');
       r.type = 'range';
@@ -605,24 +707,39 @@ export class Overlay {
       r.onchange = () => r.blur();
       row(label, r);
     };
+    toggle(t.mute, s.muted, (muted) => this.update({ muted }));
+    group(t.groupMusic);
+    select<TrackId | ''>(t.song, s.track, [['', t.musicOff], ...TRACKS.map((id): [TrackId, string] => [id, trackTitle(id)])], (track) => this.update({ track }));
+    slider(t.musicVolume, 'musicVolume');
+    slider(t.rainVolume, 'rainVolume');
+    group(t.groupTyping);
+    toggle(t.softStrike, s.softStrike, (softStrike) => this.update({ softStrike }));
     slider(t.volume, 'volume');
     slider(t.bellVolume, 'bellVolume');
     slider(t.returnVolume, 'returnVolume');
-    slider(t.musicVolume, 'musicVolume');
-    slider(t.rainVolume, 'rainVolume');
+  }
 
-    const mute = el('input');
-    mute.type = 'checkbox';
-    mute.checked = s.muted;
-    mute.onchange = () => this.update({ muted: mute.checked });
-    row(t.mute, mute);
-
-    const close = el('button', 'btn', t.close);
-    close.onclick = () => {
-      this.panelOpen = false;
-      this.render();
-    };
-    panel.append(el('p', 'credits', t.credits), close);
-    return panel;
+  private fillGeneralTab(body: HTMLElement): void {
+    const t = this.t;
+    const s = this.settings;
+    const { select, toggle } = this.rows(body);
+    select<Lang>(t.language, s.lang, [['de', 'Deutsch'], ['en', 'English']], (lang) => this.update({ lang }));
+    toggle(t.calm, s.calm, (calm) => this.update({ calm }));
+    const extras = el('div', 'tools');
+    if (document.documentElement.requestFullscreen) {
+      const fs = toolBtn('fullscreen', t.fullscreen);
+      fs.onclick = () => {
+        if (document.fullscreenElement) void document.exitFullscreen();
+        else void document.documentElement.requestFullscreen({ navigationUI: 'hide' }).catch(() => undefined);
+      };
+      extras.append(fs);
+    }
+    if (DONATE_URL) {
+      const coffee = el('button', 'btn', t.coffee);
+      coffee.onclick = () => this.openCoffee();
+      extras.append(coffee);
+    }
+    if (extras.childElementCount) body.append(extras);
+    body.append(el('p', 'credits', t.credits));
   }
 }

@@ -140,7 +140,8 @@ export class Stage {
     this.renderer.shadowMap.autoUpdate = false;
     this.renderer.shadowMap.needsUpdate = true;
     this.bindTargets();
-    for (const ev of ['keydown', 'pointerdown', 'pointermove', 'wheel', 'touchmove']) window.addEventListener(ev, () => this.poke(), { passive: true });
+    // Eine bloße Mausbewegung ändert am Bild nichts; dreht sie die Kamera, meldet das die Steuerung
+    for (const ev of ['keydown', 'pointerdown', 'wheel', 'touchmove']) window.addEventListener(ev, () => this.poke(), { passive: true });
     this.controls.addEventListener('change', () => this.poke());
     this.resize();
     this.renderer.setAnimationLoop(() => this.frame());
@@ -322,7 +323,10 @@ export class Stage {
       if (id) this.onTarget?.(id);
     });
     el.addEventListener('pointermove', (e) => {
-      if (e.pointerType === 'mouse' && !e.buttons) this.pendingHover = e;
+      if (e.pointerType !== 'mouse') return;
+      if (!e.buttons) this.pendingHover = e;
+      // Beim Kameradrehen bliebe die Beschriftung sonst an einem Ding hängen, das längst woanders ist
+      else if (this.hovered) this.setHovered(undefined, 0, 0);
     });
     el.addEventListener('pointerleave', () => this.setHovered(undefined, 0, 0));
   }
@@ -330,10 +334,7 @@ export class Stage {
   private setHovered(id: RoomTargetId | undefined, x: number, y: number): void {
     const changed = id !== this.hovered;
     this.hovered = id;
-    if (changed) {
-      this.room.targets.setHovered(id);
-      this.renderer.domElement.style.cursor = id ? 'pointer' : '';
-    }
+    if (changed) this.renderer.domElement.style.cursor = id ? 'pointer' : '';
     this.onHover?.(id, x, y);
   }
 
@@ -435,7 +436,7 @@ export class Stage {
     const now = performance.now();
     // Die Bildrate folgt dem, was gerade passiert: Das hält den Lüfter leise
     const quiet = now - this.lastActivity;
-    const busy = animator.busy || quiet < ACTIVE_MS || this.room.targets.settling;
+    const busy = animator.busy || quiet < ACTIVE_MS;
     const rates = this.saver ? FPS_SAVER : FPS;
     const fps = this.covered ? rates.covered : busy ? rates.active : !document.hasFocus() ? rates.background : quiet < IDLE_MS ? rates.idle : rates.longIdle;
     if (now < this.nextFrame - 1) return;

@@ -1,21 +1,15 @@
 import * as THREE from 'three';
-import { softTexture } from './Cozy';
 
 export type RoomTargetId = 'candle' | 'lamp' | 'window' | 'stack' | 'radio' | 'mug';
 
 interface Target {
   id: RoomTargetId;
   hit: THREE.Object3D;
-  aura: THREE.Sprite;
-  auraPower: number;
   marker: THREE.Sprite;
   /** Punkt soll gezeigt werden (Hinweise an, noch nicht benutzt) */
   shown: boolean;
   markerLevel: number;
 }
-
-const AURA = '#ffc982';
-const AURA_OPACITY = 0.3;
 
 let dotTex: THREE.Texture | undefined;
 /** Bernsteinfarbener Punkt mit dunklem Rand: auf heller Wand wie im Dunkeln gut zu sehen. */
@@ -42,35 +36,28 @@ function dotTexture(): THREE.Texture {
 
 /**
  * Was im Zimmer bedienbar ist, soll man im Zimmer sehen: Ein sanft pulsierender Punkt sitzt an
- * jedem Ding, bis man es einmal benutzt hat, und unter dem Mauszeiger leuchtet es warm auf.
+ * jedem Ding, bis man es einmal benutzt hat. Unter dem Mauszeiger zeigt die Oberfläche nur eine
+ * kleine Beschriftung: Ein Lichtschein in der Szene kostete je Pixel und lenkte beim Schreiben ab.
  */
 export class RoomTargets {
   readonly group = new THREE.Group();
   private readonly list: Target[] = [];
-  private hovered?: Target;
   private time = 0;
   private uiVisible = true;
   /** Punkte pulsieren nicht, wenn Bewegung reduziert ist */
   calm = false;
 
   /** `hit` ist unsichtbar und darf größer sein als das Ding, damit es leicht zu treffen ist. */
-  add(id: RoomTargetId, hit: THREE.Object3D, anchor: THREE.Vector3, auraSize: number, throughObjects = true): void {
+  add(id: RoomTargetId, hit: THREE.Object3D, anchor: THREE.Vector3): void {
     hit.traverse((o) => (o.visible = false));
-    const aura = new THREE.Sprite(
-      new THREE.SpriteMaterial({ map: softTexture(), color: AURA, transparent: true, opacity: 0, blending: THREE.AdditiveBlending, depthWrite: false, depthTest: !throughObjects }),
-    );
-    aura.position.copy(hit.position);
-    aura.scale.setScalar(auraSize);
-    aura.visible = false;
-    aura.renderOrder = 20;
     const marker = new THREE.Sprite(
       new THREE.SpriteMaterial({ map: dotTexture(), transparent: true, opacity: 0, depthWrite: false, depthTest: false, toneMapped: false, sizeAttenuation: false }),
     );
     marker.position.copy(anchor);
     marker.visible = false;
     marker.renderOrder = 21;
-    this.group.add(hit, aura, marker);
-    this.list.push({ id, hit, aura, auraPower: 0, marker, shown: false, markerLevel: 0 });
+    this.group.add(hit, marker);
+    this.list.push({ id, hit, marker, shown: false, markerLevel: 0 });
   }
 
   /** Nächstes bedienbares Ding entlang des Strahls samt Entfernung. */
@@ -84,10 +71,6 @@ export class RoomTargets {
     return best;
   }
 
-  setHovered(id: RoomTargetId | undefined): void {
-    this.hovered = this.list.find((t) => t.id === id);
-  }
-
   /** Welche Punkte überhaupt noch gezeigt werden sollen. */
   setShown(shown: (id: RoomTargetId) => boolean): void {
     for (const t of this.list) t.shown = shown(t.id);
@@ -98,19 +81,9 @@ export class RoomTargets {
     this.uiVisible = on;
   }
 
-  /** Läuft gerade noch eine Überblendung? Dann darf die Bildrate nicht sinken. */
-  get settling(): boolean {
-    return this.list.some((t) => t.auraPower > 0.01 && t !== this.hovered);
-  }
-
   update(dt: number): void {
     this.time += dt;
-    const step = Math.min(1, dt * 9);
     this.list.forEach((t, i) => {
-      t.auraPower += ((t === this.hovered ? 1 : 0) - t.auraPower) * step;
-      t.aura.visible = t.auraPower > 0.01;
-      (t.aura.material as THREE.SpriteMaterial).opacity = AURA_OPACITY * t.auraPower;
-
       const wanted = t.shown && this.uiVisible ? 1 : 0;
       t.markerLevel += (wanted - t.markerLevel) * Math.min(1, dt * 4);
       t.marker.visible = t.markerLevel > 0.01;

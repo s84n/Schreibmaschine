@@ -2,6 +2,16 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.9.0] – 2026-11-02
+
+### Geändert
+- **Kein Lichtkegel mehr unter der Maus:** Fährt die Maus über ein Ding im Zimmer, erscheint nur noch eine kleine Beschriftung mit Symbol. Das Klicken auf Dinge und die Punkte bleiben; die Punkte lassen sich weiter abschalten.
+- **Weniger Rechenlast:** Der Lichtschein ist aus der Szene entfernt, und eine bloße Mausbewegung schaltet die Szene nicht mehr auf die volle Bildrate.
+- **Leiste aufgeräumt:** Oben sitzt nur noch das Häufige: Papier/Maschine, Nachlesen, Nächstes Blatt, Aussicht, Musik, Lampe, Ton, Tag/Nacht. Speichern als PDF, PNG oder Text, Teilen und Neues Dokument liegen im neuen Klappmenü **Dokument**.
+- **Einstellungen in Reitern:** Schreiben (Maschine, Papier & Text), Zimmer (Aussicht & Licht, Grafik), Klang (Musik & Regen, Schreibmaschine) und Allgemein. Kopf und Reiter bleiben beim Rollen stehen.
+- **Radio mit Struktur:** Furnier aus dem Holz des Tisches mit Gebrauchsspuren, Deckel und Sockel, grober Lautsprecherstoff mit Holzleisten und Messingrahmen, Skala mit Senderteilung.
+- **Bücher mit Struktur:** Leineneinband mit Gewebe und Abrieb, gewölbte Rücken, Buchblock mit sichtbaren Blattkanten, Goldbünde und Titelfelder.
+
 ## [1.8.0] – 2026-11-01
 
 ### Geändert

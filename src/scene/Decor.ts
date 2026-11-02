@@ -1,5 +1,6 @@
 import * as THREE from 'three';
 import { rng } from '../paper/InkCanvas';
+import { applyPatina } from '../typewriter/patina';
 import { mergeStatic } from './merge';
 
 /** Gemeinsame Materialien der Deko. */
@@ -20,8 +21,9 @@ const WOOD_TILE_CM = 200;
 /**
  * Quader aus Holz im echten Maßstab: Die Maserung läuft auf jeder Fläche entlang der längeren
  * Kante, wie bei einem zugeschnittenen Brett. `seed` wählt eine andere Stelle des Stamms.
+ * Mit anderem `tile` passt das auch für andere Oberflächen im echten Maßstab, etwa Buchleinen.
  */
-export function woodBox(w: number, h: number, d: number, mat: THREE.Material, seed = 0): THREE.Mesh {
+export function woodBox(w: number, h: number, d: number, mat: THREE.Material, seed = 0, tile = WOOD_TILE_CM): THREE.Mesh {
   const geo = new THREE.BoxGeometry(w, h, d);
   const pos = geo.getAttribute('position') as THREE.BufferAttribute;
   const normal = geo.getAttribute('normal') as THREE.BufferAttribute;
@@ -33,7 +35,7 @@ export function woodBox(w: number, h: number, d: number, mat: THREE.Material, se
     const n = [normal.getX(i), normal.getY(i), normal.getZ(i)].map(Math.abs);
     const [a, b] = [0, 1, 2].filter((axis) => n[axis] < 0.5);
     const [along, across] = size[a] >= size[b] ? [a, b] : [b, a];
-    uv.setXY(i, pos.getComponent(i, along) / WOOD_TILE_CM + shift[0], pos.getComponent(i, across) / WOOD_TILE_CM + shift[1]);
+    uv.setXY(i, pos.getComponent(i, along) / tile + shift[0], pos.getComponent(i, across) / tile + shift[1]);
   }
   return new THREE.Mesh(geo, mat);
 }
@@ -122,33 +124,6 @@ export function buildTrailingPlant(seed: number, hangDir: THREE.Vector3, hangDep
       addLeaf(p, dir, 0.75 + r() * 0.35 - t * 0.2);
     }
   }
-  return shadowed(g);
-}
-
-/** Bücherreihe; Ursprung = linke untere Kante, Rücken zeigen nach +z. */
-export function buildBooks(seed: number, count: number, maxHeight: number): THREE.Group {
-  const r = rng(seed);
-  const g = new THREE.Group();
-  const colors = ['#7a2e2a', '#2d4a6b', '#c9b48a', '#355e3b', '#5b3a5e', '#a36a2c', '#1f1f24', '#8c8c80'];
-  // Gleiche Farbe, gleiches Material: Das lässt sich zusammenfügen
-  const covers = new Map(colors.map((color) => [color, new THREE.MeshStandardMaterial({ color, roughness: 0.75 })]));
-  let x = 0;
-  for (let i = 0; i < count; i++) {
-    const w = 1.6 + r() * 2.2;
-    const h = maxHeight * (0.72 + r() * 0.28);
-    const d = 10 + r() * 3;
-    const book = new THREE.Mesh(
-      new THREE.BoxGeometry(w, h, d),
-      covers.get(colors[Math.floor(r() * colors.length)])!,
-    );
-    book.position.set(x + w / 2, h / 2, -d / 2);
-    g.add(book);
-    x += w + 0.08;
-  }
-  // letztes Buch angelehnt
-  const lean = g.children[g.children.length - 1];
-  lean.rotation.z = -0.28;
-  lean.position.x += 1.6;
   return shadowed(g);
 }
 
@@ -283,42 +258,153 @@ export function buildPicture(m: DecorMaterials, w: number, h: number, seed: numb
   return shadowed(g);
 }
 
-/** Röhrenradio aus Holz; Ursprung = Boden, Front zeigt nach +z. */
+/** Skala eines Röhrenradios mit Senderteilung; die Farbe des Materials macht sie hell oder dunkel. */
+function dialTexture(): THREE.CanvasTexture {
+  const c = document.createElement('canvas');
+  c.width = 256;
+  c.height = 112;
+  const ctx = c.getContext('2d')!;
+  ctx.fillStyle = '#fff';
+  ctx.fillRect(0, 0, 256, 112);
+  ctx.fillStyle = ctx.strokeStyle = '#3a2a18';
+  for (let i = 0; i <= 40; i++) {
+    const x = 16 + i * 5.6;
+    ctx.fillRect(x, 58, 1.5, i % 5 ? 10 : 18);
+  }
+  ctx.fillRect(16, 76, 224, 2);
+  ctx.font = '19px "Special Elite", serif';
+  ctx.textAlign = 'center';
+  ['530', '700', '900', '1200', '1600'].forEach((label, i) => ctx.fillText(label, 26 + i * 51, 44));
+  // Der Zeiger
+  ctx.fillStyle = '#8c2a1c';
+  ctx.fillRect(150, 10, 3, 92);
+  const tex = new THREE.CanvasTexture(c);
+  tex.colorSpace = THREE.SRGBColorSpace;
+  tex.anisotropy = 4;
+  return tex;
+}
+
+/** Lautsprecherstoff: grobes, ungleichmäßiges Gewebe; dieselben Fäden für Farbe und Prägung. */
+function grilleCloth(): { map: THREE.CanvasTexture; bump: THREE.CanvasTexture } {
+  const S = 128;
+  const r = rng(61);
+  const threads = Array.from({ length: S / 2 }, () => r());
+  const draw = (light: string, dark: string, ground: string) => {
+    const c = document.createElement('canvas');
+    c.width = c.height = S;
+    const ctx = c.getContext('2d')!;
+    ctx.fillStyle = ground;
+    ctx.fillRect(0, 0, S, S);
+    threads.forEach((t, i) => {
+      ctx.fillStyle = t > 0.5 ? light : dark;
+      ctx.globalAlpha = 0.55 + t * 0.45;
+      if (i < S / 4) ctx.fillRect(i * 4, 0, 2, S);
+      else ctx.fillRect(0, (i - S / 4) * 4, S, 2);
+    });
+    const tex = new THREE.CanvasTexture(c);
+    tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+    tex.repeat.set(3, 2.2);
+    tex.anisotropy = 4;
+    return tex;
+  };
+  const map = draw('#c4ad86', '#a48d68', '#57472f');
+  map.colorSpace = THREE.SRGBColorSpace;
+  return { map, bump: draw('#ffffff', '#cccccc', '#202020') };
+}
+
+/**
+ * Röhrenradio mit Furniergehäuse; Ursprung = Boden, Front zeigt nach +z.
+ * `veneer` ist das Holz des Tisches: Der Scan sieht besser aus als jedes gezeichnete Furnier.
+ */
 export class Radio {
   readonly group = new THREE.Group();
   readonly size = { w: 17, h: 10, d: 7 };
   private readonly dial = new THREE.MeshBasicMaterial({ color: '#4a3f2c', toneMapped: false });
 
-  constructor() {
+  constructor(veneer: THREE.MeshStandardMaterial) {
     const { w, h, d } = this.size;
-    const wood = new THREE.MeshStandardMaterial({ color: '#5d3620', roughness: 0.5 });
-    const cabinet = new THREE.Mesh(new THREE.BoxGeometry(w, h, d), wood);
+    // Dunkler lackiert als der Tisch, mit dem Abrieb eines alten Möbels
+    const wood = veneer.clone();
+    wood.color.set('#b89a84');
+    wood.roughness = 0.8;
+    applyPatina(wood, {
+      grime: 0.2,
+      tarnish: '#1c0f08',
+      tarnishAmount: 0.1,
+      pit: '#120a05',
+      pitAmount: 0.3,
+      scratch: '#b98f66',
+      scratchAmount: 0.12,
+      roughnessMin: 0.45,
+      roughnessAdd: 0.2,
+      bump: 0.03,
+    });
+    const cabinet = woodBox(w, h, d, wood, 5);
     cabinet.position.y = h / 2;
     this.group.add(cabinet);
-
-    // Bespannung des Lautsprechers mit feinem Webmuster
-    const c = document.createElement('canvas');
-    c.width = c.height = 64;
-    const ctx = c.getContext('2d')!;
-    ctx.fillStyle = '#b09a78';
-    ctx.fillRect(0, 0, 64, 64);
-    ctx.fillStyle = '#8c7758';
-    for (let i = 0; i < 64; i += 4) {
-      ctx.fillRect(i, 0, 1, 64);
-      ctx.fillRect(0, i, 64, 1);
+    // Vorstehender Deckel und Sockel, dazu kleine Füße: So wirkt es gebaut statt aus einem Block
+    for (const [y, height] of [[h + 0.2, 0.4], [0.5, 1]] as const) {
+      const lip = woodBox(w + 0.5, height, d + 0.5, wood, 6 + y);
+      lip.position.y = y;
+      this.group.add(lip);
     }
-    const cloth = new THREE.CanvasTexture(c);
-    cloth.colorSpace = THREE.SRGBColorSpace;
-    cloth.wrapS = cloth.wrapT = THREE.RepeatWrapping;
-    cloth.repeat.set(3, 2);
-    const grille = new THREE.Mesh(new THREE.PlaneGeometry(9, 6.6), new THREE.MeshStandardMaterial({ map: cloth, roughness: 1 }));
-    grille.position.set(-3, h / 2, d / 2 + 0.02);
-    this.group.add(grille);
 
+    const brass = new THREE.MeshStandardMaterial({ color: '#b08a45', metalness: 1, roughness: 0.4 });
+    applyPatina(brass, {
+      grime: 0.3,
+      tarnish: '#4b3517',
+      tarnishAmount: 0.3,
+      pit: '#2a1d0d',
+      pitAmount: 0.4,
+      scratch: '#e6c98d',
+      scratchAmount: 0.15,
+      roughnessMin: 0.35,
+      roughnessAdd: 0.3,
+      bump: 0.02,
+    });
+
+    const GW = 9;
+    const GH = 6.6;
+    const gx = -3;
+    const gy = h / 2 + 0.2;
+    const front = d / 2 + 0.02;
+    const { map, bump } = grilleCloth();
+    const grille = new THREE.Mesh(new THREE.PlaneGeometry(GW, GH), new THREE.MeshStandardMaterial({ map, bumpMap: bump, bumpScale: 0.8, roughness: 1 }));
+    grille.position.set(gx, gy, front);
+    this.group.add(grille);
+    // Messingrahmen und zwei Holzleisten vor dem Stoff
+    const T = 0.22;
+    for (const [fw, fh, x, y] of [
+      [GW + T * 2, T, gx, gy + GH / 2 + T / 2],
+      [GW + T * 2, T, gx, gy - GH / 2 - T / 2],
+      [T, GH, gx - GW / 2 - T / 2, gy],
+      [T, GH, gx + GW / 2 + T / 2, gy],
+    ] as const) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, 0.2), brass);
+      bar.position.set(x, y, front + 0.08);
+      this.group.add(bar);
+    }
+    for (const y of [-GH / 6, GH / 6]) {
+      const slat = woodBox(GW, 0.5, 0.25, wood, 9 + y);
+      slat.position.set(gx, gy + y, front + 0.1);
+      this.group.add(slat);
+    }
+
+    this.dial.map = dialTexture();
     const dial = new THREE.Mesh(new THREE.PlaneGeometry(5, 2.2), this.dial);
-    dial.position.set(5, h / 2 + 2, d / 2 + 0.02);
+    dial.position.set(5, h / 2 + 2, front);
     this.group.add(dial);
-    const brass = new THREE.MeshStandardMaterial({ color: '#b08a45', metalness: 1, roughness: 0.35 });
+    const dialFrame = [
+      [5 + T * 2, T, 5, h / 2 + 2 + 1.1 + T / 2],
+      [5 + T * 2, T, 5, h / 2 + 2 - 1.1 - T / 2],
+      [T, 2.2, 5 - 2.5 - T / 2, h / 2 + 2],
+      [T, 2.2, 5 + 2.5 + T / 2, h / 2 + 2],
+    ] as const;
+    for (const [fw, fh, x, y] of dialFrame) {
+      const bar = new THREE.Mesh(new THREE.BoxGeometry(fw, fh, 0.2), brass);
+      bar.position.set(x, y, front + 0.08);
+      this.group.add(bar);
+    }
     for (const x of [3.3, 6.7]) {
       const knob = new THREE.Mesh(new THREE.CylinderGeometry(0.95, 1.05, 1, 20), brass);
       knob.rotation.x = Math.PI / 2;
@@ -332,6 +418,6 @@ export class Radio {
 
   /** Die Skala leuchtet, solange Musik läuft. */
   setOn(on: boolean): void {
-    this.dial.color.set(on ? '#ffbf6a' : '#4a3f2c');
+    this.dial.color.set(on ? '#ffbf6a' : '#6a5a40');
   }
 }
