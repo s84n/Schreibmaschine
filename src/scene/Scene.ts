@@ -78,6 +78,11 @@ export class Stage {
   blockers: THREE.Object3D[] = [];
   /** Die Sicht ist bedeckt (Leseansicht): Die Szene läuft auf Sparflamme. */
   covered = false;
+  /** Zweimal je Sekunde: erreichte und angestrebte Bildrate. */
+  onFps?: (fps: number, target: number) => void;
+  private fpsFrames = 0;
+  private fpsExpected = 0;
+  private fpsSince = performance.now();
   /** Grafik wurde automatisch gesenkt, weil der Rechner nicht hinterherkam. */
   onQualityDrop?: () => void;
   private readonly startedAt = performance.now();
@@ -432,6 +437,17 @@ export class Stage {
     this.lastCamQuat.copy(cam.quaternion);
   }
 
+  /** Die Wunschrate wechselt laufend: Sie wird über das Messfenster gemittelt wie die erreichte. */
+  private measureFps(now: number, target: number): void {
+    this.fpsFrames++;
+    this.fpsExpected += ((now - this.last) / 1000) * target;
+    const elapsed = now - this.fpsSince;
+    if (elapsed < 500) return;
+    this.onFps?.(Math.round((this.fpsFrames * 1000) / elapsed), Math.round((this.fpsExpected * 1000) / elapsed));
+    this.fpsFrames = this.fpsExpected = 0;
+    this.fpsSince = now;
+  }
+
   private frame(): void {
     const now = performance.now();
     // Die Bildrate folgt dem, was gerade passiert: Das hält den Lüfter leise
@@ -441,6 +457,7 @@ export class Stage {
     const fps = this.covered ? rates.covered : busy ? rates.active : !document.hasFocus() ? rates.background : quiet < IDLE_MS ? rates.idle : rates.longIdle;
     if (now < this.nextFrame - 1) return;
     this.nextFrame = Math.max(now, this.nextFrame + 1000 / fps);
+    this.measureFps(now, fps);
     this.updateHover();
     // Nur Bilder mit voller Wunschrate sagen etwas über die Last aus
     if (busy && !this.covered) this.watchLoad(now - this.last, now);

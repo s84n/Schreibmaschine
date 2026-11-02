@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.10.0] – 2026-11-02
+
+### Hinzugefügt
+- **Bildrate in der Ecke:** Unten rechts steht klein die erreichte und die angestrebte Bildrate, etwa `30 / 30 fps`. Orange heißt, dass der Rechner nicht hinterherkommt. Abschaltbar unter Zimmer → Grafik, nicht auf Smartphones.
+
 ## [1.9.0] – 2026-11-02
 
 ### Geändert

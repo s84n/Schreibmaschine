@@ -107,6 +107,7 @@ export class Overlay {
   private typed = 0;
   private uiHidden = false;
   private readonly label = el('div', 'room-label');
+  private readonly fps = el('div', 'fps');
   private pages = 0;
   private letter?: LetterState;
   private keyboardOpen = false;
@@ -116,7 +117,7 @@ export class Overlay {
     this.root = root;
     this.settings = { ...settings };
     this.label.hidden = true;
-    document.body.append(this.label);
+    document.body.append(this.label, this.fps);
     this.render();
     small.addEventListener('change', () => this.render());
     // Ein Klick daneben schließt die Klappmenüs wieder. Erst beim Klick, nicht schon beim Drücken:
@@ -173,6 +174,13 @@ export class Overlay {
     }
     if (!id) return;
     this.label.style.transform = `translate(${Math.min(x + 16, innerWidth - 300)}px, ${Math.max(y - 34, 6)}px)`;
+  }
+
+  /** Bildrate in der Ecke; unter 80 % des Ziels kommt der Rechner nicht mehr mit. */
+  setFps(fps: number, target: number): void {
+    if (this.fps.hidden) return;
+    this.fps.textContent = `${fps} / ${target} fps`;
+    this.fps.classList.toggle('slow', fps < target * 0.8);
   }
 
   /** Esc: das oberste Fenster schließen. Liefert false, wenn keines offen war. */
@@ -260,6 +268,7 @@ export class Overlay {
     this.root.replaceChildren();
     this.root.classList.toggle('compact', small.matches);
     document.documentElement.lang = s.lang;
+    this.fps.hidden = isPhone || !s.fps;
     if (isPhone) {
       this.renderPhone();
       this.root.append(el('div', 'toast'));
@@ -685,6 +694,8 @@ export class Overlay {
     toggle(t.dust, s.dust, (dust) => this.update({ dust }));
     toggle(t.shafts, s.shafts, (shafts) => this.update({ shafts }));
     toggle(t.ao, s.ao, (ao) => this.update({ ao }));
+    toggle(t.fps, s.fps, (fps) => this.update({ fps }));
+    body.append(el('p', 'credits', t.fpsHint));
   }
 
   private fillSoundTab(body: HTMLElement): void {

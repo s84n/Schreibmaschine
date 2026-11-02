@@ -304,6 +304,7 @@ async function main(): Promise<void> {
       overlay.openCoffee();
     }
   };
+  stage.onFps = (fps, target) => overlay.setFps(fps, target);
   stage.onQualityDrop = () => {
     overlay.change({ quality: 'low' });
     overlay.toast(overlay.t.qualityDropped);

@@ -165,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.27.0** (2026-11-02) – Nutzerwunsch → App v1.10.0: Bildrate unten rechts. Weil die Szene in Ruhe drosselt, steht das Ziel daneben; beide werden über ein Fenster von 500 ms gemittelt. Sie zeigt nur gerenderte Bilder der Schleife, keine GPU-Auslastung.
 - **v0.26.0** (2026-11-02) – Nutzer-Feedback → App v1.9.0: Lichtschein unter der Maus entfernt, stattdessen HTML-Beschriftung mit Symbol. `pointermove` zählt nicht mehr als Aktivität für die Bildrate, die Kamera meldet sich selbst. Menü neu: Leiste nur für Häufiges, Klappmenü „Dokument“, Einstellungen in vier Reitern nach Thema (vollständig, die Leiste ist nur Abkürzung), auf kleinen Displays zusätzlich „Start“. Radio und Bücher mit Texturen (`src/scene/Books.ts`); das Radio nutzt das Tischholz, deshalb baut `Room` es im Konstruktor. Kratzer der Patina fallen auf kleinen Dingen groß aus, weil die Kachel 14 cm abdeckt: dort schwach dosieren.
 - **v0.25.0** (2026-11-01) – Nutzerwunsch → App v1.8.0: weiße Vorhänge, verschmutztes Glas, fünf Fensterarten (`src/scene/WindowStyles.ts`). Die Fensterart hängt an der Aussicht (`window` in `VIEWS`), nicht an der Stimmung, und ist keine eigene Einstellung. Rundfenster ohne Vorhänge. Vorhänge enden auf dem Tisch, weil die Platte bis an die Wand reicht. Schmutzschleier nicht aus vielen fast durchsichtigen Verläufen zeichnen: Das rundet in 8 Bit zu sichtbaren Gitterlinien.
 - **v0.24.0** (2026-11-01) – Nutzerwunsch → App v1.7.0: rustikalere, metallischere Maschine. Gebrauchsspuren als Shader-Schicht in `src/typewriter/patina.ts`, dreiseitig über Objektkoordinaten projiziert, weil `mergeStatic` nur Position, Normale und UV erhält. Stärken je Material in `src/typewriter/materials.ts`. Kosten auf echter GPU noch zu prüfen.
@@ -207,5 +208,5 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 ## Nächster Schritt
 
-1. v1.9.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
+1. v1.10.0 auf echter GPU (Lüfter, Bildrate) und echten Smartphones testen, Feedback sammeln.
 2. Nach jedem Release: Versionsnummer erhöhen, taggen, pushen → automatisches Deployment.

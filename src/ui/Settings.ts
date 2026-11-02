@@ -38,6 +38,8 @@ export interface Settings {
   softStrike: boolean;
   bellVolume: number;
   returnVolume: number;
+  /** Bildrate in der Ecke anzeigen */
+  fps: boolean;
   /** Akku-Modus */
   saver: boolean;
   /** Ruhige Bewegung */
@@ -80,6 +82,7 @@ function defaults(): Settings {
     softStrike: false,
     bellVolume: 1,
     returnVolume: 1,
+    fps: true,
     saver: false,
     calm: matchMedia('(prefers-reduced-motion: reduce)').matches,
     textSize: 'normal',

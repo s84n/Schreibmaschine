@@ -429,6 +429,29 @@ body.typing canvas {
   color: var(--accent);
 }
 
+/* Bildrate: bleibt auch beim Tippen stehen, drängt sich aber nicht auf */
+.fps {
+  position: fixed;
+  right: max(12px, env(safe-area-inset-right));
+  bottom: max(10px, env(safe-area-inset-bottom));
+  z-index: 5;
+  padding: 2px 7px;
+  font-size: 11px;
+  color: var(--ink);
+  /* Unten rechts liegt oft das helle Manuskript: Ohne Grund wäre die Schrift dort nicht lesbar */
+  background: rgba(24, 19, 15, 0.6);
+  border-radius: 5px;
+  pointer-events: none;
+}
+
+.fps.slow {
+  color: #e8964a;
+}
+
+.fps[hidden] {
+  display: none;
+}
+
 .room-label[hidden] {
   display: none;
 }
