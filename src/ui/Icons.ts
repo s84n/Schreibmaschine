@@ -14,7 +14,8 @@ const PATHS = {
   keyboard: '<path d="M2.5 6.5h19v11h-19z"/><path d="M6 10h.01M9.5 10h.01M13 10h.01M16.5 10h.01M6 13.5h.01M18 13.5h.01M9 14h6"/>',
   fresh: '<path d="M12 3v5M12 16v5M3 12h5M16 12h5"/><path d="m6 6 2.5 2.5M15.5 15.5 18 18M6 18l2.5-2.5M15.5 8.5 18 6"/>',
   fullscreen: '<path d="M4 9V4h5M20 9V4h-5M4 15v5h5M20 15v5h-5"/>',
-  lamp: '<path d="M3.500 10.500a8.500 6 0 0 1 17 0z"/><path d="M12 10.500V20M8 20.500h8"/>',
+  // Gelenklampe mit Lichtstrahlen: Die liegende Bankerlampe sähe in 17 px wie ein Schirm aus
+  lamp: '<path d="M4 20.5h9"/><path d="M8.5 20.5 5.5 12.5l5.8-4.6"/><circle cx="5.5" cy="12.5" r="1.1"/><path d="M12.4 6.3 18.7 8.8 14.3 14.2 10.6 8.7z"/><path d="M17.5 16.5l1.5 1.5M20 13.5l1.8.6"/>',
   flame: '<path d="M12 3c.500 4 5.500 6 5.500 11.500a5.500 5.500 0 0 1-11 0c0-2.500 1.500-3.500 2-5.500 1.500 1 2 2 2.200 3C12 10 12.500 6 12 3z"/>',
   close: '<path d="M6 6l12 12M18 6 6 18"/>',
   coffee: '<path d="M4 9h13v6a5 5 0 0 1-5 5H9a5 5 0 0 1-5-5z"/><path d="M17 10.5h1.5a2.5 2.5 0 0 1 0 5H17"/><path d="M8 3v3M12 3v3"/>',

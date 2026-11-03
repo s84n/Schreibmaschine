@@ -66,10 +66,10 @@ const MUG_POS = { x: 25, z: 1 };
 const CANDLE_POS = { x: 40, z: -5 };
 const STACK_POS = { x: 29, z: 21 };
 const BOOKS_POS = { x: 38, z: -24 };
-const LAMP_POS = new THREE.Vector3(-36, DESK_Y, -15);
+const LAMP_POS = new THREE.Vector3(-31, DESK_Y, 3);
 const PENCILS_POS = { x: -30, z: -26 };
-/** Dorthin zeigt die Schreibtischlampe: auf den Tisch vor der Maschine, das Papier liegt noch im Kegel */
-const LAMP_AIM = new THREE.Vector3(-9, 0, 8);
+/** Dorthin zeigt die Schreibtischlampe: schräg von vorn auf Maschine und Blatt */
+const LAMP_AIM = new THREE.Vector3(-3, 9, -3);
 /** Grundstellung der Kamera: Von hier sieht die Aussicht aus wie das Foto. Muss zu `CAMERAS.machine` passen. */
 const REST_CAMERA = new THREE.Vector3(0, 27, 62);
 /** Weiter verschiebt sich die Aussicht nicht, sonst reißt sie beim starken Drehen an den Kanten auf. */

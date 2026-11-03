@@ -261,6 +261,7 @@ export class DeskLamp {
     const R = 5.4;
     const shade = new THREE.Group();
     shade.position.copy(center);
+    // Der Schirm dreht sich in der Schelle: lang von links nach rechts, damit er von vorn gut aussieht
     shade.rotation.set(-0.3, 0.65, 0, 'YXZ');
     const half = (radius: number, mat: THREE.Material) => {
       const geo = new THREE.CylinderGeometry(radius, radius, LENGTH, 40, 1, true, 0, Math.PI);

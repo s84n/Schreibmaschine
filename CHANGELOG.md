@@ -2,6 +2,12 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.18.0] – 2026-11-03
+
+### Geändert
+- **Schreibtischlampe weiter vorn:** Sie steht jetzt neben der Maschine statt dahinter und leuchtet schräg von vorn auf Maschine und Blatt. Das Papier ist bei Lampenlicht deutlich heller.
+- **Neues Lampensymbol:** Eine Gelenklampe mit Lichtstrahlen statt des Schirms, der wie ein Regenschirm aussah.
+
 ## [1.17.0] – 2026-11-03
 
 ### Geändert
