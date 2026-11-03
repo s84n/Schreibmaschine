@@ -6,7 +6,7 @@ Ohne Installation, ohne Konto, auf jedem Rechner.
 
 ### ▶ [Jetzt ausprobieren: s84n.github.io/Schreibmaschine](https://s84n.github.io/Schreibmaschine/)
 
-![Die Schreibmaschine auf dem Schreibtisch, dahinter ein großes Panoramafenster mit Blick auf einen roten japanischen Ahornwald](docs/screenshot.jpg)
+![Die Schreibmaschine bei Nacht im Schein der grünen Bankerlampe, draußen die Lichter von Paris und der goldene Eiffelturm](docs/screenshot.jpg)
 
 ---
 
@@ -33,13 +33,17 @@ und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 
 ![Nahaufnahme: getippter Text auf dem Papier in der Walze](docs/screenshot-paper.jpg)
 
-![Nachtmodus: brennende Kerze neben der Schreibmaschine, draußen die letzte Dämmerung über dem See](docs/screenshot-night.jpg)
+![Herbst in Kyoto: roter Ahornwald hinter einem runden Fenster](docs/screenshot-kyoto.jpg)
+
+![Nacht in Udaipur: der angestrahlte Seepalast vor dem Fenster, drinnen Lampe und Kerze](docs/screenshot-night.jpg)
 
 ![Aussicht auf ein Dorf mit bunten Holzhäusern in China](docs/screenshot-village.jpg)
 
-![Bergsee im Winter: Schnee fällt vor dem Fenster](docs/screenshot-winter.jpg)
+![Winterabend am Bergsee: Schnee fällt vor dem Fenster, die Lampe brennt](docs/screenshot-winter.jpg)
 
-![Regenwetter am nordischen See: Tropfen auf der Scheibe](docs/screenshot-rain.jpg)
+![Regen in La Boca: Tropfen auf der Scheibe, dahinter die Hochhäuser von Buenos Aires](docs/screenshot-rain.jpg)
+
+![Die Ortswahl: Vorschaubilder aller 18 Aussichten zum Anklicken](docs/screenshot-views.jpg)
 
 ![Einstellungen in Reitern, hier Klang mit Songauswahl und getrennten Reglern für Musik, Regen und Maschine](docs/screenshot-settings.jpg)
 
