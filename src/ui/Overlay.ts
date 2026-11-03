@@ -97,7 +97,8 @@ export class Overlay {
   private started = false;
   private panelOpen = false;
   private moodsOpen = false;
-  private docOpen = false;
+  /** Offenes Klappmenü in der Leiste */
+  private menu?: 'doc' | 'view' | 'music';
   private panelTab: PanelTab = small.matches ? 'start' : 'writing';
   private labelFor?: RoomTargetId;
   private phone?: PhoneState;
@@ -125,10 +126,10 @@ export class Overlay {
     window.addEventListener('click', (e) => {
       const target = e.target as Element;
       const closeMoods = this.moodsOpen && !target.closest?.('.moods');
-      const closeDoc = this.docOpen && !target.closest?.('.menu-wrap');
-      if (!closeMoods && !closeDoc) return;
+      const closeMenu = !!this.menu && !target.closest?.('.menu-wrap');
+      if (!closeMoods && !closeMenu) return;
       if (closeMoods) this.moodsOpen = false;
-      if (closeDoc) this.docOpen = false;
+      if (closeMenu) this.menu = undefined;
       this.render();
     });
   }
@@ -156,8 +157,9 @@ export class Overlay {
 
   private setUiHidden(on: boolean): void {
     this.uiHidden = on;
-    if (on && (this.moodsOpen || this.docOpen)) {
-      this.moodsOpen = this.docOpen = false;
+    if (on && (this.moodsOpen || this.menu)) {
+      this.moodsOpen = false;
+      this.menu = undefined;
       this.render();
     }
     document.body.classList.toggle('typing', on);
@@ -185,9 +187,9 @@ export class Overlay {
 
   /** Esc: das oberste Fenster schließen. Liefert false, wenn keines offen war. */
   closeTop(): boolean {
-    if (!this.coffeeOpen && !this.panelOpen && !this.moodsOpen && !this.docOpen) return false;
+    if (!this.coffeeOpen && !this.panelOpen && !this.moodsOpen && !this.menu) return false;
     if (this.moodsOpen) this.moodsOpen = false;
-    else if (this.docOpen) this.docOpen = false;
+    else if (this.menu) this.menu = undefined;
     else if (this.coffeeOpen) this.coffeeOpen = false;
     else this.panelOpen = false;
     this.render();
@@ -380,58 +382,73 @@ export class Overlay {
     return items;
   }
 
-  /** Klappmenü in der Leiste, damit die Formate dort nicht dauerhaft Platz belegen. */
-  private documentMenu(): HTMLElement {
-    const t = this.t;
+  /** Klappmenü in der Leiste: Knopf mit Pfeil, darunter der Inhalt, solange es offen ist. */
+  private dropMenu(kind: 'doc' | 'view' | 'music', toggle: HTMLButtonElement, cls: string, content: () => HTMLElement[]): HTMLElement {
     const wrap = el('div', 'menu-wrap');
-    const toggle = toolBtn('download', t.document, t.documentTitle, this.docOpen ? 'active' : '');
-    toggle.setAttribute('aria-expanded', String(this.docOpen));
+    const open = this.menu === kind;
+    toggle.classList.toggle('open', open);
+    toggle.setAttribute('aria-expanded', String(open));
+    toggle.setAttribute('aria-haspopup', 'true');
     toggle.append(chevronIcon());
     toggle.onclick = () => {
-      this.docOpen = !this.docOpen;
+      this.menu = open ? undefined : kind;
+      this.moodsOpen = false;
       this.render();
     };
     wrap.append(toggle);
-    if (this.docOpen) {
-      const menu = el('div', 'doc-menu');
-      menu.append(
-        ...this.documentButtons(() => {
-          this.docOpen = false;
-          this.render();
-        }),
-      );
+    if (open) {
+      const menu = el('div', `drop-menu ${cls}`);
+      menu.append(...content());
       wrap.append(menu);
     }
     return wrap;
+  }
+
+  /** Formate und Teilen, damit sie nicht dauerhaft Platz in der Leiste belegen. */
+  private documentMenu(): HTMLElement {
+    const t = this.t;
+    return this.dropMenu('doc', toolBtn('download', t.document, t.documentTitle), 'doc-menu', () =>
+      this.documentButtons(() => {
+        this.menu = undefined;
+        this.render();
+      }),
+    );
   }
 
   /** Aussicht und Musik wechselt man oft: Sie bleiben in der Leiste direkt erreichbar. */
   private pickers(): HTMLElement[] {
     const t = this.t;
     const s = this.settings;
-    // Auswahlfeld mit Symbol: Das Symbol sagt, worum es geht, das Feld zeigt nur noch den Wert
-    const picker = (name: IconName, title: string, cls: string, options: [string, string][], value: string, onChange: (v: string) => void) => {
-      const wrap = el('label', `btn select-wrap ${cls}`.trim());
-      wrap.title = title;
-      const sel = el('select');
-      sel.setAttribute('aria-label', title);
-      for (const [id, label] of options) {
-        const o = el('option', '', label);
-        o.value = id;
-        o.selected = id === value;
-        sel.append(o);
-      }
-      sel.onchange = () => {
-        onChange(sel.value);
-        sel.blur();
-      };
-      wrap.append(icon(name), sel, chevronIcon());
-      return wrap;
+    const choose = (patch: Partial<Settings>) => {
+      this.menu = undefined;
+      this.update(patch);
     };
-    return [
-      picker('window', t.view, '', (Object.keys(VIEWS) as ViewId[]).map((id) => [id, t.views[id]]), s.view, (v) => this.update({ view: v as ViewId })),
-      picker('music', t.music, s.track ? 'active' : '', [['', t.musicOff], ...TRACKS.map((id): [string, string] => [id, trackTitle(id)])], s.track, (v) => this.update({ track: v as TrackId | '' })),
-    ];
+    // „Paris – Über den Dächern“: In der Leiste steht nur der Ort, im Menü darunter der Zusatz
+    const place = t.views[s.view].split(' – ')[0];
+    const view = this.dropMenu('view', toolBtn('window', place, `${t.view}: ${t.views[s.view]}`, 'picker'), 'view-menu', () =>
+      (Object.keys(VIEWS) as ViewId[]).map((id) => {
+        const [name, sub] = t.views[id].split(' – ');
+        const card = el('button', `view-card${id === s.view ? ' active' : ''}`);
+        card.title = t.views[id];
+        const img = el('img');
+        img.src = `${import.meta.env.BASE_URL}views/thumbs/${id}.jpg`;
+        img.alt = '';
+        card.append(img, el('span', 'view-name', name));
+        if (sub) card.append(el('span', 'view-sub', sub));
+        card.onclick = () => choose({ view: id });
+        return card;
+      }),
+    );
+    const track = s.track ? trackTitle(s.track) : t.musicOff;
+    const options: [TrackId | '', string][] = [['', t.musicOff], ...TRACKS.map((id): [TrackId, string] => [id, trackTitle(id)])];
+    const music = this.dropMenu('music', toolBtn('music', track, `${t.music}: ${track}`, `picker${s.track ? ' active' : ''}`), 'music-menu', () =>
+      options.map(([id, label]) => {
+        const b = toolBtn(id ? 'music' : 'mute', label, label, `track${id === s.track ? ' active' : ''}`);
+        b.onclick = () => choose({ track: id });
+        return b;
+      }),
+    );
+    return [view, music];
   }
 
   /** Stimmungen: ein Klick stellt alles passend ein. In der Leiste klappt die Liste erst auf Wunsch auf. */
@@ -447,6 +464,7 @@ export class Overlay {
       toggle.append(chevronIcon());
       toggle.onclick = () => {
         this.moodsOpen = !this.moodsOpen;
+        this.menu = undefined;
         this.render();
       };
       box.append(toggle);

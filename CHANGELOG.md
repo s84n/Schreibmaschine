@@ -2,6 +2,16 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.15.0] – 2026-11-03
+
+### Behoben
+- **Ortswahl klappte oft nicht auf:** Ein Klick auf das Symbol oder den Rand des Knopfs öffnete die Liste nicht, und bei offenen Stimmungen klappte sie sofort wieder zu.
+
+### Geändert
+- **Neue Ortswahl:** Ein Klappmenü mit Vorschaubildern aller 18 Aussichten, darunter Ort und Zusatz. In der Leiste steht nur noch der Ort.
+- **Neue Musikwahl:** Ein Klappmenü in zwei Spalten, der laufende Song in Akzentfarbe, „Musik aus“ obenauf.
+- Alle Klappmenüs der Leiste sehen gleich aus, gleiten weich auf, der Pfeil dreht sich mit; es ist immer nur eines offen.
+
 ## [1.14.0] – 2026-11-03
 
 ### Hinzugefügt

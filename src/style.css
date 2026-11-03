@@ -113,34 +113,18 @@ body {
   stroke-linejoin: round;
 }
 
-.btn.with-icon,
-.select-wrap {
+.btn.with-icon {
   display: inline-flex;
   align-items: center;
   gap: 6px;
 }
 
-.select-wrap select {
-  appearance: none;
-  font: inherit;
-  color: inherit;
-  background: transparent;
-  border: 0;
-  padding: 0;
+/* Ort und Song in der Leiste: Name kürzen statt die Leiste zu sprengen */
+.btn.picker .lbl {
   max-width: 124px;
-  cursor: pointer;
-}
-
-.select-wrap select:focus-visible {
-  outline: none;
-}
-
-.select-wrap:focus-within {
-  outline: 2px solid var(--accent);
-}
-
-.select-wrap select option {
-  color: #1b1714;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .chevron {
@@ -151,31 +135,148 @@ body {
   stroke: currentColor;
   stroke-width: 1.6;
   opacity: 0.65;
+  transition: transform 0.2s ease;
 }
 
-/* Dokument-Menü klappt aus der Leiste nach unten */
+.btn.open {
+  border-color: var(--line);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.btn.open .chevron {
+  transform: rotate(180deg);
+}
+
+/* Klappmenüs der Leiste: Dokument, Aussicht, Musik */
 .menu-wrap {
   position: relative;
 }
 
-.doc-menu {
+.drop-menu {
   position: absolute;
-  top: calc(100% + 10px);
+  top: calc(100% + 12px);
   left: 0;
   z-index: 2;
+  padding: 8px;
+  background: var(--glass);
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.45);
+  backdrop-filter: blur(10px);
+  animation: drop-in 0.16s ease-out;
+}
+
+@keyframes drop-in {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+}
+
+.doc-menu {
   display: flex;
   flex-direction: column;
   align-items: stretch;
   gap: 2px;
   min-width: 170px;
-  padding: 6px;
-  background: var(--glass);
-  border: 1px solid var(--line);
-  border-radius: 10px;
 }
 
 .doc-menu .btn {
   white-space: nowrap;
+}
+
+/* Aussicht: Kacheln mit dem Blick, den das Fenster zeigt */
+.view-menu {
+  right: 0;
+  left: auto;
+  display: grid;
+  grid-template-columns: repeat(3, 168px);
+  gap: 8px;
+  max-height: calc(100dvh - 110px);
+  overflow-y: auto;
+}
+
+.view-card {
+  display: grid;
+  grid-template-rows: auto auto auto;
+  align-content: start;
+  gap: 2px;
+  padding: 5px 5px 7px;
+  font: inherit;
+  text-align: left;
+  color: var(--ink);
+  background: transparent;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  cursor: pointer;
+}
+
+.view-card img {
+  display: block;
+  width: 100%;
+  aspect-ratio: 8 / 5;
+  object-fit: cover;
+  margin-bottom: 4px;
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.05);
+  filter: saturate(0.85) brightness(0.92);
+  transition: filter 0.15s ease;
+}
+
+.view-card:hover {
+  background: rgba(255, 255, 255, 0.06);
+}
+
+.view-card:hover img {
+  filter: none;
+}
+
+.view-card:focus-visible {
+  outline: 2px solid var(--accent);
+}
+
+.view-card.active {
+  border-color: var(--accent);
+}
+
+.view-card.active img {
+  filter: none;
+}
+
+.view-name {
+  font-size: 13px;
+  line-height: 1.25;
+}
+
+.view-card.active .view-name {
+  color: var(--accent);
+}
+
+.view-sub {
+  font-size: 11px;
+  line-height: 1.25;
+  color: var(--muted);
+}
+
+/* Musik: zwei Spalten, der laufende Song in Akzentfarbe */
+.music-menu {
+  right: 0;
+  left: auto;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(150px, auto));
+  gap: 2px 6px;
+}
+
+.music-menu .btn {
+  white-space: nowrap;
+  font-size: 13px;
+}
+
+.music-menu .btn:first-child {
+  grid-column: 1 / -1;
+  margin-bottom: 4px;
+  border-bottom-color: var(--line);
+  border-radius: 7px 7px 0 0;
 }
 
 /* Wird es eng, bleiben in der Leiste nur die Symbole; die Namen stehen im Tooltip */
@@ -185,8 +286,10 @@ body {
     display: none;
   }
 
-  .toolbar .select-wrap select {
-    max-width: 108px;
+  /* Ort und Song bleiben lesbar, nur kürzer */
+  .toolbar > .menu-wrap > .btn.picker .lbl {
+    display: inline;
+    max-width: 96px;
   }
 }
 
