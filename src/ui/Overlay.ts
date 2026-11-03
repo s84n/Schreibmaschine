@@ -755,6 +755,7 @@ export class Overlay {
     const { select, toggle } = this.rows(body);
     select<Lang>(t.language, s.lang, [['de', 'Deutsch'], ['en', 'English']], (lang) => this.update({ lang }));
     toggle(t.calm, s.calm, (calm) => this.update({ calm }));
+    toggle(t.breathe, s.breathe, (breathe) => this.update({ breathe }));
     const extras = el('div', 'tools');
     if (document.documentElement.requestFullscreen) {
       const fs = toolBtn('fullscreen', t.fullscreen);

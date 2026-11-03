@@ -2,6 +2,12 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.17.0] – 2026-11-03
+
+### Geändert
+- **Atmende Kamera:** Die Kamera atmet jetzt sichtbar, auch in Ruhe: Alle gut vier Sekunden hebt und senkt sich der Blick ein wenig, dazu treibt er langsam zur Seite. Beim Schreiben atmet sie etwas tiefer, die Anschläge geben ihr spürbare kleine Stöße, der Wagenrücklauf einen Schwenk. Nah am Blatt bleibt die Bewegung entsprechend kleiner.
+- Abschaltbar unter Allgemein → **Atmende Kamera**; mit „Ruhige Bewegung“ ist sie ebenfalls aus.
+
 ## [1.16.0] – 2026-11-03
 
 ### Hinzugefügt

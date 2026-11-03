@@ -46,6 +46,8 @@ export interface Settings {
   saver: boolean;
   /** Ruhige Bewegung */
   calm: boolean;
+  /** Die Kamera atmet leicht und nickt mit den Anschlägen */
+  breathe: boolean;
   textSize: TextSize;
   paperTone: PaperTone;
   /** Leuchtende Punkte an den bedienbaren Dingen */
@@ -88,6 +90,7 @@ function defaults(): Settings {
     fps: true,
     saver: false,
     calm: matchMedia('(prefers-reduced-motion: reduce)').matches,
+    breathe: true,
     textSize: 'normal',
     paperTone: 'classic',
     hints: true,

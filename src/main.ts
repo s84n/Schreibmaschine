@@ -84,6 +84,7 @@ async function main(): Promise<void> {
   stage.setAO(settings.ao);
   stage.setSaver(settings.saver);
   stage.setCalm(settings.calm);
+  stage.setBreathe(settings.breathe);
   stage.setPaperZoom(PAPER_ZOOM[settings.textSize], 'machine');
   stage.room.lamp.setOn(settings.lamp, false);
   stage.room.radio.setOn(!!settings.track);
@@ -198,6 +199,7 @@ async function main(): Promise<void> {
       if (next.shafts !== settings.shafts) stage.room.setShafts(next.shafts);
       if (next.ao !== settings.ao) stage.setAO(next.ao);
       if (next.saver !== settings.saver) stage.setSaver(next.saver);
+      if (next.breathe !== settings.breathe) stage.setBreathe(next.breathe);
       if (next.calm !== settings.calm) {
         stage.setCalm(next.calm);
         document.body.classList.toggle('calm', next.calm);

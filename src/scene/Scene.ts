@@ -22,13 +22,17 @@ const FPS_SAVER = { active: 30, idle: 15, longIdle: 12, background: 10, covered:
 /** So lange nach der letzten Eingabe gilt die Szene als aktiv bzw. noch nicht lange still (ms). */
 const ACTIVE_MS = 1500;
 /**
- * Handkamera beim Tippen: Atmen (Neigen, Schwenken in Bogenmaß, Vor/Zurück in cm) und Feder für
- * die Stöße. Klingt nach dem letzten Anschlag über SWAY_FADE Sekunden aus; im Stillstand steht alles.
+ * Atmende Kamera: Ein Atemzug alle gut 4 s hebt und neigt den Blick, dazu ein langsames Treiben zur
+ * Seite (Bogenmaß bzw. cm). Anschläge geben der Feder kleine Stöße. Beim Schreiben atmet sie etwas tiefer.
  */
-const SWAY = { pitch: 0.0018, yaw: 0.0026, dolly: 0.3 };
-const SWAY_FADE = 5;
+const BREATH = { pitch: 0.0035, lift: 0.22, dolly: 0.5, yaw: 0.0045, rate: 1.45 };
+const BREATH_TYPING = 1.35;
+/** So schnell blendet das Atmen ein und aus (pro Sekunde) */
+const BREATH_FADE = 0.5;
 const SPRING = { stiffness: 55, damping: 9 };
-const KICK = { key: 0.006, return: 0.012 };
+const KICK = { key: 0.012, return: 0.022 };
+/** Nach dem letzten Anschlag so lange tiefer atmen */
+const TYPING_BREATH_S = 6;
 const IDLE_MS = 30000;
 /** Selbsthilfe bei schwacher Grafik: Stufen der Auflösung, danach Grafik „niedrig“. */
 const SCALE_STEPS = [1, 0.85, 0.7, 0.6];
@@ -98,9 +102,13 @@ export class Stage {
   private nextFrame = 0;
   private saver = false;
   private calm = false;
-  /** Handkamera: Hüllkurve des Atmens, Zeit, Federauslenkung (Neigen, Schwenken, Vor/Zurück) und Tempo */
+  /** Atmende Kamera: eingeschaltet, Hüllkurve, Zeit, Federauslenkung (Neigen, Schwenken, Vor/Zurück) und Tempo */
+  private breathe = true;
   private sway = 0;
   private swayClock = 0;
+  private typedAt = -Infinity;
+  /** Die Feder schwingt: dann volle Bildrate, das ruhige Atmen kommt mit der gedrosselten aus */
+  private swayKicked = false;
   private readonly swayOff = new THREE.Vector3();
   private readonly swayVel = new THREE.Vector3();
   private readonly swayPos = new THREE.Vector3();
@@ -231,27 +239,32 @@ export class Stage {
   }
 
   /** Ruhige Bewegung: Die Kamera fährt nicht, sondern wechselt direkt. */
-  /** Ein Anschlag oder der Wagenrücklauf: Die Kamera nickt kaum merklich mit. */
+  setBreathe(on: boolean): void {
+    this.breathe = on;
+  }
+
+  private get breathing(): boolean {
+    return this.breathe && !this.calm;
+  }
+
+  /** Ein Anschlag oder der Wagenrücklauf: Die Kamera nickt leicht mit. */
   nudge(kind: 'key' | 'return'): void {
-    if (this.calm) return;
-    this.sway = 1;
+    if (!this.breathing) return;
+    this.typedAt = performance.now();
     const k = KICK[kind];
     if (kind === 'key') this.swayVel.add(new THREE.Vector3(-k * (0.6 + Math.random() * 0.4), k * (Math.random() - 0.5) * 0.6, 0));
     // Der Wagen fährt zurück: ein kleiner Schwenk mit, dazu ein Hauch nach vorn
     else this.swayVel.add(new THREE.Vector3(-k * 0.3, k, k * 40));
   }
 
-  /** Handkamera fortschreiben; liefert, ob sie sich gerade bewegt. */
-  private updateSway(dt: number): boolean {
+  /** Atmen und Feder fortschreiben. Liefert, ob sich die Kamera bewegt und ob die Feder gerade schwingt. */
+  private updateSway(dt: number, now: number): { moving: boolean; kicked: boolean } {
     const off = this.swayOff;
     const vel = this.swayVel;
-    if (this.calm) {
-      this.sway = 0;
-      off.set(0, 0, 0);
-      vel.set(0, 0, 0);
-      return false;
-    }
-    this.sway = Math.max(0, this.sway - dt / SWAY_FADE);
+    const typing = now - this.typedAt < TYPING_BREATH_S * 1000;
+    const target = this.breathing ? (typing ? BREATH_TYPING : 1) : 0;
+    const step = Math.min(dt, 0.2) * BREATH_FADE;
+    this.sway += Math.max(-step, Math.min(step, target - this.sway));
     // In kleinen Schritten, damit die Feder auch bei niedriger Bildrate nicht aufschaukelt
     const steps = Math.min(Math.ceil(dt / 0.01), 20);
     const h = Math.min(dt, 0.2) / steps;
@@ -264,24 +277,26 @@ export class Stage {
       off.set(0, 0, 0);
       vel.set(0, 0, 0);
     }
-    if (this.sway > 0) this.swayClock += dt;
-    return this.sway > 0 || !settled;
+    if (this.sway > 0) this.swayClock += Math.min(dt, 0.2);
+    return { moving: this.sway > 0 || !settled, kicked: !settled };
   }
 
-  /** Versatz der Handkamera auf die Kamera legen; restoreSway() nimmt ihn nach dem Bild wieder ab. */
+  /** Versatz der atmenden Kamera auflegen; restoreSway() nimmt ihn nach dem Bild wieder ab. */
   private applySway(): void {
     const cam = this.camera;
     this.swayPos.copy(cam.position);
     this.swayQuat.copy(cam.quaternion);
-    // Weich ein- und ausblenden, Atmen aus zwei ungleichen Wellen, damit es sich nicht wiederholt
-    const e = this.sway * this.sway * (3 - 2 * this.sway);
+    const e = this.sway;
     const t = this.swayClock;
-    const pitch = this.swayOff.x + e * SWAY.pitch * (Math.sin(t * 1.3) + 0.4 * Math.sin(t * 0.47 + 1));
-    const yaw = this.swayOff.y + e * SWAY.yaw * (Math.sin(t * 0.61 + 2) + 0.5 * Math.sin(t * 0.23));
-    const dolly = this.swayOff.z + e * SWAY.dolly * Math.sin(t * 0.8 + 0.5);
-    cam.rotateX(pitch);
-    cam.rotateY(yaw);
-    cam.translateZ(-dolly);
+    // Ein Atemzug: einatmen hebt und neigt leicht nach oben, ausatmen sinkt zurück; nicht ganz regelmäßig
+    const breath = Math.sin(t * BREATH.rate + 0.35 * Math.sin(t * 0.37));
+    const drift = Math.sin(t * 0.29 + 2) + 0.5 * Math.sin(t * 0.11);
+    cam.rotateX(this.swayOff.x + e * BREATH.pitch * breath);
+    cam.rotateY(this.swayOff.y + e * BREATH.yaw * drift);
+    // Heben und Vorrücken im Verhältnis zum Abstand: Nah am Blatt wirkte derselbe Weg viel größer
+    const near = cam.position.distanceTo(this.controls.target) / 66;
+    cam.translateY(e * BREATH.lift * breath * near);
+    cam.translateZ(-(this.swayOff.z + e * BREATH.dolly * Math.sin(t * BREATH.rate * 0.5 + 1)) * near);
   }
 
   private restoreSway(): void {
@@ -525,7 +540,7 @@ export class Stage {
     const now = performance.now();
     // Die Bildrate folgt dem, was gerade passiert: Das hält den Lüfter leise
     const quiet = now - this.lastActivity;
-    const busy = animator.busy || quiet < ACTIVE_MS || this.sway > 0;
+    const busy = animator.busy || quiet < ACTIVE_MS || this.swayKicked;
     const rates = this.saver ? FPS_SAVER : FPS;
     const fps = this.covered ? rates.covered : busy ? rates.active : !document.hasFocus() ? rates.background : quiet < IDLE_MS ? rates.idle : rates.longIdle;
     if (now < this.nextFrame - 1) return;
@@ -543,7 +558,9 @@ export class Stage {
     this.room.update(dt, this.camera);
     this.controls.update();
     const moving = animator.busy;
-    const swaying = this.updateSway(dt);
+    const sway = this.updateSway(dt, now);
+    const swaying = sway.moving;
+    this.swayKicked = sway.kicked;
     this.updateShadows(now, moving);
     // Die Steuerung sieht den Versatz nie: Sonst hielte sie ihn für eine Mausbewegung
     if (swaying) this.applySway();
