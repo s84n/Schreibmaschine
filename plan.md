@@ -104,7 +104,7 @@ schreibmaschine/
 │   │   └── Export.ts        # PNG / PDF (jsPDF, nachgeladen) / TXT
 │   ├── ui/
 │   │   ├── Overlay.ts       # Werkzeugleiste, Einstellungs-Panel, Startschirm, Toasts, Ausblenden beim Tippen
-│   │   ├── Moods.ts         # Stimmungen: Bündel aus Aussicht, Licht, Wetter, Musik, Anschlag
+│   │   ├── Moods.ts         # Stimmungen: Bündel aus Aussicht, Licht, Wetter, Musik
 │   │   ├── Reader.ts        # Leseansicht und Schublade
 │   │   ├── Settings.ts      # Einstellungen laden/speichern
 │   │   └── i18n.ts          # DE/EN Strings
@@ -165,6 +165,7 @@ Status hier in `plan.md` (Abschnitt 7). Bugfixes = PATCH, neue Features = MINOR.
 
 - **v0.0.1** (2026-10-29) – Initialplanung, Grundsatzentscheidungen getroffen (Abschnitt 2).
 - **v0.1.0** (2026-10-29) – Offene Punkte entschieden: Sounds von Wikimedia Commons (CC BY/CC0), Schrift Special Elite, vorerst lokal ohne GitHub. Papier-/Tinten-Optik über Canvas-Textur statt GLSL. App-Stand **v0.8.0** umgesetzt (Roadmap v0.1–v0.8 + PWA-Grundgerüst). Zusätzlich umgesetzt: Rücktaste mit Überschreiben, Tabulator, Feststelltaste, Text-Export, Gehäusefarben.
+- **v0.29.0** (2026-11-03) – Nutzerwunsch → App v1.12.0: Stimmungen geprüft. Jede Stimmung hat einen Song (Winterabend → Nordic Folk, Sternennacht → Nocturne; Songs dürfen mehrfach vorkommen). Regennacht zeigt das bisher ungenutzte chinesische Dorf statt des nordischen Sees, damit Bild und Song „Asia“ zusammenpassen. `softStrike` gehört nicht mehr zu `MoodPatch`: Stimmungen setzen den sanften Anschlag weder an noch aus. Lampe bei Granada (Abendlicht) und Serengeti (Dämmerung) bewusst an.
 - **v0.28.0** (2026-11-02) – Nutzerwunsch → App v1.11.0: Tiefenkarten einmalig mit `tools/depth_maps.py` (Depth Anything V2 Small, Apache-2.0), Parallaxe und Dunst im Himmel-Shader. Nutzer fand Paris gut, deshalb dezent: Städte und harte Kanten `near` 1100, Dunst 0,07; Landschaften `near` 220, Dunst 0,18; New York 650; Ahornwald 600. `near` 120 verzieht in Machu Picchu den Kamm, 170 zerreißt New York. Neue Aussicht: Skript laufen lassen und `depth` in `VIEWS` eintragen.
 - **v0.27.0** (2026-11-02) – Nutzerwunsch → App v1.10.0: Bildrate unten rechts. Weil die Szene in Ruhe drosselt, steht das Ziel daneben; beide werden über ein Fenster von 500 ms gemittelt. Sie zeigt nur gerenderte Bilder der Schleife, keine GPU-Auslastung.
 - **v0.26.0** (2026-11-02) – Nutzer-Feedback → App v1.9.0: Lichtschein unter der Maus entfernt, stattdessen HTML-Beschriftung mit Symbol. `pointermove` zählt nicht mehr als Aktivität für die Bildrate, die Kamera meldet sich selbst. Menü neu: Leiste nur für Häufiges, Klappmenü „Dokument“, Einstellungen in vier Reitern nach Thema (vollständig, die Leiste ist nur Abkürzung), auf kleinen Displays zusätzlich „Start“. Radio und Bücher mit Texturen (`src/scene/Books.ts`); das Radio nutzt das Tischholz, deshalb baut `Room` es im Konstruktor. Kratzer der Patina fallen auf kleinen Dingen groß aus, weil die Kachel 14 cm abdeckt: dort schwach dosieren.

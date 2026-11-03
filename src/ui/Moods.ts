@@ -2,26 +2,29 @@ import type { Settings } from './Settings';
 
 export type MoodId = 'rainnight' | 'sunday' | 'kyoto' | 'winter' | 'stars' | 'bosporus' | 'rio' | 'paris' | 'udaipur' | 'elmina' | 'granada' | 'laboca' | 'andes' | 'serengeti' | 'alps' | 'nordic';
 
-type MoodPatch = Pick<Settings, 'view' | 'time' | 'rain' | 'lamp' | 'track' | 'softStrike'>;
+type MoodPatch = Pick<Settings, 'view' | 'time' | 'rain' | 'lamp' | 'track'>;
 
-/** Stimmungen: Ein Klick stellt Aussicht, Tageszeit, Wetter, Licht, Musik und Anschlag zusammen. */
+/**
+ * Stimmungen: Ein Klick stellt Aussicht, Tageszeit, Wetter, Licht und Musik zusammen.
+ * Jede hat einen Song. Den Anschlag lassen sie in Ruhe: Der sanfte Anschlag bleibt allein Sache des Nutzers.
+ */
 export const MOODS: Record<MoodId, MoodPatch> = {
-  rainnight: { view: 'nordiclake', time: 'night', rain: true, lamp: true, track: 'SchreibMaschine - Asia', softStrike: true },
-  sunday: { view: 'mediterranean', time: 'day', rain: false, lamp: false, track: 'SchreibMaschine - America', softStrike: false },
-  kyoto: { view: 'japanforest', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Koto Japan', softStrike: false },
-  winter: { view: 'winterlake', time: 'night', rain: false, lamp: true, track: '', softStrike: true },
-  stars: { view: 'starnight', time: 'night', rain: false, lamp: false, track: '', softStrike: true },
-  bosporus: { view: 'istanbul', time: 'day', rain: false, lamp: false, track: 'SchreibMaschine - Middle East', softStrike: false },
-  rio: { view: 'rio', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Bossa Nova', softStrike: false },
-  paris: { view: 'paris', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Musette', softStrike: false },
-  udaipur: { view: 'udaipur', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - India', softStrike: true },
-  elmina: { view: 'elmina', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Kora Westafrica', softStrike: false },
-  granada: { view: 'granada', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Flamenco', softStrike: true },
-  laboca: { view: 'buenosaires', time: 'day', rain: true, lamp: true, track: 'Schreibmaschine - Tango Argentinia', softStrike: true },
-  andes: { view: 'machupicchu', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Andes', softStrike: false },
-  serengeti: { view: 'serengeti', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Ethio Jazz Eastafrica', softStrike: false },
-  alps: { view: 'alps', time: 'night', rain: false, lamp: true, track: 'Schreibmaschine - Nocturne MiddleEurope', softStrike: true },
-  nordic: { view: 'nordiclake', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Northeurope Folk', softStrike: true },
+  rainnight: { view: 'chinavillage', time: 'night', rain: true, lamp: true, track: 'SchreibMaschine - Asia' },
+  sunday: { view: 'mediterranean', time: 'day', rain: false, lamp: false, track: 'SchreibMaschine - America' },
+  kyoto: { view: 'japanforest', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Koto Japan' },
+  winter: { view: 'winterlake', time: 'night', rain: false, lamp: true, track: 'Schreibmaschine - Northeurope Folk' },
+  stars: { view: 'starnight', time: 'night', rain: false, lamp: false, track: 'Schreibmaschine - Nocturne MiddleEurope' },
+  bosporus: { view: 'istanbul', time: 'day', rain: false, lamp: false, track: 'SchreibMaschine - Middle East' },
+  rio: { view: 'rio', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Bossa Nova' },
+  paris: { view: 'paris', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Musette' },
+  udaipur: { view: 'udaipur', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - India' },
+  elmina: { view: 'elmina', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Kora Westafrica' },
+  granada: { view: 'granada', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Flamenco' },
+  laboca: { view: 'buenosaires', time: 'day', rain: true, lamp: true, track: 'Schreibmaschine - Tango Argentinia' },
+  andes: { view: 'machupicchu', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Andes' },
+  serengeti: { view: 'serengeti', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Ethio Jazz Eastafrica' },
+  alps: { view: 'alps', time: 'night', rain: false, lamp: true, track: 'Schreibmaschine - Nocturne MiddleEurope' },
+  nordic: { view: 'nordiclake', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Northeurope Folk' },
 };
 
 /** Die Stimmung, die den Einstellungen gerade entspricht. */

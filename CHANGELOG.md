@@ -2,6 +2,13 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.12.0] – 2026-11-03
+
+### Geändert
+- **Stimmungen überarbeitet:** Jede der 16 Stimmungen spielt jetzt einen Song. Winterabend bekommt Nordic Folk, Sternennacht die Nocturne.
+- **Regennacht im chinesischen Dorf:** Die Regennacht zeigt jetzt das chinesische Dorf, passend zum Song „Asia“. Der nordische See bleibt der Stimmung „Nordische Stille“.
+- **Stimmungen lassen den Anschlag in Ruhe:** Keine Stimmung schaltet mehr den sanften Anschlag ein oder aus; er bleibt so, wie man ihn selbst eingestellt hat.
+
 ## [1.11.0] – 2026-11-02
 
 ### Hinzugefügt
