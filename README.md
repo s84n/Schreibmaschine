@@ -59,6 +59,7 @@ und ein großes Panoramafenster, hinter dem sich die Welt bewegt.
 | 💌 **Brief als Link** | Der Empfänger sieht deinen Text Anschlag für Anschlag entstehen. Er steckt nur im Link, auf keinem Server. |
 | 🌦️ **Stimmungen** | Ein Klick auf eine von 18 Stimmungen, etwa Regennacht, Herbst in Kyoto, Morgen in Rio oder Café in Paris, stellt Aussicht, Licht, Wetter und Musik zusammen. |
 | 🕹️ **Das Zimmer bedienen** | Kerze, Lampe, Fenster, Radio und Papierstapel lassen sich direkt anklicken. Ein Punkt zeigt, was geht, bis du es einmal benutzt hast; unter der Maus sagt eine kleine Beschriftung, was es tut. |
+| 🎥 **Lebendige Kamera** | Beim Tippen atmet die Kamera ganz leicht und nickt mit den Anschlägen; danach steht das Bild wieder still. |
 | 🌃 **Lichter bei Nacht** | Nachts gehen in den Städten und Dörfern vor dem Fenster die Lichter an: Fenster, Straßen, der goldene Eiffelturm, der angestrahlte Seepalast und die Alhambra. |
 | 🏔️ **Tiefe im Fenster** | Beim Drehen der Kamera wandert Nahes gegen die Ferne, über der Ferne liegt leichter Dunst. Abschaltbar unter Zimmer → Grafik. |
 | 📈 **Bildrate im Blick** | Unten rechts steht klein, wie viele Bilder pro Sekunde erreicht werden und wie viele angestrebt sind. Abschaltbar unter Zimmer → Grafik. |

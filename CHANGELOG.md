@@ -2,6 +2,11 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.16.0] – 2026-11-03
+
+### Hinzugefügt
+- **Handkamera beim Tippen:** Solange geschrieben wird, atmet die Kamera ganz leicht, nickt bei jedem Anschlag kaum merklich mit und schwenkt beim Wagenrücklauf ein wenig. Einige Sekunden nach dem letzten Anschlag klingt die Bewegung aus und das Bild steht wieder genau wie vorher. Mit „Ruhige Bewegung“ bleibt die Kamera still.
+
 ## [1.15.0] – 2026-11-03
 
 ### Behoben

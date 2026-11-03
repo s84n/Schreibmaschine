@@ -314,8 +314,10 @@ async function main(): Promise<void> {
 
   tw.on('input', () => {
     stage.poke();
+    stage.nudge('key');
     overlay.noteTyping();
   });
+  tw.on('return', () => stage.nudge('return'));
   tw.on('pageEnd', () => {
     if (doc.strikes.length) newSheetPending = true;
   });

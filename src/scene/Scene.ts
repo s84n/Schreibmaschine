@@ -21,6 +21,14 @@ const FPS = { active: 60, idle: 30, longIdle: 20, background: 15, covered: 5 };
 const FPS_SAVER = { active: 30, idle: 15, longIdle: 12, background: 10, covered: 5 };
 /** So lange nach der letzten Eingabe gilt die Szene als aktiv bzw. noch nicht lange still (ms). */
 const ACTIVE_MS = 1500;
+/**
+ * Handkamera beim Tippen: Atmen (Neigen, Schwenken in Bogenmaß, Vor/Zurück in cm) und Feder für
+ * die Stöße. Klingt nach dem letzten Anschlag über SWAY_FADE Sekunden aus; im Stillstand steht alles.
+ */
+const SWAY = { pitch: 0.0018, yaw: 0.0026, dolly: 0.3 };
+const SWAY_FADE = 5;
+const SPRING = { stiffness: 55, damping: 9 };
+const KICK = { key: 0.006, return: 0.012 };
 const IDLE_MS = 30000;
 /** Selbsthilfe bei schwacher Grafik: Stufen der Auflösung, danach Grafik „niedrig“. */
 const SCALE_STEPS = [1, 0.85, 0.7, 0.6];
@@ -90,6 +98,13 @@ export class Stage {
   private nextFrame = 0;
   private saver = false;
   private calm = false;
+  /** Handkamera: Hüllkurve des Atmens, Zeit, Federauslenkung (Neigen, Schwenken, Vor/Zurück) und Tempo */
+  private sway = 0;
+  private swayClock = 0;
+  private readonly swayOff = new THREE.Vector3();
+  private readonly swayVel = new THREE.Vector3();
+  private readonly swayPos = new THREE.Vector3();
+  private readonly swayQuat = new THREE.Quaternion();
   private paperZoom = 1;
   private scaleStep = 0;
   private fastWindows = 0;
@@ -216,6 +231,64 @@ export class Stage {
   }
 
   /** Ruhige Bewegung: Die Kamera fährt nicht, sondern wechselt direkt. */
+  /** Ein Anschlag oder der Wagenrücklauf: Die Kamera nickt kaum merklich mit. */
+  nudge(kind: 'key' | 'return'): void {
+    if (this.calm) return;
+    this.sway = 1;
+    const k = KICK[kind];
+    if (kind === 'key') this.swayVel.add(new THREE.Vector3(-k * (0.6 + Math.random() * 0.4), k * (Math.random() - 0.5) * 0.6, 0));
+    // Der Wagen fährt zurück: ein kleiner Schwenk mit, dazu ein Hauch nach vorn
+    else this.swayVel.add(new THREE.Vector3(-k * 0.3, k, k * 40));
+  }
+
+  /** Handkamera fortschreiben; liefert, ob sie sich gerade bewegt. */
+  private updateSway(dt: number): boolean {
+    const off = this.swayOff;
+    const vel = this.swayVel;
+    if (this.calm) {
+      this.sway = 0;
+      off.set(0, 0, 0);
+      vel.set(0, 0, 0);
+      return false;
+    }
+    this.sway = Math.max(0, this.sway - dt / SWAY_FADE);
+    // In kleinen Schritten, damit die Feder auch bei niedriger Bildrate nicht aufschaukelt
+    const steps = Math.min(Math.ceil(dt / 0.01), 20);
+    const h = Math.min(dt, 0.2) / steps;
+    for (let i = 0; i < steps; i++) {
+      vel.addScaledVector(off, -SPRING.stiffness * h).multiplyScalar(1 - SPRING.damping * h);
+      off.addScaledVector(vel, h);
+    }
+    const settled = off.lengthSq() < 1e-10 && vel.lengthSq() < 1e-9;
+    if (settled) {
+      off.set(0, 0, 0);
+      vel.set(0, 0, 0);
+    }
+    if (this.sway > 0) this.swayClock += dt;
+    return this.sway > 0 || !settled;
+  }
+
+  /** Versatz der Handkamera auf die Kamera legen; restoreSway() nimmt ihn nach dem Bild wieder ab. */
+  private applySway(): void {
+    const cam = this.camera;
+    this.swayPos.copy(cam.position);
+    this.swayQuat.copy(cam.quaternion);
+    // Weich ein- und ausblenden, Atmen aus zwei ungleichen Wellen, damit es sich nicht wiederholt
+    const e = this.sway * this.sway * (3 - 2 * this.sway);
+    const t = this.swayClock;
+    const pitch = this.swayOff.x + e * SWAY.pitch * (Math.sin(t * 1.3) + 0.4 * Math.sin(t * 0.47 + 1));
+    const yaw = this.swayOff.y + e * SWAY.yaw * (Math.sin(t * 0.61 + 2) + 0.5 * Math.sin(t * 0.23));
+    const dolly = this.swayOff.z + e * SWAY.dolly * Math.sin(t * 0.8 + 0.5);
+    cam.rotateX(pitch);
+    cam.rotateY(yaw);
+    cam.translateZ(-dolly);
+  }
+
+  private restoreSway(): void {
+    this.camera.position.copy(this.swayPos);
+    this.camera.quaternion.copy(this.swayQuat);
+  }
+
   setCalm(on: boolean): void {
     this.calm = on;
     this.room.setCalm(on);
@@ -452,7 +525,7 @@ export class Stage {
     const now = performance.now();
     // Die Bildrate folgt dem, was gerade passiert: Das hält den Lüfter leise
     const quiet = now - this.lastActivity;
-    const busy = animator.busy || quiet < ACTIVE_MS;
+    const busy = animator.busy || quiet < ACTIVE_MS || this.sway > 0;
     const rates = this.saver ? FPS_SAVER : FPS;
     const fps = this.covered ? rates.covered : busy ? rates.active : !document.hasFocus() ? rates.background : quiet < IDLE_MS ? rates.idle : rates.longIdle;
     if (now < this.nextFrame - 1) return;
@@ -470,9 +543,13 @@ export class Stage {
     this.room.update(dt, this.camera);
     this.controls.update();
     const moving = animator.busy;
+    const swaying = this.updateSway(dt);
     this.updateShadows(now, moving);
-    this.updateAO(moving);
+    // Die Steuerung sieht den Versatz nie: Sonst hielte sie ihn für eine Mausbewegung
+    if (swaying) this.applySway();
+    this.updateAO(moving || swaying);
     if (this.post) this.post.render(dt);
     else this.renderer.render(this.scene, this.camera);
+    if (swaying) this.restoreSway();
   }
 }

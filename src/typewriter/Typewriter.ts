@@ -22,7 +22,7 @@ const MAX_PENDING = 80;
 /** Zeitpunkt des Anschlags im Rücklauf-Sample (Wagen schlägt an). */
 const RETURN_THUNK_AT = 1.15;
 
-export type TypewriterEvent = 'pageEnd' | 'change' | 'sheet' | 'input';
+export type TypewriterEvent = 'pageEnd' | 'change' | 'sheet' | 'input' | 'return';
 
 /**
  * Die komplette Maschine: Aufbau der 3D-Teile und Mechanik-Logik.
@@ -230,6 +230,7 @@ export class Typewriter {
   carriageReturn(): void {
     if (this.hold(() => this.carriageReturn())) return;
     this.emit('input');
+    this.emit('return');
     // Auf der letzten Zeile: Blatt ist voll, das nächste wird von selbst eingespannt
     if (this.doc.line + 1 >= MAX_LINES) {
       this.emit('pageEnd');
