@@ -2,6 +2,13 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.14.0] – 2026-11-03
+
+### Hinzugefügt
+- **Lichter bei Nacht:** In zwölf Aussichten gehen nachts die Lichter an. Fenster brennen warm, einige flackern leise, über den Straßen liegt ein Schein und über dem Horizont die Lichtglocke der Stadt. Der Eiffelturm leuchtet golden, der Seepalast in Udaipur und die Alhambra sind angestrahlt, in Dubai funkelt die Skyline. Beim Wechsel zur Nacht gehen die Lichter nach und nach an.
+- Reine Landschaften (Bergsee, nordischer See, Ahornwald, Machu Picchu, Serengeti) bleiben nachts dunkel; in den Alpen leuchtet nur das Dorf im Tal.
+- Die Lichter laden erst bei Nacht nach (40–200 KB je Aussicht) und kosten kaum Rechenzeit.
+
 ## [1.13.0] – 2026-11-03
 
 ### Hinzugefügt

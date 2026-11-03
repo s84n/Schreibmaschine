@@ -47,6 +47,9 @@ const uniforms = {
   uHaze: { value: 0 },
   uHazeColor: { value: new THREE.Color() },
   uParallax: { value: new THREE.Vector3() },
+  // Nachts: Fenster und Laternen über dem abgedunkelten Tagbild
+  uNightLights: { value: null as THREE.Texture | null },
+  uNightGlow: { value: 0 },
 };
 
 const LIFE_HEAD = /* glsl */ `
@@ -56,6 +59,8 @@ const LIFE_HEAD = /* glsl */ `
   uniform float uDepthOn, uDepthNear, uHaze;
   uniform sampler2D uDepthMap;
   uniform vec3 uHazeColor, uParallax;
+  uniform sampler2D uNightLights;
+  uniform float uNightGlow;
   varying vec3 vLifeDir;
   float lifeHash(vec2 p) {
     p = fract(p * vec2(123.34, 456.21));
@@ -148,9 +153,14 @@ const LIFE_MAP = /* glsl */ `
     }
   }
   vec4 sampledDiffuseColor = uLifeOn > 0.5 ? textureGrad(map, lifeUv + lifeOff, lifeDx, lifeDy) : lifeBase;
-  sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, uHazeColor, depthHaze);
+  sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, uHazeColor, depthHaze * (1.0 - uNightGlow * 0.6));
   sampledDiffuseColor.rgb = mix(sampledDiffuseColor.rgb, vec3(0.96, 0.97, 1.0), lifeCloud) + lifeAdd;
   diffuseColor *= sampledDiffuseColor;
+  if (uNightGlow > 0.0) {
+    // Nach der Abdunklung: Lichter leuchten von selbst; ein paar Fenster flackern sacht
+    float twinkle = uLifeOn > 0.5 ? 0.82 + 0.18 * lifeNoise(lifeUv * vec2(1800.0, 300.0) + vec2(0.0, uLifeTime * 0.4)) : 1.0;
+    diffuseColor.rgb += textureGrad(uNightLights, lifeUv + lifeOff, lifeDx, lifeDy).rgb * uNightGlow * twinkle;
+  }
   #endif
 `;
 
@@ -176,6 +186,12 @@ export function setPanoramaDepth(map: THREE.Texture | undefined, depth: ViewDept
   uniforms.uDepthNear.value = depth.near;
   uniforms.uHaze.value = depth.haze;
   uniforms.uHazeColor.value.set(depth.hazeColor);
+}
+
+/** Lichtmaske der Aussicht mit Leuchtkraft `glow` (0 am Tag). */
+export function setPanoramaLights(lights: THREE.Texture | undefined, glow: number): void {
+  uniforms.uNightLights.value = lights ?? null;
+  uniforms.uNightGlow.value = lights ? glow : 0;
 }
 
 /** Kameraversatz gegenüber der Grundstellung, in den Koordinaten der Panoramakugel. */

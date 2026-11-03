@@ -44,3 +44,7 @@ Die bearbeiteten Dateien stehen wie ihre Originale unter derselben Lizenz: `duba
 ## Tiefenkarten
 
 Die Dateien `*_depth.jpg` sind aus den Panoramen oben abgeleitet, berechnet mit Depth Anything V2 Small (Apache-2.0) über `tools/depth_maps.py`. Für sie gilt die Lizenz des jeweiligen Panoramas.
+
+## Lichtmasken
+
+Die Dateien `*_lights.jpg` sind aus den Panoramen oben abgeleitet, erzeugt mit `tools/night_lights.py` (ohne fremdes Modell). Für sie gilt die Lizenz des jeweiligen Panoramas.
