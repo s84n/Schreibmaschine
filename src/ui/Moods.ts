@@ -1,6 +1,6 @@
 import type { Settings } from './Settings';
 
-export type MoodId = 'rainnight' | 'sunday' | 'kyoto' | 'winter' | 'stars' | 'bosporus' | 'rio' | 'paris' | 'udaipur' | 'elmina' | 'granada' | 'laboca' | 'andes' | 'serengeti' | 'alps' | 'nordic';
+export type MoodId = 'rainnight' | 'sunday' | 'kyoto' | 'winter' | 'stars' | 'bosporus' | 'rio' | 'paris' | 'udaipur' | 'elmina' | 'granada' | 'laboca' | 'andes' | 'serengeti' | 'alps' | 'nordic' | 'manhattan' | 'dubai';
 
 type MoodPatch = Pick<Settings, 'view' | 'time' | 'rain' | 'lamp' | 'track'>;
 
@@ -15,8 +15,10 @@ export const MOODS: Record<MoodId, MoodPatch> = {
   winter: { view: 'winterlake', time: 'night', rain: false, lamp: true, track: 'Schreibmaschine - Northeurope Folk' },
   stars: { view: 'starnight', time: 'night', rain: false, lamp: false, track: 'Schreibmaschine - Nocturne MiddleEurope' },
   bosporus: { view: 'istanbul', time: 'day', rain: false, lamp: false, track: 'SchreibMaschine - Middle East' },
+  dubai: { view: 'dubai', time: 'night', rain: false, lamp: true, track: 'SchreibMaschine - Middle East' },
   rio: { view: 'rio', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Bossa Nova' },
   paris: { view: 'paris', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Musette' },
+  manhattan: { view: 'newyork', time: 'day', rain: false, lamp: true, track: 'SchreibMaschine - America' },
   udaipur: { view: 'udaipur', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - India' },
   elmina: { view: 'elmina', time: 'day', rain: false, lamp: false, track: 'Schreibmaschine - Kora Westafrica' },
   granada: { view: 'granada', time: 'day', rain: false, lamp: true, track: 'Schreibmaschine - Flamenco' },

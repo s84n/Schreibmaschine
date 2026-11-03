@@ -74,7 +74,7 @@ const iconBtn = (name: IconName, title: string, cls = ''): HTMLButtonElement => 
   return b;
 };
 
-const MOOD_ICONS: Record<MoodId, IconName> = { rainnight: 'rain', sunday: 'coffee', kyoto: 'leaf', winter: 'snow', stars: 'stars', bosporus: 'waves', rio: 'waves', paris: 'coffee', udaipur: 'sun', elmina: 'waves', granada: 'sun', laboca: 'rain', andes: 'mountain', serengeti: 'sun', alps: 'mountain', nordic: 'snow' };
+const MOOD_ICONS: Record<MoodId, IconName> = { rainnight: 'rain', sunday: 'coffee', kyoto: 'leaf', winter: 'snow', stars: 'stars', bosporus: 'waves', rio: 'waves', paris: 'coffee', udaipur: 'sun', elmina: 'waves', granada: 'sun', laboca: 'rain', andes: 'mountain', serengeti: 'sun', alps: 'mountain', nordic: 'snow', manhattan: 'city', dubai: 'moon' };
 
 /** Symbol in der Beschriftung am Mauszeiger. */
 const ROOM_ICONS: Record<RoomTargetId, IconName> = { candle: 'flame', lamp: 'lamp', window: 'window', stack: 'read', radio: 'music', mug: 'coffee' };

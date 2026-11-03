@@ -2,6 +2,12 @@
 
 Alle Versionen folgen [SemVer](https://semver.org/lang/de/) (`MAJOR.MINOR.PATCH`).
 
+## [1.13.0] – 2026-11-03
+
+### Hinzugefügt
+- **Zwei neue Stimmungen:** **Büro in Manhattan** (New York bei Tag, Lampe an, Song „America“) und **Dämmerung in Dubai** (Skyline in der Abenddämmerung, Lampe an, Song „Middle East“). Damit gehört jede Aussicht zu mindestens einer Stimmung.
+- Neues Symbol **Stadt** für die Manhattan-Stimmung.
+
 ## [1.12.0] – 2026-11-03
 
 ### Geändert
